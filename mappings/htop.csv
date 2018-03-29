@@ -1,2 +1,3 @@
 mapping,t_@main,asapScheduling,energyConsumption,executionTime,listScheduling,memorySize,platformSize
 1,ARM00,5483933567,8.80713e+10,13664821588,6560625699,5320,7
+2,ARM01,5483933567,8.80713e+9,136648215880,6560625699,5320,7
