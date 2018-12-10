@@ -58,6 +58,7 @@ class Logger
         char buffer[255];
         std::snprintf(buffer, 255, "%s %s: %s", lvl, timestr, fmt);
         printf(buffer, args...);
+        fflush(stdout);
     }
 
    public:
@@ -93,6 +94,7 @@ class Logger
     void always(const char* fmt, Args... args)
     {
         printf(fmt, args...);
+        fflush(stdout);
     }
 
    private:

@@ -33,7 +33,7 @@ tweaked.
 
 In addition the server also parses the following environment variables:
 
-#### TETRIS_LOG_LEVEL
+#### TETRIS_LOGLEVEL
 
 With this environment variable you can control how much information the TETRiS
 server outputs. Possible values are DEBUG, INFO, WARNING and ERROR.
@@ -43,7 +43,7 @@ server outputs. Possible values are DEBUG, INFO, WARNING and ERROR.
 
 The client reacts to multiple environment variables:
 
-#### TETRIS_LOG_LEVEL
+#### TETRIS_LOGLEVEL
 
 With this environment variable you can control how much information the TETRiS
 client library outputs. Possible values are DEBUG, INFO, WARNING and ERROR.
