@@ -1,6 +1,7 @@
-project(tetris)
-
 cmake_minimum_required(VERSION 3.1)
+
+project(tetris
+        VERSION 1.0)
 
 # general setup
 set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/lib")
@@ -13,12 +14,14 @@ set(CMAKE_CXX_STANDARD "17")
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 find_package(Threads REQUIRED)
 
+include_directories(${CMAKE_SOURCE_DIR})
+
 # libtetris client legacy version
 add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc)
 target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
 # libtetris client new version
-add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc tetris_feature.h)
+add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc tetris_feature.h push_server.cc push_server.h)
 target_link_libraries(tetrisclient Threads::Threads ${CMAKE_DL_LIBS})
 
 # tetris server binary
@@ -26,3 +29,8 @@ add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_u
 
 # tetris control binary
 add_executable(tetrisctl tetris_ctl.cc)
+
+enable_testing()
+set(TEST_SOURCE_DIRECTORY test)
+set(TEST_TARGET_NAME runTests)
+add_subdirectory(${TEST_SOURCE_DIRECTORY})
