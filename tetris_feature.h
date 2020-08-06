@@ -16,12 +16,17 @@ namespace TETRiS {
     /**
      * \brief TETRiS Feature abstract class.
      *
-     * A TETRiS feature is defined as a user of the TETRiS system. A feature is bound to the TETRiS client that run on
+     * A TETRiS feature is a user of the TETRiS system. A feature is bound to the TETRiS client that runs on
      * the application side. This binding procedure allows the feature to communicate with the TETRiS server and to
      * receive push notifications if needed.
      */
     class Feature {
     public:
+        /**
+         * \brief Builds a feature.
+         */
+        Feature();
+
         /**
          * \brief Accepts the TETRiS client to bind the feature.
          * \param client Pointer to the client.
@@ -45,7 +50,7 @@ namespace TETRiS {
          * \param msg PushRequest received.
          * \return Response to the request.
          */
-        virtual PushResponse forward(const PushRequest &msg) = 0;
+        virtual PushResponse forward(const PushRequest &msg) const = 0;
 
         /**
          * \brief Checks if the feature needs a handshake.
@@ -54,7 +59,7 @@ namespace TETRiS {
          *
          * \return true if the feature needs a handshake, false otherwise.
          */
-        virtual bool need_handshake() = 0;
+        virtual bool need_handshake() const = 0;
 
         /**
          * \brief Sends a request for a handshake with the TETRiS server.
