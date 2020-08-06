@@ -17,6 +17,10 @@ find_package(Threads REQUIRED)
 add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc)
 target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
+# libtetris client new version
+add_library(tetrisclient SHARED tetris_client.cc )
+target_link_libraries(tetrisclient Threads::Threads ${CMAKE_DL_LIBS})
+
 # tetris server binary
 add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc)
 
