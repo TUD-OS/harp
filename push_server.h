@@ -27,6 +27,11 @@ namespace TETRiS {
         explicit PushServer(const std::string &socket_path);
 
         /**
+         * \brief Destroys the push server, closing the socket and joining the listener thread.
+         */
+        ~PushServer();
+
+        /**
          * \brief Adds a TETRiS feature with its id to the subscribers map.
          * \param feature_id Feature ID.
          * \param feature Pointer to feature.
@@ -42,16 +47,19 @@ namespace TETRiS {
 
     private:
         /**
-         * \brief Thread listener.
+         * \brief Callback function call in listening thread.
          * \return None.
          */
         static void *listening(void *args);
 
         /// \brief Push server socket.
-        Socket server;
+        Socket _server;
+
+        /// \brief Listener thread id.
+        pthread_t _listener_thread{};
 
         /// \brief Subscribers.
-        std::map<FeatureID, Feature *> subscribers;
+        std::map<FeatureID, Feature *> _subscribers;
     };
 }
 
