@@ -49,6 +49,10 @@ namespace TETRiS {
          * \return Response from the TETRiS server.
          */
         ClientResponse send(const ClientRequest &msg);
+
+    private:
+        /// \brief Client instance.
+        static std::unique_ptr<Client> _instance;
     };
 }
 
