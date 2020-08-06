@@ -25,11 +25,11 @@ public:
      * \return Object received.
      */
     template<class T>
-    static T Receive(Connection connection) {
+    static T Receive(LockedConnection connection) {
         T msg{};
         std::vector<uint8_t> raw_data;
         // Waiting to receive the message.
-        connection.read(raw_data);
+        connection->read(raw_data);
         // Parse the message from the vector.
         msg.ParseFromArray(raw_data.data(), raw_data.size());
         return msg;
@@ -43,13 +43,13 @@ public:
      * \param [in] msg Protobuf object to send.
      */
     template<class T>
-    static void Send(Connection connection, const T &msg) {
+    static void Send(LockedConnection connection, const T &msg) {
         size_t size_msg = msg.ByteSizeLong();
         // Prepare the raw data vector.
         std::vector<uint8_t> raw_data(size_msg);
         msg.SerializeToArray(raw_data.data(), size_msg);
         // Write the vector.
-        connection.write(raw_data);
+        connection->write(raw_data);
     }
 };
 
