@@ -17,8 +17,6 @@ namespace TETRiS {
     public:
         /**
          * \brief Initializes the TETRiS client library.
-         *
-         * Behind the scene, a thread is launched to listen on the push server.
          */
         static void initialize();
 

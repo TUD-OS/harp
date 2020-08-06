@@ -6,22 +6,16 @@
 
 #include <memory>
 
+std::unique_ptr<TETRiS::Client> TETRiS::Client::_instance;
+
 void TETRiS::Client::initialize() {
     _instance = std::make_unique<Client>(Client{});
 }
 
-void TETRiS::Client::finalize() {
-    _instance.reset();
-}
+void TETRiS::Client::finalize() { _instance.reset(); }
 
-TETRiS::Client *TETRiS::Client::get_instance() {
-    return _instance.get();
-}
+TETRiS::Client *TETRiS::Client::get_instance() { return _instance.get(); }
 
-void TETRiS::Client::bind(TETRiS::Feature *feature) {
+void TETRiS::Client::bind(TETRiS::Feature *feature) {}
 
-}
-
-TETRiS::ClientResponse TETRiS::Client::send(const TETRiS::ClientRequest &msg) {
-    return TETRiS::ClientResponse();
-}
+TETRiS::ClientResponse TETRiS::Client::send(const TETRiS::ClientRequest &msg) { return TETRiS::ClientResponse(); }
