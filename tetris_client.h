@@ -5,24 +5,49 @@
 #ifndef __TETRIS_CLIENT_H__
 #define __TETRIS_CLIENT_H__
 
+#include "proto/Tetris.pb.h"
+
 namespace TETRiS {
     class Feature;
+
     /**
-     * \brief TETRiS Client API.
+     * \brief TETRiS Client singleton.
      */
     class Client {
     public:
-        /* Initializes the push server and other implementation details */
-        void initialize();
+        /**
+         * \brief Initializes the TETRiS client library.
+         *
+         * Behind the scene, a thread is launched to listen on the push server.
+         */
+        static void initialize();
 
-        /* Destroys the push server. */
-        void finalize();
+        /**
+         * \brief Finalizes the TETRiS client library.
+         */
+        static void finalize();
 
-        /* Binds a specific TETRiS feature. During this call, a handshake
-         * is sent to the TETRiS server by calling TETRiS::Feature::Handshake() */
+        /**
+         * \brief Gets the TETRiS client instance.
+         * \return Pointer to the TETRiS client instance.
+         */
+        static Client *get_instance();
+
+        /**
+         * \brief Binds a TETRiS feature to the TETRiS client.
+         *
+         * The binding procedure includes handshaking with the TETRiS server if the feature needs to subscribe to
+         * push notifications.
+         *
+         * \param feature Pointer to the TETRiS feature.
+         */
         void bind(TETRiS::Feature *feature);
 
-        /* Sends a ClientRequest and returns a ClientResponse. */
+        /**
+         * \brief Sends a client request to the TETRiS server.
+         * \param msg Client request to send.
+         * \return Response from the TETRiS server.
+         */
         ClientResponse send(const ClientRequest &msg);
     };
 }

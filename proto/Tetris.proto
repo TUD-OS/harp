@@ -1,0 +1,75 @@
+syntax = "proto2";
+
+package TETRiS;
+
+message RegionConfiguration {
+  required string name = 1;
+  required uint64 num_replicas = 2;
+}
+
+message RegionInfo {
+  required string name = 1;
+  message ReplicaInfo {
+    message ProcessThread {
+      required string process_name = 1;
+      required string thread_id = 2;
+    }
+    repeated ProcessThread process_thread = 1;
+  }
+  repeated ReplicaInfo replicas = 2;
+}
+
+message RegionThroughput { /* not yet defined */ }
+
+message RegularProcessInfo {
+  required string name = 1;
+  required uint64 thread_id = 2;
+}
+
+message ClientRequest {
+  enum Type {
+    DPM_SUBSCRIBE = 0;
+    DPM_REGISTER_NEW_REGULAR_PROCESS = 1;
+    DPM_REGISTER_NEW_PARALLEL_REGION = 2;
+  }
+  required Type type = 1;
+  // DPM fields.
+  optional RegularProcessInfo regular_process_info = 2;
+  optional RegionInfo parallel_region_info = 3;
+}
+
+message ClientResponse {
+  enum Type {
+    ERROR = 0;
+    ACKNOWLEDGE = 1;
+  }
+  required Type type = 1;
+  optional uint32 feature_id = 2;  /* After a subscription, the server returns the feature id allocated
+                                      for the TETRiS feature. */
+}
+
+message PushRequest {
+  enum Type {
+    UPDATE_CONFIGURATION = 0;
+    GET_REGIONS_INFO = 1;
+    GET_REGIONS_THROUGHPUT = 2;
+  }
+  required Type type = 1;
+  required uint32 feature_id = 2;   /* Field used by the push server to forward the message
+                                       to the corresponding TETRiS feature. */
+  // DPM fields.
+  repeated RegionConfiguration region_configurations = 3;
+}
+
+message PushResponse {
+  enum Type {
+    ERROR = 0;
+    ACKNOWLEDGE = 1;
+    REGION_INFO = 2;
+    REGION_THROUGHPUT = 3;
+  }
+  required Type type = 1;
+  // DPM fields.
+  repeated RegionInfo region_infos = 3;
+  repeated RegionThroughput region_throughputs = 4;
+}
