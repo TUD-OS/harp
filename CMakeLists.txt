@@ -20,15 +20,15 @@ find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 # libtetris client legacy version
-add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc)
+add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc path_util.cc util.cc)
 target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
 # libtetris client new version
-add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc push_server.cc)
+add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc push_server.cc path_util.cc util.cc)
 target_link_libraries(tetrisclient Threads::Threads ${CMAKE_DL_LIBS} ${Protobuf_LIBRARIES})
 
 # tetris server binary
-add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc)
+add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc path_util.cc util.cc)
 
 # tetris control binary
 add_executable(tetrisctl tetris_ctl.cc)

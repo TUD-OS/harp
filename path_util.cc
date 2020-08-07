@@ -41,7 +41,7 @@ std::string path_util::filename(const std::string &path) {
     return splitext(split(path).second).first;
 }
 
-void path_util::for_each_file(const std::string &path, std::function<void(const std::string &)> &cb) {
+void path_util::for_each_file(const std::string &path, const std::function<void(const std::string &)> &cb) {
     auto dir = opendir(path.c_str());
     if (dir == nullptr) {
         throw std::runtime_error{"Failed to open directory at " + path};
