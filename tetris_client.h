@@ -6,8 +6,11 @@
 #define __TETRIS_CLIENT_H__
 
 #include "proto/Tetris.pb.h"
+#include "push_server.h"
+#include "connection.h"
 
 namespace TETRiS {
+    // Predefining Feature.
     class Feature;
 
     /**
@@ -17,8 +20,10 @@ namespace TETRiS {
     public:
         /**
          * \brief Initializes the TETRiS client library.
+         *
+         * \param server_socket_path TETRiS server socket path.
          */
-        static void initialize();
+        static void initialize(const std::string &server_socket_path);
 
         /**
          * \brief Finalizes the TETRiS client library.
@@ -48,9 +53,26 @@ namespace TETRiS {
          */
         ClientResponse send(const ClientRequest &msg);
 
+        /**
+         * \brief Builds the socket path for the push server based on the application PID.
+         * \return socket path for the push server.
+         */
+        static std::string get_push_server_socket_path();
+
     private:
+        /**
+         * \brief Default constructor for building Client.
+         */
+        Client(const std::string &server_socket_path);
+
         /// \brief Client instance.
         static std::unique_ptr<Client> _instance;
+
+        /// \brief Push server, listening for requests from the TETRiS server.
+        PushServer _push_server;
+
+        /// \brief Permanent connection to the TETRiS server.
+        std::unique_ptr<Connection> _tetris_server_connection;
     };
 }
 

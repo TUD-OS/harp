@@ -5,10 +5,12 @@
 #ifndef __TETRIS_FEATURE_H__
 #define __TETRIS_FEATURE_H__
 
+#include "proto/Tetris.pb.h"
 #include <cstdint>
-#include "tetris_client.h"
 
 namespace TETRiS {
+    // Predefining Client.
+    class Client;
 
     /// \brief A feature ID is used to forward request from the push server to the corresponding feature.
     using FeatureID = uint32_t;
