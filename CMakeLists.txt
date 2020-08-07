@@ -31,7 +31,7 @@ target_link_libraries(tetrisclient Threads::Threads ${CMAKE_DL_LIBS} ${Protobuf_
 add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc path_util.cc util.cc)
 
 # tetris control binary
-add_executable(tetrisctl tetris_ctl.cc)
+add_executable(tetrisctl tetris_ctl.cc path_util.cc util.cc)
 
 enable_testing()
 set(TEST_SOURCE_DIRECTORY test)
