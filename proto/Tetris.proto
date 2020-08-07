@@ -19,33 +19,54 @@ message RegionInfo {
   repeated ReplicaInfo replicas = 2;
 }
 
-message RegionThroughput { /* not yet defined */ }
+message RegionThroughput {/* not yet defined */}
 
 message RegularProcessInfo {
   required string name = 1;
   required uint64 thread_id = 2;
 }
 
+message NewClient {
+  required uint32 pid = 1;
+  required string exec = 2;
+  required bool dynamic_client = 3;
+  required string compare_criteria = 4;
+  required bool compare_more_is_better = 5;
+  optional string preferred_mapping = 7;
+  optional string filter_criteria = 9;
+}
+
+message NewClientAck {
+  required uint32 id = 1;
+  required bool managed = 2;
+}
+
 message ClientRequest {
   enum Type {
-    DPM_SUBSCRIBE = 0;
-    DPM_REGISTER_NEW_REGULAR_PROCESS = 1;
-    DPM_REGISTER_NEW_PARALLEL_REGION = 2;
+    TETRIS_NEW_CLIENT = 0;
+    DPM_SUBSCRIBE = 1;
+    DPM_REGISTER_NEW_REGULAR_PROCESS = 2;
+    DPM_REGISTER_NEW_PARALLEL_REGION = 3;
   }
   required Type type = 1;
+  // TETRiS fields.
+  optional NewClient new_client = 2;
   // DPM fields.
-  optional RegularProcessInfo regular_process_info = 2;
-  optional RegionInfo parallel_region_info = 3;
+  optional RegularProcessInfo regular_process_info = 3;
+  optional RegionInfo parallel_region_info = 4;
 }
 
 message ClientResponse {
   enum Type {
     ERROR = 0;
     ACKNOWLEDGE = 1;
+    TETRIS_NEW_CLIENT_ACK = 2;
   }
   required Type type = 1;
   optional uint32 feature_id = 2;  /* After a subscription, the server returns the feature id allocated
                                       for the TETRiS feature. */
+  // TETRiS fields.
+  optional NewClientAck new_client_ack = 3;
 }
 
 message PushRequest {

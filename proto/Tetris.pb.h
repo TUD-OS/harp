@@ -48,7 +48,7 @@ struct TableStruct_Tetris_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxillaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[10]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[12]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -62,6 +62,12 @@ extern ClientRequestDefaultTypeInternal _ClientRequest_default_instance_;
 class ClientResponse;
 class ClientResponseDefaultTypeInternal;
 extern ClientResponseDefaultTypeInternal _ClientResponse_default_instance_;
+class NewClient;
+class NewClientDefaultTypeInternal;
+extern NewClientDefaultTypeInternal _NewClient_default_instance_;
+class NewClientAck;
+class NewClientAckDefaultTypeInternal;
+extern NewClientAckDefaultTypeInternal _NewClientAck_default_instance_;
 class PushRequest;
 class PushRequestDefaultTypeInternal;
 extern PushRequestDefaultTypeInternal _PushRequest_default_instance_;
@@ -90,6 +96,8 @@ extern RegularProcessInfoDefaultTypeInternal _RegularProcessInfo_default_instanc
 PROTOBUF_NAMESPACE_OPEN
 template<> ::TETRiS::ClientRequest* Arena::CreateMaybeMessage<::TETRiS::ClientRequest>(Arena*);
 template<> ::TETRiS::ClientResponse* Arena::CreateMaybeMessage<::TETRiS::ClientResponse>(Arena*);
+template<> ::TETRiS::NewClient* Arena::CreateMaybeMessage<::TETRiS::NewClient>(Arena*);
+template<> ::TETRiS::NewClientAck* Arena::CreateMaybeMessage<::TETRiS::NewClientAck>(Arena*);
 template<> ::TETRiS::PushRequest* Arena::CreateMaybeMessage<::TETRiS::PushRequest>(Arena*);
 template<> ::TETRiS::PushResponse* Arena::CreateMaybeMessage<::TETRiS::PushResponse>(Arena*);
 template<> ::TETRiS::RegionConfiguration* Arena::CreateMaybeMessage<::TETRiS::RegionConfiguration>(Arena*);
@@ -102,12 +110,13 @@ PROTOBUF_NAMESPACE_CLOSE
 namespace TETRiS {
 
 enum ClientRequest_Type : int {
-  ClientRequest_Type_DPM_SUBSCRIBE = 0,
-  ClientRequest_Type_DPM_REGISTER_NEW_REGULAR_PROCESS = 1,
-  ClientRequest_Type_DPM_REGISTER_NEW_PARALLEL_REGION = 2
+  ClientRequest_Type_TETRIS_NEW_CLIENT = 0,
+  ClientRequest_Type_DPM_SUBSCRIBE = 1,
+  ClientRequest_Type_DPM_REGISTER_NEW_REGULAR_PROCESS = 2,
+  ClientRequest_Type_DPM_REGISTER_NEW_PARALLEL_REGION = 3
 };
 bool ClientRequest_Type_IsValid(int value);
-constexpr ClientRequest_Type ClientRequest_Type_Type_MIN = ClientRequest_Type_DPM_SUBSCRIBE;
+constexpr ClientRequest_Type ClientRequest_Type_Type_MIN = ClientRequest_Type_TETRIS_NEW_CLIENT;
 constexpr ClientRequest_Type ClientRequest_Type_Type_MAX = ClientRequest_Type_DPM_REGISTER_NEW_PARALLEL_REGION;
 constexpr int ClientRequest_Type_Type_ARRAYSIZE = ClientRequest_Type_Type_MAX + 1;
 
@@ -127,11 +136,12 @@ inline bool ClientRequest_Type_Parse(
 }
 enum ClientResponse_Type : int {
   ClientResponse_Type_ERROR = 0,
-  ClientResponse_Type_ACKNOWLEDGE = 1
+  ClientResponse_Type_ACKNOWLEDGE = 1,
+  ClientResponse_Type_TETRIS_NEW_CLIENT_ACK = 2
 };
 bool ClientResponse_Type_IsValid(int value);
 constexpr ClientResponse_Type ClientResponse_Type_Type_MIN = ClientResponse_Type_ERROR;
-constexpr ClientResponse_Type ClientResponse_Type_Type_MAX = ClientResponse_Type_ACKNOWLEDGE;
+constexpr ClientResponse_Type ClientResponse_Type_Type_MAX = ClientResponse_Type_TETRIS_NEW_CLIENT_ACK;
 constexpr int ClientResponse_Type_Type_ARRAYSIZE = ClientResponse_Type_Type_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ClientResponse_Type_descriptor();
@@ -1237,6 +1247,479 @@ class RegularProcessInfo PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
+class NewClient PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:TETRiS.NewClient) */ {
+ public:
+  inline NewClient() : NewClient(nullptr) {};
+  virtual ~NewClient();
+
+  NewClient(const NewClient& from);
+  NewClient(NewClient&& from) noexcept
+    : NewClient() {
+    *this = ::std::move(from);
+  }
+
+  inline NewClient& operator=(const NewClient& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NewClient& operator=(NewClient&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NewClient& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const NewClient* internal_default_instance() {
+    return reinterpret_cast<const NewClient*>(
+               &_NewClient_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    6;
+
+  friend void swap(NewClient& a, NewClient& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NewClient* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NewClient* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NewClient* New() const final {
+    return CreateMaybeMessage<NewClient>(nullptr);
+  }
+
+  NewClient* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NewClient>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NewClient& from);
+  void MergeFrom(const NewClient& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NewClient* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "TETRiS.NewClient";
+  }
+  protected:
+  explicit NewClient(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_Tetris_2eproto);
+    return ::descriptor_table_Tetris_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kExecFieldNumber = 2,
+    kCompareCriteriaFieldNumber = 4,
+    kPreferredMappingFieldNumber = 7,
+    kFilterCriteriaFieldNumber = 9,
+    kPidFieldNumber = 1,
+    kDynamicClientFieldNumber = 3,
+    kCompareMoreIsBetterFieldNumber = 5,
+  };
+  // required string exec = 2;
+  bool has_exec() const;
+  private:
+  bool _internal_has_exec() const;
+  public:
+  void clear_exec();
+  const std::string& exec() const;
+  void set_exec(const std::string& value);
+  void set_exec(std::string&& value);
+  void set_exec(const char* value);
+  void set_exec(const char* value, size_t size);
+  std::string* mutable_exec();
+  std::string* release_exec();
+  void set_allocated_exec(std::string* exec);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_exec();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_exec(
+      std::string* exec);
+  private:
+  const std::string& _internal_exec() const;
+  void _internal_set_exec(const std::string& value);
+  std::string* _internal_mutable_exec();
+  public:
+
+  // required string compare_criteria = 4;
+  bool has_compare_criteria() const;
+  private:
+  bool _internal_has_compare_criteria() const;
+  public:
+  void clear_compare_criteria();
+  const std::string& compare_criteria() const;
+  void set_compare_criteria(const std::string& value);
+  void set_compare_criteria(std::string&& value);
+  void set_compare_criteria(const char* value);
+  void set_compare_criteria(const char* value, size_t size);
+  std::string* mutable_compare_criteria();
+  std::string* release_compare_criteria();
+  void set_allocated_compare_criteria(std::string* compare_criteria);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_compare_criteria();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_compare_criteria(
+      std::string* compare_criteria);
+  private:
+  const std::string& _internal_compare_criteria() const;
+  void _internal_set_compare_criteria(const std::string& value);
+  std::string* _internal_mutable_compare_criteria();
+  public:
+
+  // optional string preferred_mapping = 7;
+  bool has_preferred_mapping() const;
+  private:
+  bool _internal_has_preferred_mapping() const;
+  public:
+  void clear_preferred_mapping();
+  const std::string& preferred_mapping() const;
+  void set_preferred_mapping(const std::string& value);
+  void set_preferred_mapping(std::string&& value);
+  void set_preferred_mapping(const char* value);
+  void set_preferred_mapping(const char* value, size_t size);
+  std::string* mutable_preferred_mapping();
+  std::string* release_preferred_mapping();
+  void set_allocated_preferred_mapping(std::string* preferred_mapping);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_preferred_mapping();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_preferred_mapping(
+      std::string* preferred_mapping);
+  private:
+  const std::string& _internal_preferred_mapping() const;
+  void _internal_set_preferred_mapping(const std::string& value);
+  std::string* _internal_mutable_preferred_mapping();
+  public:
+
+  // optional string filter_criteria = 9;
+  bool has_filter_criteria() const;
+  private:
+  bool _internal_has_filter_criteria() const;
+  public:
+  void clear_filter_criteria();
+  const std::string& filter_criteria() const;
+  void set_filter_criteria(const std::string& value);
+  void set_filter_criteria(std::string&& value);
+  void set_filter_criteria(const char* value);
+  void set_filter_criteria(const char* value, size_t size);
+  std::string* mutable_filter_criteria();
+  std::string* release_filter_criteria();
+  void set_allocated_filter_criteria(std::string* filter_criteria);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_filter_criteria();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_filter_criteria(
+      std::string* filter_criteria);
+  private:
+  const std::string& _internal_filter_criteria() const;
+  void _internal_set_filter_criteria(const std::string& value);
+  std::string* _internal_mutable_filter_criteria();
+  public:
+
+  // required uint32 pid = 1;
+  bool has_pid() const;
+  private:
+  bool _internal_has_pid() const;
+  public:
+  void clear_pid();
+  ::PROTOBUF_NAMESPACE_ID::uint32 pid() const;
+  void set_pid(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_pid() const;
+  void _internal_set_pid(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // required bool dynamic_client = 3;
+  bool has_dynamic_client() const;
+  private:
+  bool _internal_has_dynamic_client() const;
+  public:
+  void clear_dynamic_client();
+  bool dynamic_client() const;
+  void set_dynamic_client(bool value);
+  private:
+  bool _internal_dynamic_client() const;
+  void _internal_set_dynamic_client(bool value);
+  public:
+
+  // required bool compare_more_is_better = 5;
+  bool has_compare_more_is_better() const;
+  private:
+  bool _internal_has_compare_more_is_better() const;
+  public:
+  void clear_compare_more_is_better();
+  bool compare_more_is_better() const;
+  void set_compare_more_is_better(bool value);
+  private:
+  bool _internal_compare_more_is_better() const;
+  void _internal_set_compare_more_is_better(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:TETRiS.NewClient)
+ private:
+  class _Internal;
+
+  // helper for ByteSizeLong()
+  size_t RequiredFieldsByteSizeFallback() const;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr exec_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr compare_criteria_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr preferred_mapping_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr filter_criteria_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 pid_;
+  bool dynamic_client_;
+  bool compare_more_is_better_;
+  friend struct ::TableStruct_Tetris_2eproto;
+};
+// -------------------------------------------------------------------
+
+class NewClientAck PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:TETRiS.NewClientAck) */ {
+ public:
+  inline NewClientAck() : NewClientAck(nullptr) {};
+  virtual ~NewClientAck();
+
+  NewClientAck(const NewClientAck& from);
+  NewClientAck(NewClientAck&& from) noexcept
+    : NewClientAck() {
+    *this = ::std::move(from);
+  }
+
+  inline NewClientAck& operator=(const NewClientAck& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NewClientAck& operator=(NewClientAck&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
+    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
+  }
+  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
+    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NewClientAck& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const NewClientAck* internal_default_instance() {
+    return reinterpret_cast<const NewClientAck*>(
+               &_NewClientAck_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  friend void swap(NewClientAck& a, NewClientAck& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NewClientAck* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NewClientAck* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NewClientAck* New() const final {
+    return CreateMaybeMessage<NewClientAck>(nullptr);
+  }
+
+  NewClientAck* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NewClientAck>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NewClientAck& from);
+  void MergeFrom(const NewClientAck& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NewClientAck* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "TETRiS.NewClientAck";
+  }
+  protected:
+  explicit NewClientAck(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_Tetris_2eproto);
+    return ::descriptor_table_Tetris_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kIdFieldNumber = 1,
+    kManagedFieldNumber = 2,
+  };
+  // required uint32 id = 1;
+  bool has_id() const;
+  private:
+  bool _internal_has_id() const;
+  public:
+  void clear_id();
+  ::PROTOBUF_NAMESPACE_ID::uint32 id() const;
+  void set_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_id() const;
+  void _internal_set_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // required bool managed = 2;
+  bool has_managed() const;
+  private:
+  bool _internal_has_managed() const;
+  public:
+  void clear_managed();
+  bool managed() const;
+  void set_managed(bool value);
+  private:
+  bool _internal_managed() const;
+  void _internal_set_managed(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:TETRiS.NewClientAck)
+ private:
+  class _Internal;
+
+  // helper for ByteSizeLong()
+  size_t RequiredFieldsByteSizeFallback() const;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 id_;
+  bool managed_;
+  friend struct ::TableStruct_Tetris_2eproto;
+};
+// -------------------------------------------------------------------
+
 class ClientRequest PROTOBUF_FINAL :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:TETRiS.ClientRequest) */ {
  public:
@@ -1286,7 +1769,7 @@ class ClientRequest PROTOBUF_FINAL :
                &_ClientRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    8;
 
   friend void swap(ClientRequest& a, ClientRequest& b) {
     a.Swap(&b);
@@ -1355,6 +1838,8 @@ class ClientRequest PROTOBUF_FINAL :
   // nested types ----------------------------------------------------
 
   typedef ClientRequest_Type Type;
+  static constexpr Type TETRIS_NEW_CLIENT =
+    ClientRequest_Type_TETRIS_NEW_CLIENT;
   static constexpr Type DPM_SUBSCRIBE =
     ClientRequest_Type_DPM_SUBSCRIBE;
   static constexpr Type DPM_REGISTER_NEW_REGULAR_PROCESS =
@@ -1389,11 +1874,30 @@ class ClientRequest PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kRegularProcessInfoFieldNumber = 2,
-    kParallelRegionInfoFieldNumber = 3,
+    kNewClientFieldNumber = 2,
+    kRegularProcessInfoFieldNumber = 3,
+    kParallelRegionInfoFieldNumber = 4,
     kTypeFieldNumber = 1,
   };
-  // optional .TETRiS.RegularProcessInfo regular_process_info = 2;
+  // optional .TETRiS.NewClient new_client = 2;
+  bool has_new_client() const;
+  private:
+  bool _internal_has_new_client() const;
+  public:
+  void clear_new_client();
+  const ::TETRiS::NewClient& new_client() const;
+  ::TETRiS::NewClient* release_new_client();
+  ::TETRiS::NewClient* mutable_new_client();
+  void set_allocated_new_client(::TETRiS::NewClient* new_client);
+  private:
+  const ::TETRiS::NewClient& _internal_new_client() const;
+  ::TETRiS::NewClient* _internal_mutable_new_client();
+  public:
+  void unsafe_arena_set_allocated_new_client(
+      ::TETRiS::NewClient* new_client);
+  ::TETRiS::NewClient* unsafe_arena_release_new_client();
+
+  // optional .TETRiS.RegularProcessInfo regular_process_info = 3;
   bool has_regular_process_info() const;
   private:
   bool _internal_has_regular_process_info() const;
@@ -1411,7 +1915,7 @@ class ClientRequest PROTOBUF_FINAL :
       ::TETRiS::RegularProcessInfo* regular_process_info);
   ::TETRiS::RegularProcessInfo* unsafe_arena_release_regular_process_info();
 
-  // optional .TETRiS.RegionInfo parallel_region_info = 3;
+  // optional .TETRiS.RegionInfo parallel_region_info = 4;
   bool has_parallel_region_info() const;
   private:
   bool _internal_has_parallel_region_info() const;
@@ -1451,6 +1955,7 @@ class ClientRequest PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  ::TETRiS::NewClient* new_client_;
   ::TETRiS::RegularProcessInfo* regular_process_info_;
   ::TETRiS::RegionInfo* parallel_region_info_;
   int type_;
@@ -1507,7 +2012,7 @@ class ClientResponse PROTOBUF_FINAL :
                &_ClientResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    9;
 
   friend void swap(ClientResponse& a, ClientResponse& b) {
     a.Swap(&b);
@@ -1580,6 +2085,8 @@ class ClientResponse PROTOBUF_FINAL :
     ClientResponse_Type_ERROR;
   static constexpr Type ACKNOWLEDGE =
     ClientResponse_Type_ACKNOWLEDGE;
+  static constexpr Type TETRIS_NEW_CLIENT_ACK =
+    ClientResponse_Type_TETRIS_NEW_CLIENT_ACK;
   static inline bool Type_IsValid(int value) {
     return ClientResponse_Type_IsValid(value);
   }
@@ -1608,9 +2115,28 @@ class ClientResponse PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
+    kNewClientAckFieldNumber = 3,
     kTypeFieldNumber = 1,
     kFeatureIdFieldNumber = 2,
   };
+  // optional .TETRiS.NewClientAck new_client_ack = 3;
+  bool has_new_client_ack() const;
+  private:
+  bool _internal_has_new_client_ack() const;
+  public:
+  void clear_new_client_ack();
+  const ::TETRiS::NewClientAck& new_client_ack() const;
+  ::TETRiS::NewClientAck* release_new_client_ack();
+  ::TETRiS::NewClientAck* mutable_new_client_ack();
+  void set_allocated_new_client_ack(::TETRiS::NewClientAck* new_client_ack);
+  private:
+  const ::TETRiS::NewClientAck& _internal_new_client_ack() const;
+  ::TETRiS::NewClientAck* _internal_mutable_new_client_ack();
+  public:
+  void unsafe_arena_set_allocated_new_client_ack(
+      ::TETRiS::NewClientAck* new_client_ack);
+  ::TETRiS::NewClientAck* unsafe_arena_release_new_client_ack();
+
   // required .TETRiS.ClientResponse.Type type = 1;
   bool has_type() const;
   private:
@@ -1646,6 +2172,7 @@ class ClientResponse PROTOBUF_FINAL :
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  ::TETRiS::NewClientAck* new_client_ack_;
   int type_;
   ::PROTOBUF_NAMESPACE_ID::uint32 feature_id_;
   friend struct ::TableStruct_Tetris_2eproto;
@@ -1701,7 +2228,7 @@ class PushRequest PROTOBUF_FINAL :
                &_PushRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    10;
 
   friend void swap(PushRequest& a, PushRequest& b) {
     a.Swap(&b);
@@ -1920,7 +2447,7 @@ class PushResponse PROTOBUF_FINAL :
                &_PushResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    11;
 
   friend void swap(PushResponse& a, PushResponse& b) {
     a.Swap(&b);
@@ -2724,11 +3251,531 @@ inline void RegularProcessInfo::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 va
 
 // -------------------------------------------------------------------
 
+// NewClient
+
+// required uint32 pid = 1;
+inline bool NewClient::_internal_has_pid() const {
+  bool value = (_has_bits_[0] & 0x00000010u) != 0;
+  return value;
+}
+inline bool NewClient::has_pid() const {
+  return _internal_has_pid();
+}
+inline void NewClient::clear_pid() {
+  pid_ = 0u;
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 NewClient::_internal_pid() const {
+  return pid_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 NewClient::pid() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.pid)
+  return _internal_pid();
+}
+inline void NewClient::_internal_set_pid(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _has_bits_[0] |= 0x00000010u;
+  pid_ = value;
+}
+inline void NewClient::set_pid(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_pid(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.pid)
+}
+
+// required string exec = 2;
+inline bool NewClient::_internal_has_exec() const {
+  bool value = (_has_bits_[0] & 0x00000001u) != 0;
+  return value;
+}
+inline bool NewClient::has_exec() const {
+  return _internal_has_exec();
+}
+inline void NewClient::clear_exec() {
+  exec_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline const std::string& NewClient::exec() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.exec)
+  return _internal_exec();
+}
+inline void NewClient::set_exec(const std::string& value) {
+  _internal_set_exec(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.exec)
+}
+inline std::string* NewClient::mutable_exec() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.NewClient.exec)
+  return _internal_mutable_exec();
+}
+inline const std::string& NewClient::_internal_exec() const {
+  return exec_.Get();
+}
+inline void NewClient::_internal_set_exec(const std::string& value) {
+  _has_bits_[0] |= 0x00000001u;
+  exec_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void NewClient::set_exec(std::string&& value) {
+  _has_bits_[0] |= 0x00000001u;
+  exec_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TETRiS.NewClient.exec)
+}
+inline void NewClient::set_exec(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _has_bits_[0] |= 0x00000001u;
+  exec_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TETRiS.NewClient.exec)
+}
+inline void NewClient::set_exec(const char* value,
+    size_t size) {
+  _has_bits_[0] |= 0x00000001u;
+  exec_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TETRiS.NewClient.exec)
+}
+inline std::string* NewClient::_internal_mutable_exec() {
+  _has_bits_[0] |= 0x00000001u;
+  return exec_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* NewClient::release_exec() {
+  // @@protoc_insertion_point(field_release:TETRiS.NewClient.exec)
+  if (!_internal_has_exec()) {
+    return nullptr;
+  }
+  _has_bits_[0] &= ~0x00000001u;
+  return exec_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void NewClient::set_allocated_exec(std::string* exec) {
+  if (exec != nullptr) {
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  exec_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), exec,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.NewClient.exec)
+}
+inline std::string* NewClient::unsafe_arena_release_exec() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:TETRiS.NewClient.exec)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  _has_bits_[0] &= ~0x00000001u;
+  return exec_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void NewClient::unsafe_arena_set_allocated_exec(
+    std::string* exec) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (exec != nullptr) {
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  exec_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      exec, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.NewClient.exec)
+}
+
+// required bool dynamic_client = 3;
+inline bool NewClient::_internal_has_dynamic_client() const {
+  bool value = (_has_bits_[0] & 0x00000020u) != 0;
+  return value;
+}
+inline bool NewClient::has_dynamic_client() const {
+  return _internal_has_dynamic_client();
+}
+inline void NewClient::clear_dynamic_client() {
+  dynamic_client_ = false;
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline bool NewClient::_internal_dynamic_client() const {
+  return dynamic_client_;
+}
+inline bool NewClient::dynamic_client() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.dynamic_client)
+  return _internal_dynamic_client();
+}
+inline void NewClient::_internal_set_dynamic_client(bool value) {
+  _has_bits_[0] |= 0x00000020u;
+  dynamic_client_ = value;
+}
+inline void NewClient::set_dynamic_client(bool value) {
+  _internal_set_dynamic_client(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.dynamic_client)
+}
+
+// required string compare_criteria = 4;
+inline bool NewClient::_internal_has_compare_criteria() const {
+  bool value = (_has_bits_[0] & 0x00000002u) != 0;
+  return value;
+}
+inline bool NewClient::has_compare_criteria() const {
+  return _internal_has_compare_criteria();
+}
+inline void NewClient::clear_compare_criteria() {
+  compare_criteria_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline const std::string& NewClient::compare_criteria() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.compare_criteria)
+  return _internal_compare_criteria();
+}
+inline void NewClient::set_compare_criteria(const std::string& value) {
+  _internal_set_compare_criteria(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.compare_criteria)
+}
+inline std::string* NewClient::mutable_compare_criteria() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.NewClient.compare_criteria)
+  return _internal_mutable_compare_criteria();
+}
+inline const std::string& NewClient::_internal_compare_criteria() const {
+  return compare_criteria_.Get();
+}
+inline void NewClient::_internal_set_compare_criteria(const std::string& value) {
+  _has_bits_[0] |= 0x00000002u;
+  compare_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void NewClient::set_compare_criteria(std::string&& value) {
+  _has_bits_[0] |= 0x00000002u;
+  compare_criteria_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TETRiS.NewClient.compare_criteria)
+}
+inline void NewClient::set_compare_criteria(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _has_bits_[0] |= 0x00000002u;
+  compare_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TETRiS.NewClient.compare_criteria)
+}
+inline void NewClient::set_compare_criteria(const char* value,
+    size_t size) {
+  _has_bits_[0] |= 0x00000002u;
+  compare_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TETRiS.NewClient.compare_criteria)
+}
+inline std::string* NewClient::_internal_mutable_compare_criteria() {
+  _has_bits_[0] |= 0x00000002u;
+  return compare_criteria_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* NewClient::release_compare_criteria() {
+  // @@protoc_insertion_point(field_release:TETRiS.NewClient.compare_criteria)
+  if (!_internal_has_compare_criteria()) {
+    return nullptr;
+  }
+  _has_bits_[0] &= ~0x00000002u;
+  return compare_criteria_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void NewClient::set_allocated_compare_criteria(std::string* compare_criteria) {
+  if (compare_criteria != nullptr) {
+    _has_bits_[0] |= 0x00000002u;
+  } else {
+    _has_bits_[0] &= ~0x00000002u;
+  }
+  compare_criteria_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), compare_criteria,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.NewClient.compare_criteria)
+}
+inline std::string* NewClient::unsafe_arena_release_compare_criteria() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:TETRiS.NewClient.compare_criteria)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  _has_bits_[0] &= ~0x00000002u;
+  return compare_criteria_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void NewClient::unsafe_arena_set_allocated_compare_criteria(
+    std::string* compare_criteria) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (compare_criteria != nullptr) {
+    _has_bits_[0] |= 0x00000002u;
+  } else {
+    _has_bits_[0] &= ~0x00000002u;
+  }
+  compare_criteria_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      compare_criteria, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.NewClient.compare_criteria)
+}
+
+// required bool compare_more_is_better = 5;
+inline bool NewClient::_internal_has_compare_more_is_better() const {
+  bool value = (_has_bits_[0] & 0x00000040u) != 0;
+  return value;
+}
+inline bool NewClient::has_compare_more_is_better() const {
+  return _internal_has_compare_more_is_better();
+}
+inline void NewClient::clear_compare_more_is_better() {
+  compare_more_is_better_ = false;
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline bool NewClient::_internal_compare_more_is_better() const {
+  return compare_more_is_better_;
+}
+inline bool NewClient::compare_more_is_better() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.compare_more_is_better)
+  return _internal_compare_more_is_better();
+}
+inline void NewClient::_internal_set_compare_more_is_better(bool value) {
+  _has_bits_[0] |= 0x00000040u;
+  compare_more_is_better_ = value;
+}
+inline void NewClient::set_compare_more_is_better(bool value) {
+  _internal_set_compare_more_is_better(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.compare_more_is_better)
+}
+
+// optional string preferred_mapping = 7;
+inline bool NewClient::_internal_has_preferred_mapping() const {
+  bool value = (_has_bits_[0] & 0x00000004u) != 0;
+  return value;
+}
+inline bool NewClient::has_preferred_mapping() const {
+  return _internal_has_preferred_mapping();
+}
+inline void NewClient::clear_preferred_mapping() {
+  preferred_mapping_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline const std::string& NewClient::preferred_mapping() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.preferred_mapping)
+  return _internal_preferred_mapping();
+}
+inline void NewClient::set_preferred_mapping(const std::string& value) {
+  _internal_set_preferred_mapping(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.preferred_mapping)
+}
+inline std::string* NewClient::mutable_preferred_mapping() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.NewClient.preferred_mapping)
+  return _internal_mutable_preferred_mapping();
+}
+inline const std::string& NewClient::_internal_preferred_mapping() const {
+  return preferred_mapping_.Get();
+}
+inline void NewClient::_internal_set_preferred_mapping(const std::string& value) {
+  _has_bits_[0] |= 0x00000004u;
+  preferred_mapping_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void NewClient::set_preferred_mapping(std::string&& value) {
+  _has_bits_[0] |= 0x00000004u;
+  preferred_mapping_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TETRiS.NewClient.preferred_mapping)
+}
+inline void NewClient::set_preferred_mapping(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _has_bits_[0] |= 0x00000004u;
+  preferred_mapping_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TETRiS.NewClient.preferred_mapping)
+}
+inline void NewClient::set_preferred_mapping(const char* value,
+    size_t size) {
+  _has_bits_[0] |= 0x00000004u;
+  preferred_mapping_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TETRiS.NewClient.preferred_mapping)
+}
+inline std::string* NewClient::_internal_mutable_preferred_mapping() {
+  _has_bits_[0] |= 0x00000004u;
+  return preferred_mapping_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* NewClient::release_preferred_mapping() {
+  // @@protoc_insertion_point(field_release:TETRiS.NewClient.preferred_mapping)
+  if (!_internal_has_preferred_mapping()) {
+    return nullptr;
+  }
+  _has_bits_[0] &= ~0x00000004u;
+  return preferred_mapping_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void NewClient::set_allocated_preferred_mapping(std::string* preferred_mapping) {
+  if (preferred_mapping != nullptr) {
+    _has_bits_[0] |= 0x00000004u;
+  } else {
+    _has_bits_[0] &= ~0x00000004u;
+  }
+  preferred_mapping_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), preferred_mapping,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.NewClient.preferred_mapping)
+}
+inline std::string* NewClient::unsafe_arena_release_preferred_mapping() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:TETRiS.NewClient.preferred_mapping)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  _has_bits_[0] &= ~0x00000004u;
+  return preferred_mapping_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void NewClient::unsafe_arena_set_allocated_preferred_mapping(
+    std::string* preferred_mapping) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (preferred_mapping != nullptr) {
+    _has_bits_[0] |= 0x00000004u;
+  } else {
+    _has_bits_[0] &= ~0x00000004u;
+  }
+  preferred_mapping_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      preferred_mapping, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.NewClient.preferred_mapping)
+}
+
+// optional string filter_criteria = 9;
+inline bool NewClient::_internal_has_filter_criteria() const {
+  bool value = (_has_bits_[0] & 0x00000008u) != 0;
+  return value;
+}
+inline bool NewClient::has_filter_criteria() const {
+  return _internal_has_filter_criteria();
+}
+inline void NewClient::clear_filter_criteria() {
+  filter_criteria_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline const std::string& NewClient::filter_criteria() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClient.filter_criteria)
+  return _internal_filter_criteria();
+}
+inline void NewClient::set_filter_criteria(const std::string& value) {
+  _internal_set_filter_criteria(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClient.filter_criteria)
+}
+inline std::string* NewClient::mutable_filter_criteria() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.NewClient.filter_criteria)
+  return _internal_mutable_filter_criteria();
+}
+inline const std::string& NewClient::_internal_filter_criteria() const {
+  return filter_criteria_.Get();
+}
+inline void NewClient::_internal_set_filter_criteria(const std::string& value) {
+  _has_bits_[0] |= 0x00000008u;
+  filter_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void NewClient::set_filter_criteria(std::string&& value) {
+  _has_bits_[0] |= 0x00000008u;
+  filter_criteria_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:TETRiS.NewClient.filter_criteria)
+}
+inline void NewClient::set_filter_criteria(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  _has_bits_[0] |= 0x00000008u;
+  filter_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:TETRiS.NewClient.filter_criteria)
+}
+inline void NewClient::set_filter_criteria(const char* value,
+    size_t size) {
+  _has_bits_[0] |= 0x00000008u;
+  filter_criteria_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:TETRiS.NewClient.filter_criteria)
+}
+inline std::string* NewClient::_internal_mutable_filter_criteria() {
+  _has_bits_[0] |= 0x00000008u;
+  return filter_criteria_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* NewClient::release_filter_criteria() {
+  // @@protoc_insertion_point(field_release:TETRiS.NewClient.filter_criteria)
+  if (!_internal_has_filter_criteria()) {
+    return nullptr;
+  }
+  _has_bits_[0] &= ~0x00000008u;
+  return filter_criteria_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void NewClient::set_allocated_filter_criteria(std::string* filter_criteria) {
+  if (filter_criteria != nullptr) {
+    _has_bits_[0] |= 0x00000008u;
+  } else {
+    _has_bits_[0] &= ~0x00000008u;
+  }
+  filter_criteria_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), filter_criteria,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.NewClient.filter_criteria)
+}
+inline std::string* NewClient::unsafe_arena_release_filter_criteria() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:TETRiS.NewClient.filter_criteria)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  _has_bits_[0] &= ~0x00000008u;
+  return filter_criteria_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void NewClient::unsafe_arena_set_allocated_filter_criteria(
+    std::string* filter_criteria) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (filter_criteria != nullptr) {
+    _has_bits_[0] |= 0x00000008u;
+  } else {
+    _has_bits_[0] &= ~0x00000008u;
+  }
+  filter_criteria_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      filter_criteria, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.NewClient.filter_criteria)
+}
+
+// -------------------------------------------------------------------
+
+// NewClientAck
+
+// required uint32 id = 1;
+inline bool NewClientAck::_internal_has_id() const {
+  bool value = (_has_bits_[0] & 0x00000001u) != 0;
+  return value;
+}
+inline bool NewClientAck::has_id() const {
+  return _internal_has_id();
+}
+inline void NewClientAck::clear_id() {
+  id_ = 0u;
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 NewClientAck::_internal_id() const {
+  return id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 NewClientAck::id() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClientAck.id)
+  return _internal_id();
+}
+inline void NewClientAck::_internal_set_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _has_bits_[0] |= 0x00000001u;
+  id_ = value;
+}
+inline void NewClientAck::set_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClientAck.id)
+}
+
+// required bool managed = 2;
+inline bool NewClientAck::_internal_has_managed() const {
+  bool value = (_has_bits_[0] & 0x00000002u) != 0;
+  return value;
+}
+inline bool NewClientAck::has_managed() const {
+  return _internal_has_managed();
+}
+inline void NewClientAck::clear_managed() {
+  managed_ = false;
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline bool NewClientAck::_internal_managed() const {
+  return managed_;
+}
+inline bool NewClientAck::managed() const {
+  // @@protoc_insertion_point(field_get:TETRiS.NewClientAck.managed)
+  return _internal_managed();
+}
+inline void NewClientAck::_internal_set_managed(bool value) {
+  _has_bits_[0] |= 0x00000002u;
+  managed_ = value;
+}
+inline void NewClientAck::set_managed(bool value) {
+  _internal_set_managed(value);
+  // @@protoc_insertion_point(field_set:TETRiS.NewClientAck.managed)
+}
+
+// -------------------------------------------------------------------
+
 // ClientRequest
 
 // required .TETRiS.ClientRequest.Type type = 1;
 inline bool ClientRequest::_internal_has_type() const {
-  bool value = (_has_bits_[0] & 0x00000004u) != 0;
+  bool value = (_has_bits_[0] & 0x00000008u) != 0;
   return value;
 }
 inline bool ClientRequest::has_type() const {
@@ -2736,7 +3783,7 @@ inline bool ClientRequest::has_type() const {
 }
 inline void ClientRequest::clear_type() {
   type_ = 0;
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline ::TETRiS::ClientRequest_Type ClientRequest::_internal_type() const {
   return static_cast< ::TETRiS::ClientRequest_Type >(type_);
@@ -2747,7 +3794,7 @@ inline ::TETRiS::ClientRequest_Type ClientRequest::type() const {
 }
 inline void ClientRequest::_internal_set_type(::TETRiS::ClientRequest_Type value) {
   assert(::TETRiS::ClientRequest_Type_IsValid(value));
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
   type_ = value;
 }
 inline void ClientRequest::set_type(::TETRiS::ClientRequest_Type value) {
@@ -2755,9 +3802,90 @@ inline void ClientRequest::set_type(::TETRiS::ClientRequest_Type value) {
   // @@protoc_insertion_point(field_set:TETRiS.ClientRequest.type)
 }
 
-// optional .TETRiS.RegularProcessInfo regular_process_info = 2;
-inline bool ClientRequest::_internal_has_regular_process_info() const {
+// optional .TETRiS.NewClient new_client = 2;
+inline bool ClientRequest::_internal_has_new_client() const {
   bool value = (_has_bits_[0] & 0x00000001u) != 0;
+  PROTOBUF_ASSUME(!value || new_client_ != nullptr);
+  return value;
+}
+inline bool ClientRequest::has_new_client() const {
+  return _internal_has_new_client();
+}
+inline void ClientRequest::clear_new_client() {
+  if (new_client_ != nullptr) new_client_->Clear();
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline const ::TETRiS::NewClient& ClientRequest::_internal_new_client() const {
+  const ::TETRiS::NewClient* p = new_client_;
+  return p != nullptr ? *p : *reinterpret_cast<const ::TETRiS::NewClient*>(
+      &::TETRiS::_NewClient_default_instance_);
+}
+inline const ::TETRiS::NewClient& ClientRequest::new_client() const {
+  // @@protoc_insertion_point(field_get:TETRiS.ClientRequest.new_client)
+  return _internal_new_client();
+}
+inline void ClientRequest::unsafe_arena_set_allocated_new_client(
+    ::TETRiS::NewClient* new_client) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(new_client_);
+  }
+  new_client_ = new_client;
+  if (new_client) {
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.ClientRequest.new_client)
+}
+inline ::TETRiS::NewClient* ClientRequest::release_new_client() {
+  auto temp = unsafe_arena_release_new_client();
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::TETRiS::NewClient* ClientRequest::unsafe_arena_release_new_client() {
+  // @@protoc_insertion_point(field_release:TETRiS.ClientRequest.new_client)
+  _has_bits_[0] &= ~0x00000001u;
+  ::TETRiS::NewClient* temp = new_client_;
+  new_client_ = nullptr;
+  return temp;
+}
+inline ::TETRiS::NewClient* ClientRequest::_internal_mutable_new_client() {
+  _has_bits_[0] |= 0x00000001u;
+  if (new_client_ == nullptr) {
+    auto* p = CreateMaybeMessage<::TETRiS::NewClient>(GetArena());
+    new_client_ = p;
+  }
+  return new_client_;
+}
+inline ::TETRiS::NewClient* ClientRequest::mutable_new_client() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.ClientRequest.new_client)
+  return _internal_mutable_new_client();
+}
+inline void ClientRequest::set_allocated_new_client(::TETRiS::NewClient* new_client) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete new_client_;
+  }
+  if (new_client) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::GetArena(new_client);
+    if (message_arena != submessage_arena) {
+      new_client = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, new_client, submessage_arena);
+    }
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  new_client_ = new_client;
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.ClientRequest.new_client)
+}
+
+// optional .TETRiS.RegularProcessInfo regular_process_info = 3;
+inline bool ClientRequest::_internal_has_regular_process_info() const {
+  bool value = (_has_bits_[0] & 0x00000002u) != 0;
   PROTOBUF_ASSUME(!value || regular_process_info_ != nullptr);
   return value;
 }
@@ -2766,7 +3894,7 @@ inline bool ClientRequest::has_regular_process_info() const {
 }
 inline void ClientRequest::clear_regular_process_info() {
   if (regular_process_info_ != nullptr) regular_process_info_->Clear();
-  _has_bits_[0] &= ~0x00000001u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline const ::TETRiS::RegularProcessInfo& ClientRequest::_internal_regular_process_info() const {
   const ::TETRiS::RegularProcessInfo* p = regular_process_info_;
@@ -2784,9 +3912,9 @@ inline void ClientRequest::unsafe_arena_set_allocated_regular_process_info(
   }
   regular_process_info_ = regular_process_info;
   if (regular_process_info) {
-    _has_bits_[0] |= 0x00000001u;
+    _has_bits_[0] |= 0x00000002u;
   } else {
-    _has_bits_[0] &= ~0x00000001u;
+    _has_bits_[0] &= ~0x00000002u;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.ClientRequest.regular_process_info)
 }
@@ -2799,13 +3927,13 @@ inline ::TETRiS::RegularProcessInfo* ClientRequest::release_regular_process_info
 }
 inline ::TETRiS::RegularProcessInfo* ClientRequest::unsafe_arena_release_regular_process_info() {
   // @@protoc_insertion_point(field_release:TETRiS.ClientRequest.regular_process_info)
-  _has_bits_[0] &= ~0x00000001u;
+  _has_bits_[0] &= ~0x00000002u;
   ::TETRiS::RegularProcessInfo* temp = regular_process_info_;
   regular_process_info_ = nullptr;
   return temp;
 }
 inline ::TETRiS::RegularProcessInfo* ClientRequest::_internal_mutable_regular_process_info() {
-  _has_bits_[0] |= 0x00000001u;
+  _has_bits_[0] |= 0x00000002u;
   if (regular_process_info_ == nullptr) {
     auto* p = CreateMaybeMessage<::TETRiS::RegularProcessInfo>(GetArena());
     regular_process_info_ = p;
@@ -2828,17 +3956,17 @@ inline void ClientRequest::set_allocated_regular_process_info(::TETRiS::RegularP
       regular_process_info = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, regular_process_info, submessage_arena);
     }
-    _has_bits_[0] |= 0x00000001u;
+    _has_bits_[0] |= 0x00000002u;
   } else {
-    _has_bits_[0] &= ~0x00000001u;
+    _has_bits_[0] &= ~0x00000002u;
   }
   regular_process_info_ = regular_process_info;
   // @@protoc_insertion_point(field_set_allocated:TETRiS.ClientRequest.regular_process_info)
 }
 
-// optional .TETRiS.RegionInfo parallel_region_info = 3;
+// optional .TETRiS.RegionInfo parallel_region_info = 4;
 inline bool ClientRequest::_internal_has_parallel_region_info() const {
-  bool value = (_has_bits_[0] & 0x00000002u) != 0;
+  bool value = (_has_bits_[0] & 0x00000004u) != 0;
   PROTOBUF_ASSUME(!value || parallel_region_info_ != nullptr);
   return value;
 }
@@ -2847,7 +3975,7 @@ inline bool ClientRequest::has_parallel_region_info() const {
 }
 inline void ClientRequest::clear_parallel_region_info() {
   if (parallel_region_info_ != nullptr) parallel_region_info_->Clear();
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline const ::TETRiS::RegionInfo& ClientRequest::_internal_parallel_region_info() const {
   const ::TETRiS::RegionInfo* p = parallel_region_info_;
@@ -2865,9 +3993,9 @@ inline void ClientRequest::unsafe_arena_set_allocated_parallel_region_info(
   }
   parallel_region_info_ = parallel_region_info;
   if (parallel_region_info) {
-    _has_bits_[0] |= 0x00000002u;
+    _has_bits_[0] |= 0x00000004u;
   } else {
-    _has_bits_[0] &= ~0x00000002u;
+    _has_bits_[0] &= ~0x00000004u;
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.ClientRequest.parallel_region_info)
 }
@@ -2880,13 +4008,13 @@ inline ::TETRiS::RegionInfo* ClientRequest::release_parallel_region_info() {
 }
 inline ::TETRiS::RegionInfo* ClientRequest::unsafe_arena_release_parallel_region_info() {
   // @@protoc_insertion_point(field_release:TETRiS.ClientRequest.parallel_region_info)
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
   ::TETRiS::RegionInfo* temp = parallel_region_info_;
   parallel_region_info_ = nullptr;
   return temp;
 }
 inline ::TETRiS::RegionInfo* ClientRequest::_internal_mutable_parallel_region_info() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000004u;
   if (parallel_region_info_ == nullptr) {
     auto* p = CreateMaybeMessage<::TETRiS::RegionInfo>(GetArena());
     parallel_region_info_ = p;
@@ -2909,9 +4037,9 @@ inline void ClientRequest::set_allocated_parallel_region_info(::TETRiS::RegionIn
       parallel_region_info = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
           message_arena, parallel_region_info, submessage_arena);
     }
-    _has_bits_[0] |= 0x00000002u;
+    _has_bits_[0] |= 0x00000004u;
   } else {
-    _has_bits_[0] &= ~0x00000002u;
+    _has_bits_[0] &= ~0x00000004u;
   }
   parallel_region_info_ = parallel_region_info;
   // @@protoc_insertion_point(field_set_allocated:TETRiS.ClientRequest.parallel_region_info)
@@ -2923,7 +4051,7 @@ inline void ClientRequest::set_allocated_parallel_region_info(::TETRiS::RegionIn
 
 // required .TETRiS.ClientResponse.Type type = 1;
 inline bool ClientResponse::_internal_has_type() const {
-  bool value = (_has_bits_[0] & 0x00000001u) != 0;
+  bool value = (_has_bits_[0] & 0x00000002u) != 0;
   return value;
 }
 inline bool ClientResponse::has_type() const {
@@ -2931,7 +4059,7 @@ inline bool ClientResponse::has_type() const {
 }
 inline void ClientResponse::clear_type() {
   type_ = 0;
-  _has_bits_[0] &= ~0x00000001u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline ::TETRiS::ClientResponse_Type ClientResponse::_internal_type() const {
   return static_cast< ::TETRiS::ClientResponse_Type >(type_);
@@ -2942,7 +4070,7 @@ inline ::TETRiS::ClientResponse_Type ClientResponse::type() const {
 }
 inline void ClientResponse::_internal_set_type(::TETRiS::ClientResponse_Type value) {
   assert(::TETRiS::ClientResponse_Type_IsValid(value));
-  _has_bits_[0] |= 0x00000001u;
+  _has_bits_[0] |= 0x00000002u;
   type_ = value;
 }
 inline void ClientResponse::set_type(::TETRiS::ClientResponse_Type value) {
@@ -2952,7 +4080,7 @@ inline void ClientResponse::set_type(::TETRiS::ClientResponse_Type value) {
 
 // optional uint32 feature_id = 2;
 inline bool ClientResponse::_internal_has_feature_id() const {
-  bool value = (_has_bits_[0] & 0x00000002u) != 0;
+  bool value = (_has_bits_[0] & 0x00000004u) != 0;
   return value;
 }
 inline bool ClientResponse::has_feature_id() const {
@@ -2960,7 +4088,7 @@ inline bool ClientResponse::has_feature_id() const {
 }
 inline void ClientResponse::clear_feature_id() {
   feature_id_ = 0u;
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline ::PROTOBUF_NAMESPACE_ID::uint32 ClientResponse::_internal_feature_id() const {
   return feature_id_;
@@ -2970,12 +4098,93 @@ inline ::PROTOBUF_NAMESPACE_ID::uint32 ClientResponse::feature_id() const {
   return _internal_feature_id();
 }
 inline void ClientResponse::_internal_set_feature_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000004u;
   feature_id_ = value;
 }
 inline void ClientResponse::set_feature_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _internal_set_feature_id(value);
   // @@protoc_insertion_point(field_set:TETRiS.ClientResponse.feature_id)
+}
+
+// optional .TETRiS.NewClientAck new_client_ack = 3;
+inline bool ClientResponse::_internal_has_new_client_ack() const {
+  bool value = (_has_bits_[0] & 0x00000001u) != 0;
+  PROTOBUF_ASSUME(!value || new_client_ack_ != nullptr);
+  return value;
+}
+inline bool ClientResponse::has_new_client_ack() const {
+  return _internal_has_new_client_ack();
+}
+inline void ClientResponse::clear_new_client_ack() {
+  if (new_client_ack_ != nullptr) new_client_ack_->Clear();
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline const ::TETRiS::NewClientAck& ClientResponse::_internal_new_client_ack() const {
+  const ::TETRiS::NewClientAck* p = new_client_ack_;
+  return p != nullptr ? *p : *reinterpret_cast<const ::TETRiS::NewClientAck*>(
+      &::TETRiS::_NewClientAck_default_instance_);
+}
+inline const ::TETRiS::NewClientAck& ClientResponse::new_client_ack() const {
+  // @@protoc_insertion_point(field_get:TETRiS.ClientResponse.new_client_ack)
+  return _internal_new_client_ack();
+}
+inline void ClientResponse::unsafe_arena_set_allocated_new_client_ack(
+    ::TETRiS::NewClientAck* new_client_ack) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(new_client_ack_);
+  }
+  new_client_ack_ = new_client_ack;
+  if (new_client_ack) {
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.ClientResponse.new_client_ack)
+}
+inline ::TETRiS::NewClientAck* ClientResponse::release_new_client_ack() {
+  auto temp = unsafe_arena_release_new_client_ack();
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::TETRiS::NewClientAck* ClientResponse::unsafe_arena_release_new_client_ack() {
+  // @@protoc_insertion_point(field_release:TETRiS.ClientResponse.new_client_ack)
+  _has_bits_[0] &= ~0x00000001u;
+  ::TETRiS::NewClientAck* temp = new_client_ack_;
+  new_client_ack_ = nullptr;
+  return temp;
+}
+inline ::TETRiS::NewClientAck* ClientResponse::_internal_mutable_new_client_ack() {
+  _has_bits_[0] |= 0x00000001u;
+  if (new_client_ack_ == nullptr) {
+    auto* p = CreateMaybeMessage<::TETRiS::NewClientAck>(GetArena());
+    new_client_ack_ = p;
+  }
+  return new_client_ack_;
+}
+inline ::TETRiS::NewClientAck* ClientResponse::mutable_new_client_ack() {
+  // @@protoc_insertion_point(field_mutable:TETRiS.ClientResponse.new_client_ack)
+  return _internal_mutable_new_client_ack();
+}
+inline void ClientResponse::set_allocated_new_client_ack(::TETRiS::NewClientAck* new_client_ack) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete new_client_ack_;
+  }
+  if (new_client_ack) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::GetArena(new_client_ack);
+    if (message_arena != submessage_arena) {
+      new_client_ack = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, new_client_ack, submessage_arena);
+    }
+    _has_bits_[0] |= 0x00000001u;
+  } else {
+    _has_bits_[0] &= ~0x00000001u;
+  }
+  new_client_ack_ = new_client_ack;
+  // @@protoc_insertion_point(field_set_allocated:TETRiS.ClientResponse.new_client_ack)
 }
 
 // -------------------------------------------------------------------
@@ -3192,6 +4401,10 @@ PushResponse::region_throughputs() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
