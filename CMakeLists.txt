@@ -25,10 +25,11 @@ target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
 # libtetris client new version
 add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc push_message_listener.cc path_util.cc util.cc debug_util.cc)
-target_link_libraries(tetrisclient Threads::Threads ${CMAKE_DL_LIBS} ${Protobuf_LIBRARIES})
+target_link_libraries(tetrisclient ${Protobuf_LIBRARIES})
 
 # tetris server binary
-add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc path_util.cc util.cc)
+add_executable(tetrisserver tetris_server.cc algorithm.cc equivalence.cc debug_util.cc path_util.cc util.cc proto/Tetris.pb.cc)
+target_link_libraries(tetrisserver ${Protobuf_LIBRARIES})
 
 # tetris control binary
 add_executable(tetrisctl tetris_ctl.cc path_util.cc util.cc)
