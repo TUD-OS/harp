@@ -4,7 +4,7 @@
 
 #include "tetris_client.h"
 #include "tetris_feature.h"
-#include "push_server.h"
+#include "push_message_listener.h"
 #include "protobuf_util.h"
 
 #include <memory>
@@ -28,7 +28,7 @@ void TETRiS::Client::bind(TETRiS::Feature *feature) {
     feature->accept(this);
     if (feature->need_handshake()) {
         auto feature_id = feature->handshake();
-        _push_server.add_subscriber(feature_id, feature);
+        _push_message_listener.add_subscriber(feature_id, feature);
     }
 }
 
@@ -38,7 +38,7 @@ TETRiS::ClientResponse TETRiS::Client::send(const TETRiS::ClientRequest &msg) {
     return response;
 }
 
-TETRiS::Client::Client(const std::string &server_socket_path) : _push_server(get_push_server_socket_path()),
+TETRiS::Client::Client(const std::string &server_socket_path) : _push_message_listener(get_push_listener_socket_path()),
                                                                 _managed(false) {
     _logger = debug::Logger::get();
     try {
@@ -49,9 +49,9 @@ TETRiS::Client::Client(const std::string &server_socket_path) : _push_server(get
     }
 }
 
-std::string TETRiS::Client::get_push_server_socket_path() {
+std::string TETRiS::Client::get_push_listener_socket_path() {
     std::stringstream string_stream{};
-    string_stream << "/tmp/tetris_push_server_" << getpid();
+    string_stream << "/tmp/tetris_push_listener_" << getpid();
     return string_stream.str();
 }
 

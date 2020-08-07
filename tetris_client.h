@@ -6,7 +6,7 @@
 #define __TETRIS_CLIENT_H__
 
 #include "proto/Tetris.pb.h"
-#include "push_server.h"
+#include "push_message_listener.h"
 #include "connection.h"
 #include "debug_util.h"
 
@@ -58,7 +58,7 @@ namespace TETRiS {
          * \brief Builds the socket path for the push server based on the application PID.
          * \return socket path for the push server.
          */
-        static std::string get_push_server_socket_path();
+        static std::string get_push_listener_socket_path();
 
     private:
         /**
@@ -75,8 +75,8 @@ namespace TETRiS {
         /// \brief Client instance.
         static std::unique_ptr<Client> _instance;
 
-        /// \brief Push server, listening for requests from the TETRiS server.
-        PushServer _push_server;
+        /// \brief Push message listener, listening for requests from the TETRiS server.
+        PushMessageListener _push_message_listener;
 
         /// \brief Permanent connection to the TETRiS server.
         std::unique_ptr<Connection> _tetris_server_connection;

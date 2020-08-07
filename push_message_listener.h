@@ -2,34 +2,34 @@
 // Created by dylan on 06/08/2020.
 //
 
-#ifndef __PUSH_SERVER_H__
-#define __PUSH_SERVER_H__
+#ifndef __PUSH_MESSAGE_LISTENER_H__
+#define __PUSH_MESSAGE_LISTENER_H__
 
 #include "tetris_feature.h"
 #include "socket.h"
 
 namespace TETRiS {
     /**
-     * \brief TETRiS Push Server.
+     * \brief TETRiS Push Message Listener.
      *
-     * A push server runs in a TETRiS client instance in order to receive request from the TETRiS server. It handles
-     * logic for redistributing message to the corresponding TETRiS feature.
+     * A push message listener runs in a TETRiS client instance in order to receive request from the TETRiS server.
+     * It handles the logic responsible for the redistribution of message to TETRiS features.
      */
-    class PushServer {
+    class PushMessageListener {
     public:
         /**
-         * \brief Builds a PushServer.
+         * \brief Builds a PushMessageListener.
          *
-         * Behind the scene, a thread is launched to listen on the push server.
+         * Behind the scene, a thread is launched to listen on the push message listener.
          *
-         * \param [in] socket_path Path to the socket to run the server on.
+         * \param [in] socket_path Path to the socket to run the listener on.
          */
-        explicit PushServer(const std::string &socket_path);
+        explicit PushMessageListener(const std::string &socket_path);
 
         /**
-         * \brief Destroys the push server, closing the socket and joining the listener thread.
+         * \brief Destroys the push message listener, closing the socket and joining the listener thread.
          */
-        ~PushServer();
+        ~PushMessageListener();
 
         /**
          * \brief Adds a TETRiS feature with its id to the subscribers map.
@@ -52,8 +52,8 @@ namespace TETRiS {
          */
         static void *listening(void *args);
 
-        /// \brief Push server socket.
-        Socket _server;
+        /// \brief Push message listening socket.
+        Socket _listening_socket;
 
         /// \brief Listener thread id.
         pthread_t _listener_thread{};
@@ -63,4 +63,4 @@ namespace TETRiS {
     };
 }
 
-#endif //__PUSH_SERVER_H__
+#endif //__PUSH_MESSAGE_LISTENER_H__

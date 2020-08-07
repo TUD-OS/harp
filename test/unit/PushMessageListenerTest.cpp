@@ -4,11 +4,11 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <push_server.h>
+#include <push_message_listener.h>
 #include <connection.h>
 #include <protobuf_util.h>
 
-#define SOCKET_PATH "/tmp/test_socket_tetris_push_server"
+#define SOCKET_PATH "/tmp/test_socket_tetris_push_listener"
 
 class MockFeature : public TETRiS::Feature {
 public:
@@ -17,7 +17,7 @@ public:
     MOCK_METHOD(TETRiS::FeatureID, handshake, ());
 };
 
-class PushServerTest : public ::testing::Test {
+class PushMessageListenerTest : public ::testing::Test {
 protected:
     void SetUp() override {
     }
@@ -25,10 +25,10 @@ protected:
     void TearDown() override {
     }
 
-    TETRiS::PushServer push_server{SOCKET_PATH};
+    TETRiS::PushMessageListener push_listener{SOCKET_PATH};
 };
 
-TEST_F(PushServerTest, CheckForwardingMechanism) {
+TEST_F(PushMessageListenerTest, CheckForwardingMechanism) {
     MockFeature mock_1, mock_2;
     EXPECT_CALL(mock_1, forward).Times(1).WillOnce([]() {
         auto response = TETRiS::PushResponse{};
@@ -37,12 +37,12 @@ TEST_F(PushServerTest, CheckForwardingMechanism) {
     });
     EXPECT_CALL(mock_2, forward).Times(0);
 
-    push_server.add_subscriber(0, &mock_1);
-    push_server.add_subscriber(1, &mock_2);
+    push_listener.add_subscriber(0, &mock_1);
+    push_listener.add_subscriber(1, &mock_2);
 
     auto request = TETRiS::PushRequest{};
     request.set_feature_id(0);
-    auto response = push_server.forward(request);
+    auto response = push_listener.forward(request);
 
     ASSERT_EQ(TETRiS::PushResponse::ACKNOWLEDGE, response.type());
 }
@@ -62,7 +62,7 @@ TETRiS::PushResponse SendDummyMessage() {
     return response;
 }
 
-TEST_F(PushServerTest, CheckListener) {
+TEST_F(PushMessageListenerTest, CheckListener) {
     MockFeature mock_1, mock_2;
     EXPECT_CALL(mock_1, forward).Times(1).WillOnce([]() {
         auto response = TETRiS::PushResponse{};
@@ -71,8 +71,8 @@ TEST_F(PushServerTest, CheckListener) {
     });
     EXPECT_CALL(mock_2, forward).Times(0);
 
-    push_server.add_subscriber(0, &mock_1);
-    push_server.add_subscriber(1, &mock_2);
+    push_listener.add_subscriber(0, &mock_1);
+    push_listener.add_subscriber(1, &mock_2);
 
     auto response = SendDummyMessage();
 
