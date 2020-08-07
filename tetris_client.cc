@@ -10,15 +10,15 @@
 #include <memory>
 #include <sstream>
 
-std::unique_ptr<TETRiS::Client> TETRiS::Client::_instance;
+std::unique_ptr<TETRiS::Client> TETRiS::ClientProvider::_instance;
 
-void TETRiS::Client::initialize(const std::string &server_socket_path) {
-    _instance.reset(new TETRiS::Client{server_socket_path});
+void TETRiS::ClientProvider::initialize(const std::string &socket_path) {
+    _instance = std::make_unique<TETRiS::Client>(socket_path);
 }
 
-void TETRiS::Client::finalize() { _instance.reset(); }
+void TETRiS::ClientProvider::finalize() { _instance.reset(); }
 
-TETRiS::Client *TETRiS::Client::get_instance() { return _instance.get(); }
+TETRiS::Client *TETRiS::ClientProvider::get_instance() { return _instance.get(); }
 
 void TETRiS::Client::bind(TETRiS::Feature *feature) {
     // If the client is not connected to the server, do not bind the feature.

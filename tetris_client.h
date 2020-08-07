@@ -14,28 +14,12 @@ namespace TETRiS {
     // Predefining Feature.
     class Feature;
 
-    /**
-     * \brief TETRiS Client singleton.
-     */
     class Client {
     public:
         /**
-         * \brief Initializes the TETRiS client library.
-         *
-         * \param server_socket_path TETRiS server socket path.
+         * \brief Builds a concrete client.
          */
-        static void initialize(const std::string &server_socket_path);
-
-        /**
-         * \brief Finalizes the TETRiS client library.
-         */
-        static void finalize();
-
-        /**
-         * \brief Gets the TETRiS client instance.
-         * \return Pointer to the TETRiS client instance.
-         */
-        static Client *get_instance();
+        explicit Client(const std::string &server_socket_path);
 
         /**
          * \brief Binds a TETRiS feature to the TETRiS client.
@@ -45,14 +29,14 @@ namespace TETRiS {
          *
          * \param feature Pointer to the TETRiS feature.
          */
-        void bind(TETRiS::Feature *feature);
+        virtual void bind(TETRiS::Feature *feature);
 
         /**
          * \brief Sends a client request to the TETRiS server.
          * \param msg Client request to send.
          * \return Response from the TETRiS server.
          */
-        ClientResponse send(const ClientRequest &msg);
+        virtual ClientResponse send(const ClientRequest &msg);
 
         /**
          * \brief Builds the socket path for the push server based on the application PID.
@@ -62,18 +46,10 @@ namespace TETRiS {
 
     private:
         /**
-         * \brief Default constructor for building Client.
-         */
-        Client(const std::string &server_socket_path);
-
-        /**
          * \brief Sends a NewClient command to the TETRiS server.
          * \return true if the TETRiS manaager handles this client.
          */
         bool send_new_client_command();
-
-        /// \brief Client instance.
-        static std::unique_ptr<Client> _instance;
 
         /// \brief Push message listener, listening for requests from the TETRiS server.
         PushMessageListener _push_message_listener;
@@ -86,6 +62,35 @@ namespace TETRiS {
 
         /// \brief If true, the client is connected to the TETRiS server and is managed.
         bool _managed;
+    };
+
+    /**
+     * \brief TETRiS Client singleton.
+     */
+    class ClientProvider {
+    public:
+        /**
+         * \brief Initializes a TETRiS client.
+         *
+         * \param server_socket_path TETRiS server socket path.
+         */
+        static void initialize(const std::string &socket_path);
+
+        /**
+         * \brief Finalizes the TETRiS client.
+         */
+        static void finalize();
+
+        /**
+         * \brief Gets the TETRiS client instance.
+         * \return Pointer to the TETRiS client instance.
+         */
+        static Client *get_instance();
+
+    private:
+        /// \brief Client instance.
+        static std::unique_ptr<Client> _instance;
+
     };
 }
 

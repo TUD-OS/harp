@@ -45,11 +45,11 @@ protected:
         _mock_tetris_server.open("mock_tetris_server");
         _mock_tetris_server.listening();
         pthread_create(&_listening_thread, nullptr, listening, &_mock_tetris_server);
-        TETRiS::Client::initialize("mock_tetris_server");
+        TETRiS::ClientProvider::initialize("mock_tetris_server");
     }
 
     void TearDown() override {
-        TETRiS::Client::finalize();
+        TETRiS::ClientProvider::finalize();
         pthread_join(_listening_thread, nullptr);
     }
     Socket _mock_tetris_server;
@@ -74,7 +74,7 @@ TETRiS::PushResponse SendMessage(const TETRiS::FeatureID& feature_id) {
 TEST_F(TetrisClientIntegrationTest, CheckBinding) {
     MockFeature mock_1;
     EXPECT_CALL(mock_1, need_handshake).Times(1).WillOnce([]() { return false; });
-    TETRiS::Client::get_instance()->bind(&mock_1);
+    TETRiS::ClientProvider::get_instance()->bind(&mock_1);
     ASSERT_TRUE(mock_1.is_bound());
 }
 
@@ -89,7 +89,7 @@ TEST_F(TetrisClientIntegrationTest, CheckPushServerForwarding) {
     EXPECT_CALL(mock_1, need_handshake).Times(1).WillOnce([]() { return true; });
     EXPECT_CALL(mock_1, handshake).Times(1).WillOnce([attributed_feature_id]() { return attributed_feature_id; });
 
-    TETRiS::Client::get_instance()->bind(&mock_1);
+    TETRiS::ClientProvider::get_instance()->bind(&mock_1);
 
     auto response = SendMessage(attributed_feature_id);
     ASSERT_EQ(TETRiS::PushResponse::ACKNOWLEDGE, response.type());
