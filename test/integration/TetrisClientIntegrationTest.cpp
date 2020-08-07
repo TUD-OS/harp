@@ -17,19 +17,43 @@ public:
     MOCK_METHOD(TETRiS::FeatureID, handshake, ());
 };
 
+void *listening(void *args) {
+    auto socket = reinterpret_cast<Socket *>(args);
+    int cl;
+    // Accept connection on the socket.
+    sockaddr_un in_sock{};
+    socklen_t in_sock_size = sizeof(in_sock);
+    int infd = ::accept(socket->fd(), reinterpret_cast<sockaddr *>(&in_sock), &in_sock_size);
+    if (infd == -1)
+        return nullptr;
+    Connection in_conn(infd, in_sock);
+    auto request = protobuf_util::Receive<TETRiS::ClientRequest>(in_conn.locked());
+    auto response = TETRiS::ClientResponse{};
+    response.set_type(TETRiS::ClientResponse::TETRIS_NEW_CLIENT_ACK);
+    auto new_client_ack_msg = response.mutable_new_client_ack();
+    new_client_ack_msg->set_managed(true);
+    new_client_ack_msg->set_id(0);
+    protobuf_util::Send(in_conn.locked(), response);
+    return nullptr;
+}
+
+
 class TetrisClientIntegrationTest : public ::testing::Test {
 protected:
     void SetUp() override {
         unlink("mock_tetris_server");
         _mock_tetris_server.open("mock_tetris_server");
         _mock_tetris_server.listening();
+        pthread_create(&_listening_thread, nullptr, listening, &_mock_tetris_server);
         TETRiS::Client::initialize("mock_tetris_server");
     }
 
     void TearDown() override {
         TETRiS::Client::finalize();
+        pthread_join(_listening_thread, nullptr);
     }
     Socket _mock_tetris_server;
+    pthread_t _listening_thread;
 };
 
 TETRiS::PushResponse SendMessage(const TETRiS::FeatureID& feature_id) {
@@ -48,6 +72,13 @@ TETRiS::PushResponse SendMessage(const TETRiS::FeatureID& feature_id) {
 }
 
 TEST_F(TetrisClientIntegrationTest, CheckBinding) {
+    MockFeature mock_1;
+    EXPECT_CALL(mock_1, need_handshake).Times(1).WillOnce([]() { return false; });
+    TETRiS::Client::get_instance()->bind(&mock_1);
+    ASSERT_TRUE(mock_1.is_bound());
+}
+
+TEST_F(TetrisClientIntegrationTest, CheckPushServerForwarding) {
     MockFeature mock_1;
     TETRiS::FeatureID attributed_feature_id = 64;
     EXPECT_CALL(mock_1, forward).Times(1).WillOnce([]() {

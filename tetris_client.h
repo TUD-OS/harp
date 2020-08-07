@@ -8,6 +8,7 @@
 #include "proto/Tetris.pb.h"
 #include "push_server.h"
 #include "connection.h"
+#include "debug_util.h"
 
 namespace TETRiS {
     // Predefining Feature.
@@ -65,6 +66,12 @@ namespace TETRiS {
          */
         Client(const std::string &server_socket_path);
 
+        /**
+         * \brief Sends a NewClient command to the TETRiS server.
+         * \return true if the TETRiS manaager handles this client.
+         */
+        bool send_new_client_command();
+
         /// \brief Client instance.
         static std::unique_ptr<Client> _instance;
 
@@ -73,6 +80,12 @@ namespace TETRiS {
 
         /// \brief Permanent connection to the TETRiS server.
         std::unique_ptr<Connection> _tetris_server_connection;
+
+        /// \brief Pointer to the debug logger.
+        debug::LoggerPtr _logger;
+
+        /// \brief If true, the client is connected to the TETRiS server and is managed.
+        bool _managed;
     };
 }
 
