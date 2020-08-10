@@ -10,17 +10,17 @@
 #include <memory>
 #include <sstream>
 
-std::unique_ptr<TETRiS::Client> TETRiS::ClientProvider::_instance;
+std::unique_ptr<TETRiS::ConcreteClient> TETRiS::ClientProvider::_instance;
 
 void TETRiS::ClientProvider::initialize(const std::string &socket_path) {
-    _instance = std::make_unique<TETRiS::Client>(socket_path);
+    _instance = std::make_unique<TETRiS::ConcreteClient>(socket_path);
 }
 
 void TETRiS::ClientProvider::finalize() { _instance.reset(); }
 
 TETRiS::Client *TETRiS::ClientProvider::get_instance() { return _instance.get(); }
 
-void TETRiS::Client::bind(TETRiS::Feature *feature) {
+void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature) {
     // If the client is not connected to the server, do not bind the feature.
     if (!_managed)
         return;
@@ -32,14 +32,15 @@ void TETRiS::Client::bind(TETRiS::Feature *feature) {
     }
 }
 
-TETRiS::ClientResponse TETRiS::Client::send(const TETRiS::ClientRequest &msg) {
+TETRiS::ClientResponse TETRiS::ConcreteClient::send(const TETRiS::ClientRequest &msg) {
     protobuf_util::Send(_tetris_server_connection->locked(), msg);
     auto response = protobuf_util::Receive<ClientResponse>(_tetris_server_connection->locked());
     return response;
 }
 
-TETRiS::Client::Client(const std::string &server_socket_path) : _push_message_listener(get_push_listener_socket_path()),
-                                                                _managed(false) {
+TETRiS::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
+        : Client(), _push_message_listener(get_push_listener_socket_path()),
+          _managed(false) {
     _logger = debug::Logger::get();
     try {
         _tetris_server_connection = std::make_unique<Connection>(server_socket_path);
@@ -49,7 +50,7 @@ TETRiS::Client::Client(const std::string &server_socket_path) : _push_message_li
     }
 }
 
-std::string TETRiS::Client::get_push_listener_socket_path() {
+std::string TETRiS::ConcreteClient::get_push_listener_socket_path() {
     std::stringstream string_stream{};
     string_stream << "/tmp/tetris_push_listener_" << getpid();
     return string_stream.str();
@@ -65,7 +66,7 @@ std::map<std::string, std::string> retrieve_env_variables() {
     return env_variables;
 }
 
-bool TETRiS::Client::send_new_client_command() {
+bool TETRiS::ConcreteClient::send_new_client_command() {
 
     auto env_variables = retrieve_env_variables();
 

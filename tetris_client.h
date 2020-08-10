@@ -17,11 +17,6 @@ namespace TETRiS {
     class Client {
     public:
         /**
-         * \brief Builds a concrete client.
-         */
-        explicit Client(const std::string &server_socket_path);
-
-        /**
          * \brief Binds a TETRiS feature to the TETRiS client.
          *
          * The binding procedure includes handshaking with the TETRiS server if the feature needs to subscribe to
@@ -29,14 +24,32 @@ namespace TETRiS {
          *
          * \param feature Pointer to the TETRiS feature.
          */
-        virtual void bind(TETRiS::Feature *feature);
+        virtual void bind(TETRiS::Feature *feature) = 0;
 
         /**
          * \brief Sends a client request to the TETRiS server.
          * \param msg Client request to send.
          * \return Response from the TETRiS server.
          */
-        virtual ClientResponse send(const ClientRequest &msg);
+        virtual ClientResponse send(const ClientRequest &msg) = 0;
+    };
+
+    class ConcreteClient : public Client {
+    public:
+        /**
+         * \brief Builds a concrete client.
+         */
+        explicit ConcreteClient(const std::string &server_socket_path);
+
+        /**
+         * \copydoc bind(TETRiS::Feature *feature)
+         */
+        void bind(TETRiS::Feature *feature) override;
+
+        /**
+         * \copydoc send(const ClientRequest &msg)
+         */
+        ClientResponse send(const ClientRequest &msg) override;
 
         /**
          * \brief Builds the socket path for the push server based on the application PID.
@@ -89,7 +102,7 @@ namespace TETRiS {
 
     private:
         /// \brief Client instance.
-        static std::unique_ptr<Client> _instance;
+        static std::unique_ptr<ConcreteClient> _instance;
 
     };
 }

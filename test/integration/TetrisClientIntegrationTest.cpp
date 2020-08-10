@@ -57,7 +57,7 @@ protected:
 };
 
 TETRiS::PushResponse SendMessage(const TETRiS::FeatureID& feature_id) {
-    Connection in_conn{TETRiS::Client::get_push_listener_socket_path()};
+    Connection in_conn{TETRiS::ConcreteClient::get_push_listener_socket_path()};
 
     // Prepare the command.
     TETRiS::PushRequest request{};
