@@ -63,7 +63,7 @@ namespace TETRiS {
          * \param msg PushRequest received.
          * \return PushResponse to the request.
          */
-        virtual PushResponse forward(const PushRequest &msg) const = 0;
+        virtual PushResponse forward(const PushRequest &msg) = 0;
 
         /**
          * \brief Checks if the feature needs a handshake.

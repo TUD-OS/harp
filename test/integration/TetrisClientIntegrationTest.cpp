@@ -13,7 +13,7 @@
 
 class MockFeature : public TETRiS::Feature {
 public:
-    MOCK_METHOD(TETRiS::PushResponse, forward, (const TETRiS::PushRequest &msg), (const));
+    MOCK_METHOD(TETRiS::PushResponse, forward, (const TETRiS::PushRequest &msg));
     MOCK_METHOD(bool, need_handshake, (), (const));
     MOCK_METHOD(TETRiS::FeatureID, handshake, ());
 };
