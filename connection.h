@@ -169,7 +169,10 @@ class Connection : public Lockable<Connection>
         }
         // Read the vector size through the socket.
         ssize_t vector_size = 0;
-        read(vector_size);
+        InState read_state = read(vector_size);
+        if (read_state == InState::CLOSED)
+            return InState::CLOSED;
+        // Resize the vector.
         data.resize(vector_size);
         // Read the vector through the socket.
         ssize_t size = ::read(_fd, data.data(), data.size());
@@ -210,7 +213,9 @@ class Connection : public Lockable<Connection>
         }
         // Write the size of the vector before sending it.
         ssize_t vector_size = data.size();
-        write(vector_size);
+        OutState write_state = write(vector_size);
+        if (write_state != OutState::DONE)
+            return write_state;
         // Write the data contained in the vector.
         ssize_t size = ::write(_fd, data.data(), data.size());
         if (size == -1) {
