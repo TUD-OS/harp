@@ -413,102 +413,120 @@ class Manager
         bool done = false;
         bool close = false;
 
-        auto request = protobuf_util::Receive<TETRiS::ClientRequest>(conn->locked());
+        while (!done) {
+            TETRiS::ClientRequest request{};
+            auto res = protobuf_util::Receive<TETRiS::ClientRequest>(conn->locked(), request);
+            if (res == Connection::InState::DONE) {
+                /* We are done processing. So return. */
+                done = true;
+            } else if (res == Connection::InState::CLOSED) {
+                /* We are done processing and the remote site closed the
+                 * connection. */
+                close = true;
+                done = true;
+            } else {
+                /* There is some data to process. Handle it. */
+                switch (request.type()) {
+                    case TETRiS::ClientRequest::TETRIS_NEW_CLIENT: {
+                        int pid = request.new_client().pid();
+                        std::string exec = string_util::strip(path_util::basename(request.new_client().exec()));
+                        bool managed;
+                        try {
+                            logger->always("New client registered: '%s' [%d] (ID: %d)\n", exec.c_str(), pid, fd);
 
-        /* There is some data to process. Handle it. */
-        switch (request.type()) {
-            case TETRiS::ClientRequest::TETRIS_NEW_CLIENT: {
-                int pid = request.new_client().pid();
-                std::string exec = string_util::strip(path_util::basename(request.new_client().exec()));
-                bool managed;
-                try {
-                    logger->always("New client registered: '%s' [%d] (ID: %d)\n", exec.c_str(), pid, fd);
+                            /* Update the client data. */
+                            c.pid = pid;
+                            c.exec = exec;
+                            c.dynamic_client = request.new_client().dynamic_client();
+                            c.mappings = _mappings.at(exec);
 
-                    /* Update the client data. */
-                    c.pid = pid;
-                    c.exec = exec;
-                    c.dynamic_client = request.new_client().dynamic_client();
-                    c.mappings = _mappings.at(exec);
+                            c.comp = Client::Comp(string_util::strip(request.new_client().compare_criteria()),
+                                                  request.new_client().compare_more_is_better());
 
-                    c.comp = Client::Comp(string_util::strip(request.new_client().compare_criteria()),
-                                      request.new_client().compare_more_is_better());
+                            logger->info(" * criteria: %s\n", c.comp.repr().c_str());
 
-                    logger->info(" * criteria: %s\n", c.comp.repr().c_str());
+                            if (request.new_client().has_filter_criteria())
+                                c.filter = Filter(request.new_client().filter_criteria());
 
-                    if (request.new_client().has_filter_criteria())
-                        c.filter = Filter(request.new_client().filter_criteria());
+                            logger->info(" * filter: %s\n", c.filter.repr().c_str());
 
-                    logger->info(" * filter: %s\n", c.filter.repr().c_str());
+                            if (request.new_client().has_preferred_mapping()) {
+                                std::string preferred_mapping = string_util::strip(
+                                        request.new_client().preferred_mapping());
+                                c.update_mapping(use_preferred_mapping(c, preferred_mapping));
+                            } else {
+                                c.update_mapping(select_best_mapping(c));
+                            }
 
-                    if (request.new_client().has_preferred_mapping()) {
-                        std::string preferred_mapping = string_util::strip(request.new_client().preferred_mapping());
-                        c.update_mapping(use_preferred_mapping(c, preferred_mapping));
-                    } else {
-                        c.update_mapping(select_best_mapping(c));
+                            logger->info(" * mapping: %s (%.0f@%s) [%s]\n", c.active_mapping.name.c_str(),
+                                         c.active_mapping.characteristic(c.comp.criteria()), c.comp.repr().c_str(),
+                                         c.active_mapping.equivalence_class().name().c_str());
+                            logger->info(" * thread placement: %s\n", c.dynamic_client ? "CFS" : "static");
+
+                            /* Add the main thread to the client */
+                            c.new_thread("@main", c.pid);
+
+                            /* We will manage this client. */
+                            managed = true;
+                        } catch (std::out_of_range &) {
+                            logger->error("Unknown client: '%s' [%i]\n", exec.c_str(), pid);
+                            managed = false;
+                        } catch (NoMappingError &) {
+                            logger->warning("Couldn't find a proper mapping for client: '%s' [%i]\n", exec.c_str(),
+                                            pid);
+                            managed = false;
+                        }
+
+                        /* We need to acknowledge this message. */
+                        TETRiS::ClientResponse ack{};
+                        ack.set_type(TETRiS::ClientResponse::TETRIS_NEW_CLIENT_ACK);
+                        ack.mutable_new_client_ack()->set_id(fd);
+                        ack.mutable_new_client_ack()->set_managed(managed);
+
+                        if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
+                            logger->error("Failed to acknowledge the new-client message\n");
+                            managed = false;
+                        }
+
+                        /* If we don't manage this client we can close its connection. */
+                        close = !managed;
+                        break;
                     }
+                    case TetrisData::Operations::NEW_THREAD: {
+                        TetrisData message{};
+                        int tid = message.new_thread_data.tid;
+                        std::string name = string_util::strip(message.new_thread_data.name);
+                        bool managed;
+                        try {
+                            /* Update the client data. */
+                            c.new_thread(name, tid);
+                            managed = true;
+                        } catch (std::out_of_range) {
+                            logger->error("Unknown thread: '%s' [%i] for client '%s'\n", name.c_str(), tid,
+                                          c.exec.c_str());
+                            managed = false;
+                        }
 
-                    logger->info(" * mapping: %s (%.0f@%s) [%s]\n", c.active_mapping.name.c_str(),
-                            c.active_mapping.characteristic(c.comp.criteria()), c.comp.repr().c_str(),
-                            c.active_mapping.equivalence_class().name().c_str());
-                    logger->info(" * thread placement: %s\n", c.dynamic_client ? "CFS" : "static");
+                        /* We need to acknowledge this message. */
+                        TetrisData ack;
+                        ack.op = TetrisData::NEW_THREAD_ACK;
+                        ack.new_thread_ack_data.managed = managed;
 
-                    /* Add the main thread to the client */
-                    c.new_thread("@main", c.pid);
+                        if (conn->write(ack) != Connection::OutState::DONE)
+                            logger->error("Failed to acknowledge the new-thread message\n");
 
-                    /* We will manage this client. */
-                    managed = true;
-                } catch (std::out_of_range&) {
-                    logger->error("Unknown client: '%s' [%i]\n", exec.c_str(), pid);
-                    managed = false;
-                } catch (NoMappingError&) {
-                    logger->warning("Couldn't find a proper mapping for client: '%s' [%i]\n", exec.c_str(), pid);
-                    managed = false;
+                        break;
+                    }
+                    default:
+                        logger->warning("Other message received\n");
                 }
-
-                /* We need to acknowledge this message. */
-                TETRiS::ClientResponse ack{};
-                ack.set_type(TETRiS::ClientResponse::TETRIS_NEW_CLIENT_ACK);
-                ack.mutable_new_client_ack()->set_id(fd);
-                ack.mutable_new_client_ack()->set_id(managed);
-
-                protobuf_util::Send(conn->locked(), ack);
-
-                /* If we don't manage this client we can close its connection. */
-                close = !managed;
-                break;
             }
-            case TetrisData::Operations::NEW_THREAD: {
-                TetrisData message{};
-                int tid = message.new_thread_data.tid;
-                std::string name = string_util::strip(message.new_thread_data.name);
-                bool managed;
-                try {
-                    /* Update the client data. */
-                    c.new_thread(name, tid);
-                    managed = true;
-                } catch (std::out_of_range) {
-                    logger->error("Unknown thread: '%s' [%i] for client '%s'\n", name.c_str(), tid, c.exec.c_str());
-                    managed = false;
-                }
-
-                /* We need to acknowledge this message. */
-                TetrisData ack;
-                ack.op = TetrisData::NEW_THREAD_ACK;
-                ack.new_thread_ack_data.managed = managed;
-
-                if (conn->write(ack) != Connection::OutState::DONE)
-                    logger->error("Failed to acknowledge the new-thread message\n");
-
-                break;
-            }
-            default:
-                logger->warning("Other message received\n");
         }
         return close;
     } catch (std::out_of_range) {
         logger->warning("Received message for unknown client %i\n", fd);
         return true;
-    } catch (std::runtime_error& e) {
+    } catch (std::runtime_error &e) {
         logger->warning("Error working with message for client %i: %s", fd, e.what());
         return true;
     }
