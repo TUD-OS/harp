@@ -5,6 +5,7 @@
 #include "push_message_listener.h"
 #include "connection.h"
 #include "protobuf_util.h"
+#include "proto/Tetris.pb.h"
 
 TETRiS::PushMessageListener::PushMessageListener(const std::string &socket_path) : _listener_thread(0) {
     _listening_socket.open(socket_path);

@@ -2,7 +2,7 @@
 // Created by dylan on 06/08/2020.
 //
 
-#include "tetris_feature.h"
+#include "tetris_client.h"
 
 TETRiS::Feature::Feature() : _client(nullptr) {}
 

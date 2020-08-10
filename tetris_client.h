@@ -5,17 +5,94 @@
 #ifndef __TETRIS_CLIENT_H__
 #define __TETRIS_CLIENT_H__
 
-#include "proto/Tetris.pb.h"
-#include "push_message_listener.h"
-#include "connection.h"
-#include "debug_util.h"
+#include <string>
+#include <memory>
 
 namespace TETRiS {
-    // Predefining Feature.
-    class Feature;
 
+    // Predefining classes.
+    class Client;
+    class ClientRequest;
+    class ClientResponse;
+    class PushRequest;
+    class PushResponse;
+
+    /// \brief A feature ID is used to forward request from the push server to the corresponding feature.
+    using FeatureID = uint32_t;
+
+    /**
+     * \brief TETRiS Feature abstract class.
+     *
+     * A TETRiS feature is a user of the TETRiS system. A feature is bound to the TETRiS client that runs on
+     * the application side. This binding procedure allows the feature to communicate with the TETRiS server and to
+     * receive push notifications if needed.
+     */
+    class Feature {
+    public:
+        /**
+         * \brief Builds a feature.
+         */
+        Feature();
+
+        /**
+         * \brief Accepts the TETRiS client to bind the feature.
+         * \param client Pointer to the client.
+         */
+        void accept(Client *client);
+
+        /**
+         * \brief Checks if the feature is bound to a TETRiS client.
+         *
+         * This method can be used to check if the feature is connected.
+         *
+         * \return true if bounded, false otherwise.
+         */
+        bool is_bound() const;
+
+        /**
+         * \brief Forwards a message to the feature.
+         *
+         * Called from the push listener thread when a command is received.
+         *
+         * \param msg PushRequest received.
+         * \return PushResponse to the request.
+         */
+        virtual PushResponse forward(const PushRequest &msg) const = 0;
+
+        /**
+         * \brief Checks if the feature needs a handshake.
+         *
+         * A handshake is only needed to subscribe to push notifications from the server.
+         *
+         * \return true if the feature needs a handshake, false otherwise.
+         */
+        virtual bool need_handshake() const = 0;
+
+        /**
+         * \brief Sends a request for a handshake with the TETRiS server.
+         * \return Allocated feature ID.
+         */
+        virtual FeatureID handshake() = 0;
+
+    protected:
+        /**
+         * \brief Gets the TETRiS client instance.
+         * \return Pointer to the TETRiS client.
+         */
+        Client *get_client() const;
+
+    private:
+        /// \brief Bounded TETRiS client instance.
+        Client *_client;
+    };
+
+    /**
+     * \brief TETRiS client interface.
+     */
     class Client {
     public:
+        virtual ~Client() = default;
+
         /**
          * \brief Binds a TETRiS feature to the TETRiS client.
          *
@@ -32,49 +109,6 @@ namespace TETRiS {
          * \return Response from the TETRiS server.
          */
         virtual ClientResponse send(const ClientRequest &msg) = 0;
-    };
-
-    class ConcreteClient : public Client {
-    public:
-        /**
-         * \brief Builds a concrete client.
-         */
-        explicit ConcreteClient(const std::string &server_socket_path);
-
-        /**
-         * \copydoc bind(TETRiS::Feature *feature)
-         */
-        void bind(TETRiS::Feature *feature) override;
-
-        /**
-         * \copydoc send(const ClientRequest &msg)
-         */
-        ClientResponse send(const ClientRequest &msg) override;
-
-        /**
-         * \brief Builds the socket path for the push server based on the application PID.
-         * \return socket path for the push server.
-         */
-        static std::string get_push_listener_socket_path();
-
-    private:
-        /**
-         * \brief Sends a NewClient command to the TETRiS server.
-         * \return true if the TETRiS manaager handles this client.
-         */
-        bool send_new_client_command();
-
-        /// \brief Push message listener, listening for requests from the TETRiS server.
-        PushMessageListener _push_message_listener;
-
-        /// \brief Permanent connection to the TETRiS server.
-        std::unique_ptr<Connection> _tetris_server_connection;
-
-        /// \brief Pointer to the debug logger.
-        debug::LoggerPtr _logger;
-
-        /// \brief If true, the client is connected to the TETRiS server and is managed.
-        bool _managed;
     };
 
     /**
@@ -102,7 +136,7 @@ namespace TETRiS {
 
     private:
         /// \brief Client instance.
-        static std::unique_ptr<ConcreteClient> _instance;
+        static std::unique_ptr<Client> _instance;
 
     };
 }

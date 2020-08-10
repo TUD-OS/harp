@@ -6,9 +6,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <tetris_client.h>
-#include <tetris_feature.h>
 #include <protobuf_util.h>
-
+#include <socket.h>
+#include <concrete_client.h>
+#include <proto/Tetris.pb.h>
 
 class MockFeature : public TETRiS::Feature {
 public:

@@ -7,6 +7,7 @@
 #include <push_message_listener.h>
 #include <connection.h>
 #include <protobuf_util.h>
+#include <proto/Tetris.pb.h>
 
 #define SOCKET_PATH "/tmp/test_socket_tetris_push_listener"
 

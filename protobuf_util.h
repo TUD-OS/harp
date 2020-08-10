@@ -5,6 +5,8 @@
 #ifndef DPPM_PROTOBUFHELPER_H
 #define DPPM_PROTOBUFHELPER_H
 
+#include "connection.h"
+
 #include <unistd.h>
 
 #include <vector>
