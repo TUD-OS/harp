@@ -10,11 +10,17 @@
 
 namespace TETRiS {
 
+    static const char *SERVER_SOCKET = "/tmp/tetris_socket";
+
     // Predefining classes.
     class Client;
+
     class ClientRequest;
+
     class ClientResponse;
+
     class PushRequest;
+
     class PushResponse;
 
     /// \brief A feature ID is used to forward request from the push server to the corresponding feature.
