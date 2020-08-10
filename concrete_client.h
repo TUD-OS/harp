@@ -46,7 +46,7 @@ namespace TETRiS {
         PushMessageListener _push_message_listener;
 
         /// \brief Permanent connection to the TETRiS server.
-        std::unique_ptr<Connection> _tetris_server_connection;
+        Connection _tetris_server_connection;
 
         /// \brief Pointer to the debug logger.
         debug::LoggerPtr _logger;

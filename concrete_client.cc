@@ -11,6 +11,19 @@
 #include <memory>
 #include <sstream>
 
+TETRiS::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
+        : Client(), _push_message_listener(get_push_listener_socket_path()),
+          _managed(false) {
+    _logger = debug::Logger::get();
+    try {
+        _tetris_server_connection.connect(server_socket_path);
+        _managed = send_new_client_command();
+    } catch (std::exception &e) {
+        _logger->info("No TETRiS server, TETRiS is unused.\n");
+        _managed = false;
+    }
+}
+
 void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature) {
     // If the client is not connected to the server, do not bind the feature.
     if (!_managed)
@@ -24,21 +37,9 @@ void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature) {
 }
 
 TETRiS::ClientResponse TETRiS::ConcreteClient::send(const TETRiS::ClientRequest &msg) {
-    protobuf_util::Send(_tetris_server_connection->locked(), msg);
-    auto response = protobuf_util::Receive<ClientResponse>(_tetris_server_connection->locked());
+    protobuf_util::Send(_tetris_server_connection.locked(), msg);
+    auto response = protobuf_util::Receive<ClientResponse>(_tetris_server_connection.locked());
     return response;
-}
-
-TETRiS::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
-        : Client(), _push_message_listener(get_push_listener_socket_path()),
-          _managed(false) {
-    _logger = debug::Logger::get();
-    try {
-        _tetris_server_connection = std::make_unique<Connection>(server_socket_path);
-        _managed = send_new_client_command();
-    } catch (std::exception &e) {
-        _managed = false;
-    }
 }
 
 std::string TETRiS::ConcreteClient::get_push_listener_socket_path() {
@@ -63,14 +64,14 @@ bool TETRiS::ConcreteClient::send_new_client_command() {
 
     ClientRequest request{};
     request.set_type(ClientRequest::TETRIS_NEW_CLIENT);
-    auto new_client_message = request.new_client();
+    auto new_client_message = request.mutable_new_client();
 
     /* Send the new-client message to the server. */
-    new_client_message.set_pid(getpid());
+    new_client_message->set_pid(getpid());
     char exec[100];
     memset(exec, 0, sizeof(exec));
     readlink("/proc/self/exe", exec, sizeof(exec));
-    new_client_message.set_exec(exec);
+    new_client_message->set_exec(exec);
 
     bool dynamic_client = false;
     try {
@@ -84,15 +85,15 @@ bool TETRiS::ConcreteClient::send_new_client_command() {
             _logger->warning("Unknown mapping type: %s\n", mapping_type);
         }
     } catch (std::exception &e) { /* Do nothing */ }
-    new_client_message.set_dynamic_client(dynamic_client);
+    new_client_message->set_dynamic_client(dynamic_client);
 
     try {
         auto compare_criteria = env_variables.at("TETRIS_COMPARE_CRITERIA");
         _logger->info("Use given compare criteria -- %s.\n", compare_criteria);
-        new_client_message.set_compare_criteria(compare_criteria);
+        new_client_message->set_compare_criteria(compare_criteria);
     } catch (std::exception &e) {
         _logger->info("Use default compare criteria -- executionTime.\n");
-        new_client_message.set_compare_criteria("executionTime");
+        new_client_message->set_compare_criteria("executionTime");
     }
 
     auto compare_more_is_better = env_variables.find("TETRIS_COMPARE_MORE_IS_BETTER") != env_variables.end();
@@ -100,16 +101,16 @@ bool TETRiS::ConcreteClient::send_new_client_command() {
         _logger->info("Use greater than comparison for criteria.\n");
     else
         _logger->info("Use less then comparison for criteria.\n");
-    new_client_message.set_compare_more_is_better(compare_more_is_better);
+    new_client_message->set_compare_more_is_better(compare_more_is_better);
 
     try {
         auto preferred_mapping = env_variables.at("TETRIS_PREFERRED_MAPPING");
-        new_client_message.set_preferred_mapping(preferred_mapping);
+        new_client_message->set_preferred_mapping(preferred_mapping);
     } catch (std::exception &e) {}
 
     try {
         auto filter_criteria = env_variables.at("TETRIS_FILTERED_CRITERIA");
-        new_client_message.set_filter_criteria(filter_criteria);
+        new_client_message->set_filter_criteria(filter_criteria);
     } catch (std::exception &e) {}
 
     auto response = send(request);
