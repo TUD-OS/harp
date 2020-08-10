@@ -12,7 +12,7 @@ message RegionInfo {
   message ReplicaInfo {
     message ProcessThread {
       required string process_name = 1;
-      required string thread_id = 2;
+      required uint64 thread_id = 2;
     }
     repeated ProcessThread process_thread = 1;
   }

@@ -414,7 +414,7 @@ const char descriptor_table_protodef_Tetris_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "\032\215\001\n\013ReplicaInfo\022D\n\016process_thread\030\001 \003(\013"
   "2,.TETRiS.RegionInfo.ReplicaInfo.Process"
   "Thread\0328\n\rProcessThread\022\024\n\014process_name\030"
-  "\001 \002(\t\022\021\n\tthread_id\030\002 \002(\t\"\022\n\020RegionThroug"
+  "\001 \002(\t\022\021\n\tthread_id\030\002 \002(\004\"\022\n\020RegionThroug"
   "hput\"5\n\022RegularProcessInfo\022\014\n\004name\030\001 \002(\t"
   "\022\021\n\tthread_id\030\002 \002(\004\"\254\001\n\tNewClient\022\013\n\003pid"
   "\030\001 \002(\r\022\014\n\004exec\030\002 \002(\t\022\026\n\016dynamic_client\030\003"
@@ -888,18 +888,14 @@ RegionInfo_ReplicaInfo_ProcessThread::RegionInfo_ReplicaInfo_ProcessThread(const
     process_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_process_name(),
       GetArena());
   }
-  thread_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (from._internal_has_thread_id()) {
-    thread_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_thread_id(),
-      GetArena());
-  }
+  thread_id_ = from.thread_id_;
   // @@protoc_insertion_point(copy_constructor:TETRiS.RegionInfo.ReplicaInfo.ProcessThread)
 }
 
 void RegionInfo_ReplicaInfo_ProcessThread::SharedCtor() {
   ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RegionInfo_ReplicaInfo_ProcessThread_Tetris_2eproto.base);
   process_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  thread_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  thread_id_ = PROTOBUF_ULONGLONG(0);
 }
 
 RegionInfo_ReplicaInfo_ProcessThread::~RegionInfo_ReplicaInfo_ProcessThread() {
@@ -911,7 +907,6 @@ RegionInfo_ReplicaInfo_ProcessThread::~RegionInfo_ReplicaInfo_ProcessThread() {
 void RegionInfo_ReplicaInfo_ProcessThread::SharedDtor() {
   GOOGLE_DCHECK(GetArena() == nullptr);
   process_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  thread_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void RegionInfo_ReplicaInfo_ProcessThread::ArenaDtor(void* object) {
@@ -936,14 +931,10 @@ void RegionInfo_ReplicaInfo_ProcessThread::Clear() {
   (void) cached_has_bits;
 
   cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
-    if (cached_has_bits & 0x00000001u) {
-      process_name_.ClearNonDefaultToEmpty();
-    }
-    if (cached_has_bits & 0x00000002u) {
-      thread_id_.ClearNonDefaultToEmpty();
-    }
+  if (cached_has_bits & 0x00000001u) {
+    process_name_.ClearNonDefaultToEmpty();
   }
+  thread_id_ = PROTOBUF_ULONGLONG(0);
   _has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -968,14 +959,11 @@ const char* RegionInfo_ReplicaInfo_ProcessThread::_InternalParse(const char* ptr
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // required string thread_id = 2;
+      // required uint64 thread_id = 2;
       case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
-          auto str = _internal_mutable_thread_id();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id");
-          #endif  // !NDEBUG
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          _Internal::set_has_thread_id(&has_bits);
+          thread_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1019,14 +1007,10 @@ failure:
         1, this->_internal_process_name(), target);
   }
 
-  // required string thread_id = 2;
+  // required uint64 thread_id = 2;
   if (cached_has_bits & 0x00000002u) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->_internal_thread_id().data(), static_cast<int>(this->_internal_thread_id().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id");
-    target = stream->WriteStringMaybeAliased(
-        2, this->_internal_thread_id(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(2, this->_internal_thread_id(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1049,9 +1033,9 @@ size_t RegionInfo_ReplicaInfo_ProcessThread::RequiredFieldsByteSizeFallback() co
   }
 
   if (_internal_has_thread_id()) {
-    // required string thread_id = 2;
+    // required uint64 thread_id = 2;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
         this->_internal_thread_id());
   }
 
@@ -1067,9 +1051,9 @@ size_t RegionInfo_ReplicaInfo_ProcessThread::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_process_name());
 
-    // required string thread_id = 2;
+    // required uint64 thread_id = 2;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
         this->_internal_thread_id());
 
   } else {
@@ -1116,8 +1100,9 @@ void RegionInfo_ReplicaInfo_ProcessThread::MergeFrom(const RegionInfo_ReplicaInf
       _internal_set_process_name(from._internal_process_name());
     }
     if (cached_has_bits & 0x00000002u) {
-      _internal_set_thread_id(from._internal_thread_id());
+      thread_id_ = from.thread_id_;
     }
+    _has_bits_[0] |= cached_has_bits;
   }
 }
 
@@ -1145,7 +1130,7 @@ void RegionInfo_ReplicaInfo_ProcessThread::InternalSwap(RegionInfo_ReplicaInfo_P
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
   process_name_.Swap(&other->process_name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-  thread_id_.Swap(&other->thread_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  swap(thread_id_, other->thread_id_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata RegionInfo_ReplicaInfo_ProcessThread::GetMetadata() const {

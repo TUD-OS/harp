@@ -544,33 +544,17 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
   std::string* _internal_mutable_process_name();
   public:
 
-  // required string thread_id = 2;
+  // required uint64 thread_id = 2;
   bool has_thread_id() const;
   private:
   bool _internal_has_thread_id() const;
   public:
   void clear_thread_id();
-  const std::string& thread_id() const;
-  void set_thread_id(const std::string& value);
-  void set_thread_id(std::string&& value);
-  void set_thread_id(const char* value);
-  void set_thread_id(const char* value, size_t size);
-  std::string* mutable_thread_id();
-  std::string* release_thread_id();
-  void set_allocated_thread_id(std::string* thread_id);
-  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  std::string* unsafe_arena_release_thread_id();
-  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  void unsafe_arena_set_allocated_thread_id(
-      std::string* thread_id);
+  ::PROTOBUF_NAMESPACE_ID::uint64 thread_id() const;
+  void set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value);
   private:
-  const std::string& _internal_thread_id() const;
-  void _internal_set_thread_id(const std::string& value);
-  std::string* _internal_mutable_thread_id();
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_thread_id() const;
+  void _internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value);
   public:
 
   // @@protoc_insertion_point(class_scope:TETRiS.RegionInfo.ReplicaInfo.ProcessThread)
@@ -586,7 +570,7 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr process_name_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr thread_id_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 thread_id_;
   friend struct ::TableStruct_Tetris_2eproto;
 };
 // -------------------------------------------------------------------
@@ -2848,7 +2832,7 @@ inline void RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_set_allocated_pro
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.process_name)
 }
 
-// required string thread_id = 2;
+// required uint64 thread_id = 2;
 inline bool RegionInfo_ReplicaInfo_ProcessThread::_internal_has_thread_id() const {
   bool value = (_has_bits_[0] & 0x00000002u) != 0;
   return value;
@@ -2857,88 +2841,23 @@ inline bool RegionInfo_ReplicaInfo_ProcessThread::has_thread_id() const {
   return _internal_has_thread_id();
 }
 inline void RegionInfo_ReplicaInfo_ProcessThread::clear_thread_id() {
-  thread_id_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+  thread_id_ = PROTOBUF_ULONGLONG(0);
   _has_bits_[0] &= ~0x00000002u;
 }
-inline const std::string& RegionInfo_ReplicaInfo_ProcessThread::thread_id() const {
+inline ::PROTOBUF_NAMESPACE_ID::uint64 RegionInfo_ReplicaInfo_ProcessThread::_internal_thread_id() const {
+  return thread_id_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 RegionInfo_ReplicaInfo_ProcessThread::thread_id() const {
   // @@protoc_insertion_point(field_get:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
   return _internal_thread_id();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(const std::string& value) {
+inline void RegionInfo_ReplicaInfo_ProcessThread::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _has_bits_[0] |= 0x00000002u;
+  thread_id_ = value;
+}
+inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value) {
   _internal_set_thread_id(value);
   // @@protoc_insertion_point(field_set:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-}
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::mutable_thread_id() {
-  // @@protoc_insertion_point(field_mutable:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-  return _internal_mutable_thread_id();
-}
-inline const std::string& RegionInfo_ReplicaInfo_ProcessThread::_internal_thread_id() const {
-  return thread_id_.Get();
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::_internal_set_thread_id(const std::string& value) {
-  _has_bits_[0] |= 0x00000002u;
-  thread_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(std::string&& value) {
-  _has_bits_[0] |= 0x00000002u;
-  thread_id_.Set(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
-  // @@protoc_insertion_point(field_set_rvalue:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  _has_bits_[0] |= 0x00000002u;
-  thread_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
-              GetArena());
-  // @@protoc_insertion_point(field_set_char:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(const char* value,
-    size_t size) {
-  _has_bits_[0] |= 0x00000002u;
-  thread_id_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
-      reinterpret_cast<const char*>(value), size), GetArena());
-  // @@protoc_insertion_point(field_set_pointer:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-}
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::_internal_mutable_thread_id() {
-  _has_bits_[0] |= 0x00000002u;
-  return thread_id_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::release_thread_id() {
-  // @@protoc_insertion_point(field_release:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-  if (!_internal_has_thread_id()) {
-    return nullptr;
-  }
-  _has_bits_[0] &= ~0x00000002u;
-  return thread_id_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_allocated_thread_id(std::string* thread_id) {
-  if (thread_id != nullptr) {
-    _has_bits_[0] |= 0x00000002u;
-  } else {
-    _has_bits_[0] &= ~0x00000002u;
-  }
-  thread_id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), thread_id,
-      GetArena());
-  // @@protoc_insertion_point(field_set_allocated:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-}
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_release_thread_id() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
-  GOOGLE_DCHECK(GetArena() != nullptr);
-  _has_bits_[0] &= ~0x00000002u;
-  return thread_id_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      GetArena());
-}
-inline void RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_set_allocated_thread_id(
-    std::string* thread_id) {
-  GOOGLE_DCHECK(GetArena() != nullptr);
-  if (thread_id != nullptr) {
-    _has_bits_[0] |= 0x00000002u;
-  } else {
-    _has_bits_[0] &= ~0x00000002u;
-  }
-  thread_id_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      thread_id, GetArena());
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:TETRiS.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
 }
 
 // -------------------------------------------------------------------
