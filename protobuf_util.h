@@ -32,7 +32,7 @@ public:
         // Waiting to receive the message.
         Connection::InState in_state = connection->read(raw_data);
         // Parse the message from the vector if we succeed to read from the socket.
-        if (in_state != Connection::InState::CLOSED)
+        if (!raw_data.empty())
             msg.ParseFromArray(raw_data.data(), raw_data.size());
         return in_state;
     }

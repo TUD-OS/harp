@@ -119,6 +119,7 @@ class Client
     std::vector<Thread>     threads;
     std::vector<Mapping>    mappings;
     Mapping                 active_mapping;
+    bool                    using_dppm;
 
     Filter                  filter;
     Comp                    comp;
@@ -128,7 +129,7 @@ class Client
 
     Client(const ConnectionPtr& conn) :
         connection{conn}, exec{}, pid{-1}, dynamic_client{false}, threads{}, mappings{}, active_mapping{},
-        filter{}, comp{}
+        using_dppm{false}, filter{}, comp{}
     {}
 
     ~Client()
@@ -517,6 +518,20 @@ class Manager
 
                         break;
                     }
+                    case TETRiS::ClientRequest::DPM_SUBSCRIBE: {
+                        logger->always("Client '%s' [%d] use Dppm\n", c.exec.c_str(), c.pid);
+                        c.using_dppm = true;
+
+                        /* We need to acknowledge this message. */
+                        TETRiS::ClientResponse ack{};
+                        ack.set_type(TETRiS::ClientResponse::ACKNOWLEDGE);
+                        ack.set_feature_id(0);
+                        if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
+                            logger->error("Failed to acknowledge the Dppm registration message\n");
+                            c.using_dppm = false;
+                        }
+                        break;
+                    }
                     default:
                         logger->warning("Other message received\n");
                 }
@@ -595,7 +610,7 @@ class Manager
                   << "==========================" << std::endl;
         for (const auto& [name, client] : _clients) {
             std::cout << "Client '" << client.exec << "' [" << client.pid << "] (ID: " << name << ")" << std::endl;
-            std::cout << "-> mapping: " << client.active_mapping.name << " [" 
+            std::cout << "-> mapping: " << client.active_mapping.name << " ["
                 << client.active_mapping.equivalence_class().name() << "]" << std::endl;
 
             std::cout << "-> threads:" << std::endl;
@@ -604,7 +619,7 @@ class Manager
                     << string_util::join(t.cpus.cpulist(num_cpus), ",") << std::endl;
         }
         std::cout << "======= END OF LIST =======" << std::endl;
-    } 
+    }
 
     void update_mappings()
     {
