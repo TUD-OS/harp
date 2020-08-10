@@ -38,7 +38,8 @@ void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature) {
 
 TETRiS::ClientResponse TETRiS::ConcreteClient::send(const TETRiS::ClientRequest &msg) {
     protobuf_util::Send(_tetris_server_connection.locked(), msg);
-    auto response = protobuf_util::Receive<ClientResponse>(_tetris_server_connection.locked());
+    TETRiS::ClientResponse response{};
+    protobuf_util::Receive(_tetris_server_connection.locked(), response);
     return response;
 }
 

@@ -28,8 +28,9 @@ void *listening(void *args) {
     if (infd == -1)
         return nullptr;
     Connection in_conn(infd, in_sock);
-    auto request = protobuf_util::Receive<TETRiS::ClientRequest>(in_conn.locked());
-    auto response = TETRiS::ClientResponse{};
+    TETRiS::ClientRequest request{};
+    protobuf_util::Receive(in_conn.locked(), request);
+    TETRiS::ClientResponse response{};
     response.set_type(TETRiS::ClientResponse::TETRIS_NEW_CLIENT_ACK);
     auto new_client_ack_msg = response.mutable_new_client_ack();
     new_client_ack_msg->set_managed(true);
@@ -67,7 +68,8 @@ TETRiS::PushResponse SendMessage(const TETRiS::FeatureID& feature_id) {
     // Send the command.
     protobuf_util::Send(in_conn.locked(), request);
     // Receive the response.
-    auto response = protobuf_util::Receive<TETRiS::PushResponse>(in_conn.locked());
+    TETRiS::PushResponse response{};
+    protobuf_util::Receive(in_conn.locked(), response);
 
     return response;
 }

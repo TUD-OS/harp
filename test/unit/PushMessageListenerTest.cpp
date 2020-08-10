@@ -58,7 +58,8 @@ TETRiS::PushResponse SendDummyMessage() {
     // Send the command.
     protobuf_util::Send(in_conn.locked(), request);
     // Receive the response.
-    auto response = protobuf_util::Receive<TETRiS::PushResponse>(in_conn.locked());
+    TETRiS::PushResponse response{};
+    protobuf_util::Receive<>(in_conn.locked(), response);
 
     return response;
 }

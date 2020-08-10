@@ -36,7 +36,8 @@ void *TETRiS::PushMessageListener::listening(void *args) {
         }
 
         Connection in_conn(infd, in_sock);
-        auto request = protobuf_util::Receive<PushRequest>(in_conn.locked());
+        TETRiS::PushRequest request{};
+        protobuf_util::Receive(in_conn.locked(), request);
         auto response = push_server->forward(request);
         protobuf_util::Send(in_conn.locked(), response);
     }
