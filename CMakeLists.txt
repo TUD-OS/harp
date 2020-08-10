@@ -24,7 +24,7 @@ add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc path
 target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
 # libtetris client new version
-add_library(tetrisclient SHARED tetris_client.cc proto/Tetris.pb.cc tetris_feature.cc push_message_listener.cc path_util.cc util.cc debug_util.cc)
+add_library(tetrisclient STATIC tetris_client.cc proto/Tetris.pb.cc feature.cc push_message_listener.cc path_util.cc util.cc debug_util.cc concrete_client.cc)
 target_link_libraries(tetrisclient ${Protobuf_LIBRARIES})
 
 # tetris server binary
