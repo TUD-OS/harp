@@ -4,10 +4,14 @@
 
 #include "tetris_client.h"
 
-TETRiS::Feature::Feature() : _client(nullptr) {}
+TETRiS::Feature::Feature() : _client(nullptr)
+{}
 
-void TETRiS::Feature::accept(TETRiS::Client *client) { _client = client; }
+void TETRiS::Feature::accept(TETRiS::Client *client)
+{ _client = client; }
 
-bool TETRiS::Feature::is_bound() const { return _client != nullptr; }
+bool TETRiS::Feature::is_bounded() const
+{ return _client != nullptr; }
 
-TETRiS::Client *TETRiS::Feature::get_client() const { return _client; }
+TETRiS::Client *TETRiS::Feature::get_client() const
+{ return _client; }

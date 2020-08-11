@@ -13,7 +13,8 @@
 
 TETRiS::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
         : Client(), _push_message_listener(get_push_listener_socket_path()),
-          _managed(false) {
+          _managed(false)
+{
     _logger = debug::Logger::get();
     try {
         _tetris_server_connection.connect(server_socket_path);
@@ -24,32 +25,38 @@ TETRiS::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
     }
 }
 
-void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature) {
+void TETRiS::ConcreteClient::bind(TETRiS::Feature *feature)
+{
     // If the client is not connected to the server, do not bind the feature.
     if (!_managed)
         return;
-
+    // Bind the client to the feature.
     feature->accept(this);
+    // If it needs a handshake, perform it.
     if (feature->need_handshake()) {
         auto feature_id = feature->handshake();
+        // Add the feature to the subscriber lists of the push listener.
         _push_message_listener.add_subscriber(feature_id, feature);
     }
 }
 
-TETRiS::ClientResponse TETRiS::ConcreteClient::send(const TETRiS::ClientRequest &msg) {
-    protobuf_util::Send(_tetris_server_connection.locked(), msg);
+TETRiS::ClientResponse TETRiS::ConcreteClient::send(const TETRiS::ClientRequest &request)
+{
     TETRiS::ClientResponse response{};
+    protobuf_util::Send(_tetris_server_connection.locked(), request);
     protobuf_util::Receive(_tetris_server_connection.locked(), response);
     return response;
 }
 
-std::string TETRiS::ConcreteClient::get_push_listener_socket_path() {
+std::string TETRiS::ConcreteClient::get_push_listener_socket_path()
+{
     std::stringstream string_stream{};
     string_stream << "/tmp/tetris_push_listener_" << getpid();
     return string_stream.str();
 }
 
-std::map<std::string, std::string> retrieve_env_variables() {
+std::map<std::string, std::string> retrieve_env_variables()
+{
     std::map<std::string, std::string> env_variables{};
     for (auto &env : {"TETRIS_MAPPING_TYPE", "TETRIS_MAPPING_TYPE", "TETRIS_COMPARE_CRITERIA",
                       "TETRIS_COMPARE_MORE_IS_BETTER", "TETRIS_PREFERRED_MAPPING", "TETRIS_FILTER_CRITERIA"}) {
@@ -59,7 +66,8 @@ std::map<std::string, std::string> retrieve_env_variables() {
     return env_variables;
 }
 
-bool TETRiS::ConcreteClient::send_new_client_command() {
+bool TETRiS::ConcreteClient::send_new_client_command()
+{
 
     auto env_variables = retrieve_env_variables();
 
@@ -114,8 +122,10 @@ bool TETRiS::ConcreteClient::send_new_client_command() {
         new_client_message->set_filter_criteria(filter_criteria);
     } catch (std::exception &e) {}
 
+    // Send the command.
     auto response = send(request);
 
+    // Process the TETRiS server response.
     if ((response.type() == ClientResponse::TETRIS_NEW_CLIENT_ACK) && response.has_new_client_ack()) {
         if (response.new_client_ack().managed())
             _logger->info("TETRIS-ID: %d\n", response.new_client_ack().id());

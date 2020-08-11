@@ -5,14 +5,15 @@
 #include "tetris_client.h"
 #include "concrete_client.h"
 
-#include <memory>
-
 std::unique_ptr<TETRiS::Client> TETRiS::ClientProvider::_instance;
 
-void TETRiS::ClientProvider::initialize(const std::string &socket_path) {
+void TETRiS::ClientProvider::initialize(const std::string &socket_path)
+{
     _instance = std::make_unique<TETRiS::ConcreteClient>(socket_path);
 }
 
-void TETRiS::ClientProvider::finalize() { _instance.reset(); }
+void TETRiS::ClientProvider::finalize()
+{ _instance.reset(); }
 
-TETRiS::Client *TETRiS::ClientProvider::get_instance() { return _instance.get(); }
+TETRiS::Client *TETRiS::ClientProvider::get_instance()
+{ return _instance.get(); }

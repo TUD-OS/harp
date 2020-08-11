@@ -24,7 +24,7 @@ public:
      *
      * \tparam T Type of protobuf object to receive.
      * \param [in] connection Socket connection to read from.
-     * \return Object received.
+     * \param [out] msg Protobuf object received.
      */
     template<class T>
     static Connection::InState Receive(LockedConnection connection, T &msg) {
