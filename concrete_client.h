@@ -6,7 +6,7 @@
 #include "connection.h"
 #include "debug_util.h"
 
-namespace TETRiS {
+namespace tetris {
 
 /**
  * \brief TETRiS concrete client.
@@ -24,12 +24,12 @@ public:
     /**
      * \copydoc bind(TETRiS::Feature *feature)
      */
-    void bind(TETRiS::Feature *feature) override;
+    void bind(tetris::Feature *feature) override;
 
     /**
      * \copydoc send(const ClientRequest &msg)
      */
-    ClientResponse send(const ClientRequest &msg) override;
+    PullResponse send(const PullRequest &msg) override;
 
     /**
      * \brief Builds the socket path for the push listener based on the application PID.

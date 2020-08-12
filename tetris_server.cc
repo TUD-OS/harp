@@ -8,7 +8,7 @@
 #include "socket.h"
 #include "string_util.h"
 #include "tetris.h"
-#include "proto/Tetris.pb.h"
+#include "proto/tetris.pb.h"
 #include "protobuf_util.h"
 
 #include <algorithm>
@@ -415,7 +415,7 @@ class Manager
         bool close = false;
 
         while (!done) {
-            TETRiS::ClientRequest request{};
+            tetris::PullRequest request{};
             auto res = protobuf_util::Receive(conn->locked(), request);
             if (res == Connection::InState::DONE) {
                 /* We are done processing. So return. */
@@ -428,7 +428,7 @@ class Manager
             } else {
                 /* There is some data to process. Handle it. */
                 switch (request.type()) {
-                    case TETRiS::ClientRequest::TETRIS_NEW_CLIENT: {
+                    case tetris::PullRequest::TETRIS_NEW_CLIENT: {
                         int pid = request.new_client().pid();
                         std::string exec = string_util::strip(path_util::basename(request.new_client().exec()));
                         bool managed;
@@ -438,7 +438,7 @@ class Manager
                             /* Update the client data. */
                             c.pid = pid;
                             c.exec = exec;
-                            c.dynamic_client = request.new_client().dynamic_client();
+                            c.dynamic_client = request.new_client().mapping_type();
                             c.mappings = _mappings.at(exec);
 
                             c.comp = Client::Comp(string_util::strip(request.new_client().compare_criteria()),
@@ -479,8 +479,8 @@ class Manager
                         }
 
                         /* We need to acknowledge this message. */
-                        TETRiS::ClientResponse ack{};
-                        ack.set_type(TETRiS::ClientResponse::TETRIS_NEW_CLIENT_ACK);
+                        tetris::PullResponse ack{};
+                        ack.set_type(tetris::PullResponse::TETRIS_NEW_CLIENT_ACK);
                         ack.mutable_new_client_ack()->set_id(fd);
                         ack.mutable_new_client_ack()->set_managed(managed);
 
@@ -518,13 +518,13 @@ class Manager
 
                         break;
                     }
-                    case TETRiS::ClientRequest::DPM_SUBSCRIBE: {
+                    case tetris::PullRequest::DPM_SUBSCRIBE: {
                         logger->always("Client '%s' [%d] use Dppm\n", c.exec.c_str(), c.pid);
                         c.using_dppm = true;
 
                         /* We need to acknowledge this message. */
-                        TETRiS::ClientResponse ack{};
-                        ack.set_type(TETRiS::ClientResponse::ACKNOWLEDGE);
+                        tetris::PullResponse ack{};
+                        ack.set_type(tetris::PullResponse::ACKNOWLEDGE);
                         ack.set_feature_id(0);
                         if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
                             logger->error("Failed to acknowledge the Dppm registration message\n");

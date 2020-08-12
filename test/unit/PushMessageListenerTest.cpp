@@ -7,30 +7,30 @@
 #include <push_message_listener.h>
 #include <connection.h>
 #include <protobuf_util.h>
-#include <proto/Tetris.pb.h>
+#include <proto/tetris.pb.h>
 
 #define SOCKET_PATH "/tmp/test_socket_tetris_push_listener"
 
-class MockFeature : public TETRiS::Feature
+class MockFeature : public tetris::Feature
 {
 public:
-    MOCK_METHOD(TETRiS::PushResponse, forward, (const TETRiS::PushRequest &msg));
+    MOCK_METHOD(tetris::PushResponse, forward, (const tetris::PushRequest &msg));
     MOCK_METHOD(bool, need_handshake, (), (const));
-    MOCK_METHOD(TETRiS::FeatureID, handshake, ());
+    MOCK_METHOD(tetris::FeatureID, handshake, ());
 };
 
 class PushMessageListenerTest : public ::testing::Test
 {
 protected:
-    TETRiS::PushMessageListener push_listener{SOCKET_PATH};
+    tetris::PushMessageListener push_listener{SOCKET_PATH};
 };
 
 TEST_F(PushMessageListenerTest, CheckForwardingMechanism)
 {
     MockFeature mock_1, mock_2;
     EXPECT_CALL(mock_1, forward).Times(1).WillOnce([]() {
-        auto response = TETRiS::PushResponse{};
-        response.set_type(TETRiS::PushResponse::ACKNOWLEDGE);
+        auto response = tetris::PushResponse{};
+        response.set_type(tetris::PushResponse::ACKNOWLEDGE);
         return response;
     });
     EXPECT_CALL(mock_2, forward).Times(0);
@@ -38,22 +38,22 @@ TEST_F(PushMessageListenerTest, CheckForwardingMechanism)
     push_listener.add_subscriber(0, &mock_1);
     push_listener.add_subscriber(1, &mock_2);
     // Send a push request to the push listener.
-    auto request = TETRiS::PushRequest{};
+    auto request = tetris::PushRequest{};
     request.set_feature_id(0);
     auto response = push_listener.forward(request);
     // Assert the response is a acknowledge from mock_1.
-    ASSERT_EQ(TETRiS::PushResponse::ACKNOWLEDGE, response.type());
+    ASSERT_EQ(tetris::PushResponse::ACKNOWLEDGE, response.type());
 }
 
-TETRiS::PushResponse SendDummyRequest()
+tetris::PushResponse SendDummyRequest()
 {
     Connection in_conn{SOCKET_PATH};
 
     // Prepare the command.
-    TETRiS::PushRequest request{};
-    TETRiS::PushResponse response{};
+    tetris::PushRequest request{};
+    tetris::PushResponse response{};
     request.set_feature_id(0);
-    request.set_type(TETRiS::PushRequest::UPDATE_CONFIGURATION);
+    request.set_type(tetris::PushRequest::UPDATE_CONFIGURATION);
     // Send the request.
     protobuf_util::Send(in_conn.locked(), request);
     // Receive the response.
@@ -66,8 +66,8 @@ TEST_F(PushMessageListenerTest, CheckListener)
 {
     MockFeature mock_1, mock_2;
     EXPECT_CALL(mock_1, forward).Times(1).WillOnce([]() {
-        auto response = TETRiS::PushResponse{};
-        response.set_type(TETRiS::PushResponse::ACKNOWLEDGE);
+        auto response = tetris::PushResponse{};
+        response.set_type(tetris::PushResponse::ACKNOWLEDGE);
         return response;
     });
     EXPECT_CALL(mock_2, forward).Times(0);
@@ -77,5 +77,5 @@ TEST_F(PushMessageListenerTest, CheckListener)
 
     auto response = SendDummyRequest();
 
-    ASSERT_EQ(TETRiS::PushResponse::ACKNOWLEDGE, response.type());
+    ASSERT_EQ(tetris::PushResponse::ACKNOWLEDGE, response.type());
 }

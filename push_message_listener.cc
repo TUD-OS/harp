@@ -5,25 +5,25 @@
 #include "push_message_listener.h"
 #include "connection.h"
 #include "protobuf_util.h"
-#include "proto/Tetris.pb.h"
+#include "proto/tetris.pb.h"
 
-TETRiS::PushMessageListener::PushMessageListener(const std::string &socket_path) : _listener_thread(0) {
+tetris::PushMessageListener::PushMessageListener(const std::string &socket_path) : _listener_thread(0) {
     _listening_socket.open(socket_path);
     _listening_socket.listening();
     pthread_create(&_listener_thread, nullptr, listening, this);
 }
 
-void TETRiS::PushMessageListener::add_subscriber(const TETRiS::FeatureID &feature_id, TETRiS::Feature *feature) {
+void tetris::PushMessageListener::add_subscriber(const tetris::FeatureID &feature_id, tetris::Feature *feature) {
     _subscribers.emplace(feature_id, feature);
 }
 
-TETRiS::PushResponse TETRiS::PushMessageListener::forward(const TETRiS::PushRequest &request) const {
+tetris::PushResponse tetris::PushMessageListener::forward(const tetris::PushRequest &request) const {
     auto feature_id = request.feature_id();
     auto feature = _subscribers.at(feature_id);
     return feature->forward(request);
 }
 
-void *TETRiS::PushMessageListener::listening(void *args) {
+void *tetris::PushMessageListener::listening(void *args) {
     auto push_server = reinterpret_cast<PushMessageListener *>(args);
     int cl;
     // Accept connection on the socket.
@@ -36,7 +36,7 @@ void *TETRiS::PushMessageListener::listening(void *args) {
         }
 
         Connection in_conn(infd, in_sock);
-        TETRiS::PushRequest request{};
+        tetris::PushRequest request{};
         protobuf_util::Receive(in_conn.locked(), request);
         auto response = push_server->forward(request);
         protobuf_util::Send(in_conn.locked(), response);
@@ -45,7 +45,7 @@ void *TETRiS::PushMessageListener::listening(void *args) {
     return nullptr;
 }
 
-TETRiS::PushMessageListener::~PushMessageListener() {
+tetris::PushMessageListener::~PushMessageListener() {
     shutdown(_listening_socket.fd(), SHUT_RDWR);
     pthread_join(_listener_thread, nullptr);
 }

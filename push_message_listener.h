@@ -9,7 +9,7 @@
 #include "tetris_client.h"
 #include "socket.h"
 
-namespace TETRiS {
+namespace tetris {
     /**
      * \brief TETRiS Push Message Listener.
      *
