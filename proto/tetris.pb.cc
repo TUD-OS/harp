@@ -17,21 +17,20 @@
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Configuration_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewClient_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewClientAck_tetris_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ProcessInfo_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegionConfiguration_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RegionInfo_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RegionInfo_ReplicaInfo_tetris_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegionThroughput_tetris_2eproto;
-extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegularProcessInfo_tetris_2eproto;
 namespace tetris {
 class RegionConfigurationDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RegionConfiguration> _instance;
 } _RegionConfiguration_default_instance_;
-class RegionInfo_ReplicaInfo_ProcessThreadDefaultTypeInternal {
+class ProcessInfoDefaultTypeInternal {
  public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RegionInfo_ReplicaInfo_ProcessThread> _instance;
-} _RegionInfo_ReplicaInfo_ProcessThread_default_instance_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ProcessInfo> _instance;
+} _ProcessInfo_default_instance_;
 class RegionInfo_ReplicaInfoDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RegionInfo_ReplicaInfo> _instance;
@@ -44,10 +43,6 @@ class RegionThroughputDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RegionThroughput> _instance;
 } _RegionThroughput_default_instance_;
-class RegularProcessInfoDefaultTypeInternal {
- public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RegularProcessInfo> _instance;
-} _RegularProcessInfo_default_instance_;
 class NewClientDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<NewClient> _instance;
@@ -90,7 +85,7 @@ static void InitDefaultsscc_info_Configuration_tetris_2eproto() {
 
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Configuration_tetris_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_Configuration_tetris_2eproto}, {
-      &scc_info_RegularProcessInfo_tetris_2eproto.base,
+      &scc_info_ProcessInfo_tetris_2eproto.base,
       &scc_info_RegionInfo_tetris_2eproto.base,}};
 
 static void InitDefaultsscc_info_NewClient_tetris_2eproto() {
@@ -120,6 +115,20 @@ static void InitDefaultsscc_info_NewClientAck_tetris_2eproto() {
 
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewClientAck_tetris_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_NewClientAck_tetris_2eproto}, {}};
+
+static void InitDefaultsscc_info_ProcessInfo_tetris_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::tetris::_ProcessInfo_default_instance_;
+    new (ptr) ::tetris::ProcessInfo();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::tetris::ProcessInfo::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ProcessInfo_tetris_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ProcessInfo_tetris_2eproto}, {}};
 
 static void InitDefaultsscc_info_PullRequest_tetris_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -225,21 +234,7 @@ static void InitDefaultsscc_info_RegionInfo_ReplicaInfo_tetris_2eproto() {
 
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_RegionInfo_ReplicaInfo_tetris_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_RegionInfo_ReplicaInfo_tetris_2eproto}, {
-      &scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto.base,}};
-
-static void InitDefaultsscc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::tetris::_RegionInfo_ReplicaInfo_ProcessThread_default_instance_;
-    new (ptr) ::tetris::RegionInfo_ReplicaInfo_ProcessThread();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::tetris::RegionInfo_ReplicaInfo_ProcessThread::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto}, {}};
+      &scc_info_ProcessInfo_tetris_2eproto.base,}};
 
 static void InitDefaultsscc_info_RegionThroughput_tetris_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -255,21 +250,7 @@ static void InitDefaultsscc_info_RegionThroughput_tetris_2eproto() {
 ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegionThroughput_tetris_2eproto =
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RegionThroughput_tetris_2eproto}, {}};
 
-static void InitDefaultsscc_info_RegularProcessInfo_tetris_2eproto() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::tetris::_RegularProcessInfo_default_instance_;
-    new (ptr) ::tetris::RegularProcessInfo();
-    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::tetris::RegularProcessInfo::InitAsDefaultInstance();
-}
-
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RegularProcessInfo_tetris_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RegularProcessInfo_tetris_2eproto}, {}};
-
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_tetris_2eproto[13];
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_tetris_2eproto[12];
 static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_tetris_2eproto[5];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_tetris_2eproto = nullptr;
 
@@ -283,13 +264,13 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
   PROTOBUF_FIELD_OFFSET(::tetris::RegionConfiguration, num_replicas_),
   0,
   1,
-  PROTOBUF_FIELD_OFFSET(::tetris::RegionInfo_ReplicaInfo_ProcessThread, _has_bits_),
-  PROTOBUF_FIELD_OFFSET(::tetris::RegionInfo_ReplicaInfo_ProcessThread, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ProcessInfo, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ProcessInfo, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::tetris::RegionInfo_ReplicaInfo_ProcessThread, process_name_),
-  PROTOBUF_FIELD_OFFSET(::tetris::RegionInfo_ReplicaInfo_ProcessThread, thread_id_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ProcessInfo, process_name_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ProcessInfo, thread_id_),
   0,
   1,
   ~0u,  // no _has_bits_
@@ -312,15 +293,6 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::tetris::RegularProcessInfo, _has_bits_),
-  PROTOBUF_FIELD_OFFSET(::tetris::RegularProcessInfo, _internal_metadata_),
-  ~0u,  // no _extensions_
-  ~0u,  // no _oneof_case_
-  ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::tetris::RegularProcessInfo, name_),
-  PROTOBUF_FIELD_OFFSET(::tetris::RegularProcessInfo, thread_id_),
-  0,
-  1,
   PROTOBUF_FIELD_OFFSET(::tetris::NewClient, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::tetris::NewClient, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -354,7 +326,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::tetris::Configuration, regular_process_info_),
+  PROTOBUF_FIELD_OFFSET(::tetris::Configuration, process_info_),
   PROTOBUF_FIELD_OFFSET(::tetris::Configuration, parallel_region_info_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, _internal_metadata_),
@@ -403,27 +375,25 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, 7, sizeof(::tetris::RegionConfiguration)},
-  { 9, 16, sizeof(::tetris::RegionInfo_ReplicaInfo_ProcessThread)},
+  { 9, 16, sizeof(::tetris::ProcessInfo)},
   { 18, -1, sizeof(::tetris::RegionInfo_ReplicaInfo)},
   { 24, 31, sizeof(::tetris::RegionInfo)},
   { 33, -1, sizeof(::tetris::RegionThroughput)},
-  { 38, 45, sizeof(::tetris::RegularProcessInfo)},
-  { 47, 59, sizeof(::tetris::NewClient)},
-  { 66, 73, sizeof(::tetris::NewClientAck)},
-  { 75, -1, sizeof(::tetris::Configuration)},
-  { 82, 90, sizeof(::tetris::PullRequest)},
-  { 93, 101, sizeof(::tetris::PullResponse)},
-  { 104, 112, sizeof(::tetris::PushRequest)},
-  { 115, 123, sizeof(::tetris::PushResponse)},
+  { 38, 50, sizeof(::tetris::NewClient)},
+  { 57, 64, sizeof(::tetris::NewClientAck)},
+  { 66, -1, sizeof(::tetris::Configuration)},
+  { 73, 81, sizeof(::tetris::PullRequest)},
+  { 84, 92, sizeof(::tetris::PullResponse)},
+  { 95, 103, sizeof(::tetris::PushRequest)},
+  { 106, 114, sizeof(::tetris::PushResponse)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegionConfiguration_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegionInfo_ReplicaInfo_ProcessThread_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_ProcessInfo_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegionInfo_ReplicaInfo_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegionInfo_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegionThroughput_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_RegularProcessInfo_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_NewClient_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_NewClientAck_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_Configuration_default_instance_),
@@ -436,53 +406,51 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 const char descriptor_table_protodef_tetris_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
   "\n\014tetris.proto\022\006tetris\"9\n\023RegionConfigur"
   "ation\022\014\n\004name\030\001 \002(\t\022\024\n\014num_replicas\030\002 \002("
-  "\r\"\334\001\n\nRegionInfo\022\014\n\004name\030\001 \002(\t\0220\n\010replic"
-  "as\030\002 \003(\0132\036.tetris.RegionInfo.ReplicaInfo"
-  "\032\215\001\n\013ReplicaInfo\022D\n\016process_thread\030\001 \003(\013"
-  "2,.tetris.RegionInfo.ReplicaInfo.Process"
-  "Thread\0328\n\rProcessThread\022\024\n\014process_name\030"
-  "\001 \002(\t\022\021\n\tthread_id\030\002 \002(\r\"\022\n\020RegionThroug"
-  "hput\"5\n\022RegularProcessInfo\022\014\n\004name\030\001 \002(\t"
-  "\022\021\n\tthread_id\030\002 \002(\r\"\361\001\n\tNewClient\022\013\n\003pid"
-  "\030\001 \002(\r\022\014\n\004exec\030\002 \002(\t\0223\n\014mapping_type\030\003 \002"
-  "(\0162\035.tetris.NewClient.MappingType\022\030\n\020com"
-  "pare_criteria\030\004 \001(\t\022\036\n\026compare_more_is_b"
-  "etter\030\005 \001(\010\022\031\n\021preferred_mapping\030\006 \001(\t\022\027"
-  "\n\017filter_criteria\030\007 \001(\t\"&\n\013MappingType\022\013"
-  "\n\007DYNAMIC\020\000\022\n\n\006STATIC\020\001\"+\n\014NewClientAck\022"
-  "\n\n\002id\030\001 \002(\r\022\017\n\007managed\030\002 \002(\010\"{\n\rConfigur"
-  "ation\0228\n\024regular_process_info\030\003 \003(\0132\032.te"
-  "tris.RegularProcessInfo\0220\n\024parallel_regi"
-  "on_info\030\004 \003(\0132\022.tetris.RegionInfo\"\330\001\n\013Pu"
-  "llRequest\022&\n\004type\030\001 \002(\0162\030.tetris.PullReq"
-  "uest.Type\022%\n\nnew_client\030\002 \001(\0132\021.tetris.N"
-  "ewClient\022,\n\rconfiguration\030\003 \001(\0132\025.tetris"
-  ".Configuration\"L\n\004Type\022\025\n\021TETRIS_NEW_CLI"
-  "ENT\020\000\022\021\n\rDPM_SUBSCRIBE\020\001\022\032\n\026DPM_SEND_CON"
-  "FIGURATION\020\002\"\270\001\n\014PullResponse\022\'\n\004type\030\001 "
-  "\002(\0162\031.tetris.PullResponse.Type\022\022\n\nfeatur"
-  "e_id\030\002 \001(\r\022,\n\016new_client_ack\030\003 \001(\0132\024.tet"
-  "ris.NewClientAck\"=\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013A"
-  "CKNOWLEDGE\020\001\022\031\n\025TETRIS_NEW_CLIENT_ACK\020\002\""
-  "\331\001\n\013PushRequest\022&\n\004type\030\001 \002(\0162\030.tetris.P"
-  "ushRequest.Type\022\022\n\nfeature_id\030\002 \002(\r\022:\n\025r"
-  "egion_configurations\030\003 \003(\0132\033.tetris.Regi"
-  "onConfiguration\"R\n\004Type\022\030\n\024UPDATE_CONFIG"
-  "URATION\020\000\022\024\n\020GET_REGIONS_INFO\020\001\022\032\n\026GET_R"
-  "EGIONS_THROUGHPUT\020\002\"\343\001\n\014PushResponse\022\'\n\004"
-  "type\030\001 \002(\0162\031.tetris.PushResponse.Type\022(\n"
-  "\014region_infos\030\003 \003(\0132\022.tetris.RegionInfo\022"
-  "4\n\022region_throughputs\030\004 \003(\0132\030.tetris.Reg"
-  "ionThroughput\"J\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013ACKN"
-  "OWLEDGE\020\001\022\017\n\013REGION_INFO\020\002\022\025\n\021REGION_THR"
-  "OUGHPUT\020\003"
+  "\r\"6\n\013ProcessInfo\022\024\n\014process_name\030\001 \002(\t\022\021"
+  "\n\tthread_id\030\002 \002(\r\"\210\001\n\nRegionInfo\022\014\n\004name"
+  "\030\001 \002(\t\0220\n\010replicas\030\002 \003(\0132\036.tetris.Region"
+  "Info.ReplicaInfo\032:\n\013ReplicaInfo\022+\n\016proce"
+  "ss_thread\030\001 \003(\0132\023.tetris.ProcessInfo\"\022\n\020"
+  "RegionThroughput\"\361\001\n\tNewClient\022\013\n\003pid\030\001 "
+  "\002(\r\022\014\n\004exec\030\002 \002(\t\0223\n\014mapping_type\030\003 \002(\0162"
+  "\035.tetris.NewClient.MappingType\022\030\n\020compar"
+  "e_criteria\030\004 \001(\t\022\036\n\026compare_more_is_bett"
+  "er\030\005 \001(\010\022\031\n\021preferred_mapping\030\006 \001(\t\022\027\n\017f"
+  "ilter_criteria\030\007 \001(\t\"&\n\013MappingType\022\013\n\007D"
+  "YNAMIC\020\000\022\n\n\006STATIC\020\001\"+\n\014NewClientAck\022\n\n\002"
+  "id\030\001 \002(\r\022\017\n\007managed\030\002 \002(\010\"l\n\rConfigurati"
+  "on\022)\n\014process_info\030\003 \003(\0132\023.tetris.Proces"
+  "sInfo\0220\n\024parallel_region_info\030\004 \003(\0132\022.te"
+  "tris.RegionInfo\"\330\001\n\013PullRequest\022&\n\004type\030"
+  "\001 \002(\0162\030.tetris.PullRequest.Type\022%\n\nnew_c"
+  "lient\030\002 \001(\0132\021.tetris.NewClient\022,\n\rconfig"
+  "uration\030\003 \001(\0132\025.tetris.Configuration\"L\n\004"
+  "Type\022\025\n\021TETRIS_NEW_CLIENT\020\000\022\021\n\rDPM_SUBSC"
+  "RIBE\020\001\022\032\n\026DPM_SEND_CONFIGURATION\020\002\"\270\001\n\014P"
+  "ullResponse\022\'\n\004type\030\001 \002(\0162\031.tetris.PullR"
+  "esponse.Type\022\022\n\nfeature_id\030\002 \001(\r\022,\n\016new_"
+  "client_ack\030\003 \001(\0132\024.tetris.NewClientAck\"="
+  "\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013ACKNOWLEDGE\020\001\022\031\n\025TE"
+  "TRIS_NEW_CLIENT_ACK\020\002\"\331\001\n\013PushRequest\022&\n"
+  "\004type\030\001 \002(\0162\030.tetris.PushRequest.Type\022\022\n"
+  "\nfeature_id\030\002 \002(\r\022:\n\025region_configuratio"
+  "ns\030\003 \003(\0132\033.tetris.RegionConfiguration\"R\n"
+  "\004Type\022\030\n\024UPDATE_CONFIGURATION\020\000\022\024\n\020GET_R"
+  "EGIONS_INFO\020\001\022\032\n\026GET_REGIONS_THROUGHPUT\020"
+  "\002\"\343\001\n\014PushResponse\022\'\n\004type\030\001 \002(\0162\031.tetri"
+  "s.PushResponse.Type\022(\n\014region_infos\030\003 \003("
+  "\0132\022.tetris.RegionInfo\0224\n\022region_throughp"
+  "uts\030\004 \003(\0132\030.tetris.RegionThroughput\"J\n\004T"
+  "ype\022\t\n\005ERROR\020\000\022\017\n\013ACKNOWLEDGE\020\001\022\017\n\013REGIO"
+  "N_INFO\020\002\022\025\n\021REGION_THROUGHPUT\020\003"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_tetris_2eproto_deps[1] = {
 };
-static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tetris_2eproto_sccs[13] = {
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tetris_2eproto_sccs[12] = {
   &scc_info_Configuration_tetris_2eproto.base,
   &scc_info_NewClient_tetris_2eproto.base,
   &scc_info_NewClientAck_tetris_2eproto.base,
+  &scc_info_ProcessInfo_tetris_2eproto.base,
   &scc_info_PullRequest_tetris_2eproto.base,
   &scc_info_PullResponse_tetris_2eproto.base,
   &scc_info_PushRequest_tetris_2eproto.base,
@@ -490,16 +458,14 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tet
   &scc_info_RegionConfiguration_tetris_2eproto.base,
   &scc_info_RegionInfo_tetris_2eproto.base,
   &scc_info_RegionInfo_ReplicaInfo_tetris_2eproto.base,
-  &scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto.base,
   &scc_info_RegionThroughput_tetris_2eproto.base,
-  &scc_info_RegularProcessInfo_tetris_2eproto.base,
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_tetris_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_tetris_2eproto = {
-  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1649,
-  &descriptor_table_tetris_2eproto_once, descriptor_table_tetris_2eproto_sccs, descriptor_table_tetris_2eproto_deps, 13, 0,
+  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1551,
+  &descriptor_table_tetris_2eproto_once, descriptor_table_tetris_2eproto_sccs, descriptor_table_tetris_2eproto_deps, 12, 0,
   schemas, file_default_instances, TableStruct_tetris_2eproto::offsets,
-  file_level_metadata_tetris_2eproto, 13, file_level_enum_descriptors_tetris_2eproto, file_level_service_descriptors_tetris_2eproto,
+  file_level_metadata_tetris_2eproto, 12, file_level_enum_descriptors_tetris_2eproto, file_level_service_descriptors_tetris_2eproto,
 };
 
 // Force running AddDescriptors() at dynamic initialization time.
@@ -906,11 +872,11 @@ void RegionConfiguration::InternalSwap(RegionConfiguration* other) {
 
 // ===================================================================
 
-void RegionInfo_ReplicaInfo_ProcessThread::InitAsDefaultInstance() {
+void ProcessInfo::InitAsDefaultInstance() {
 }
-class RegionInfo_ReplicaInfo_ProcessThread::_Internal {
+class ProcessInfo::_Internal {
  public:
-  using HasBits = decltype(std::declval<RegionInfo_ReplicaInfo_ProcessThread>()._has_bits_);
+  using HasBits = decltype(std::declval<ProcessInfo>()._has_bits_);
   static void set_has_process_name(HasBits* has_bits) {
     (*has_bits)[0] |= 1u;
   }
@@ -922,13 +888,13 @@ class RegionInfo_ReplicaInfo_ProcessThread::_Internal {
   }
 };
 
-RegionInfo_ReplicaInfo_ProcessThread::RegionInfo_ReplicaInfo_ProcessThread(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+ProcessInfo::ProcessInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
   SharedCtor();
   RegisterArenaDtor(arena);
-  // @@protoc_insertion_point(arena_constructor:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(arena_constructor:tetris.ProcessInfo)
 }
-RegionInfo_ReplicaInfo_ProcessThread::RegionInfo_ReplicaInfo_ProcessThread(const RegionInfo_ReplicaInfo_ProcessThread& from)
+ProcessInfo::ProcessInfo(const ProcessInfo& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _has_bits_(from._has_bits_) {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -938,43 +904,43 @@ RegionInfo_ReplicaInfo_ProcessThread::RegionInfo_ReplicaInfo_ProcessThread(const
       GetArena());
   }
   thread_id_ = from.thread_id_;
-  // @@protoc_insertion_point(copy_constructor:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(copy_constructor:tetris.ProcessInfo)
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto.base);
+void ProcessInfo::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ProcessInfo_tetris_2eproto.base);
   process_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   thread_id_ = 0u;
 }
 
-RegionInfo_ReplicaInfo_ProcessThread::~RegionInfo_ReplicaInfo_ProcessThread() {
-  // @@protoc_insertion_point(destructor:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+ProcessInfo::~ProcessInfo() {
+  // @@protoc_insertion_point(destructor:tetris.ProcessInfo)
   SharedDtor();
   _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::SharedDtor() {
+void ProcessInfo::SharedDtor() {
   GOOGLE_DCHECK(GetArena() == nullptr);
   process_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::ArenaDtor(void* object) {
-  RegionInfo_ReplicaInfo_ProcessThread* _this = reinterpret_cast< RegionInfo_ReplicaInfo_ProcessThread* >(object);
+void ProcessInfo::ArenaDtor(void* object) {
+  ProcessInfo* _this = reinterpret_cast< ProcessInfo* >(object);
   (void)_this;
 }
-void RegionInfo_ReplicaInfo_ProcessThread::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+void ProcessInfo::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
 }
-void RegionInfo_ReplicaInfo_ProcessThread::SetCachedSize(int size) const {
+void ProcessInfo::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const RegionInfo_ReplicaInfo_ProcessThread& RegionInfo_ReplicaInfo_ProcessThread::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RegionInfo_ReplicaInfo_ProcessThread_tetris_2eproto.base);
+const ProcessInfo& ProcessInfo::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ProcessInfo_tetris_2eproto.base);
   return *internal_default_instance();
 }
 
 
-void RegionInfo_ReplicaInfo_ProcessThread::Clear() {
-// @@protoc_insertion_point(message_clear_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+void ProcessInfo::Clear() {
+// @@protoc_insertion_point(message_clear_start:tetris.ProcessInfo)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -988,7 +954,7 @@ void RegionInfo_ReplicaInfo_ProcessThread::Clear() {
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* RegionInfo_ReplicaInfo_ProcessThread::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ProcessInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   _Internal::HasBits has_bits{};
   ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
@@ -1003,7 +969,7 @@ const char* RegionInfo_ReplicaInfo_ProcessThread::_InternalParse(const char* ptr
           auto str = _internal_mutable_process_name();
           ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
           #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name");
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tetris.ProcessInfo.process_name");
           #endif  // !NDEBUG
           CHK_(ptr);
         } else goto handle_unusual;
@@ -1039,9 +1005,9 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* RegionInfo_ReplicaInfo_ProcessThread::_InternalSerialize(
+::PROTOBUF_NAMESPACE_ID::uint8* ProcessInfo::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(serialize_to_array_start:tetris.ProcessInfo)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -1051,7 +1017,7 @@ failure:
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
       this->_internal_process_name().data(), static_cast<int>(this->_internal_process_name().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name");
+      "tetris.ProcessInfo.process_name");
     target = stream->WriteStringMaybeAliased(
         1, this->_internal_process_name(), target);
   }
@@ -1066,12 +1032,12 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(serialize_to_array_end:tetris.ProcessInfo)
   return target;
 }
 
-size_t RegionInfo_ReplicaInfo_ProcessThread::RequiredFieldsByteSizeFallback() const {
-// @@protoc_insertion_point(required_fields_byte_size_fallback_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+size_t ProcessInfo::RequiredFieldsByteSizeFallback() const {
+// @@protoc_insertion_point(required_fields_byte_size_fallback_start:tetris.ProcessInfo)
   size_t total_size = 0;
 
   if (_internal_has_process_name()) {
@@ -1090,8 +1056,8 @@ size_t RegionInfo_ReplicaInfo_ProcessThread::RequiredFieldsByteSizeFallback() co
 
   return total_size;
 }
-size_t RegionInfo_ReplicaInfo_ProcessThread::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+size_t ProcessInfo::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:tetris.ProcessInfo)
   size_t total_size = 0;
 
   if (((_has_bits_[0] & 0x00000003) ^ 0x00000003) == 0) {  // All required fields are present.
@@ -1121,23 +1087,23 @@ size_t RegionInfo_ReplicaInfo_ProcessThread::ByteSizeLong() const {
   return total_size;
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+void ProcessInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:tetris.ProcessInfo)
   GOOGLE_DCHECK_NE(&from, this);
-  const RegionInfo_ReplicaInfo_ProcessThread* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RegionInfo_ReplicaInfo_ProcessThread>(
+  const ProcessInfo* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ProcessInfo>(
           &from);
   if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:tetris.ProcessInfo)
     ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:tetris.ProcessInfo)
     MergeFrom(*source);
   }
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::MergeFrom(const RegionInfo_ReplicaInfo_ProcessThread& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+void ProcessInfo::MergeFrom(const ProcessInfo& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:tetris.ProcessInfo)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -1155,26 +1121,26 @@ void RegionInfo_ReplicaInfo_ProcessThread::MergeFrom(const RegionInfo_ReplicaInf
   }
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+void ProcessInfo::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:tetris.ProcessInfo)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::CopyFrom(const RegionInfo_ReplicaInfo_ProcessThread& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+void ProcessInfo::CopyFrom(const ProcessInfo& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:tetris.ProcessInfo)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool RegionInfo_ReplicaInfo_ProcessThread::IsInitialized() const {
+bool ProcessInfo::IsInitialized() const {
   if (_Internal::MissingRequiredFields(_has_bits_)) return false;
   return true;
 }
 
-void RegionInfo_ReplicaInfo_ProcessThread::InternalSwap(RegionInfo_ReplicaInfo_ProcessThread* other) {
+void ProcessInfo::InternalSwap(ProcessInfo* other) {
   using std::swap;
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   swap(_has_bits_[0], other->_has_bits_[0]);
@@ -1182,7 +1148,7 @@ void RegionInfo_ReplicaInfo_ProcessThread::InternalSwap(RegionInfo_ReplicaInfo_P
   swap(thread_id_, other->thread_id_);
 }
 
-::PROTOBUF_NAMESPACE_ID::Metadata RegionInfo_ReplicaInfo_ProcessThread::GetMetadata() const {
+::PROTOBUF_NAMESPACE_ID::Metadata ProcessInfo::GetMetadata() const {
   return GetMetadataStatic();
 }
 
@@ -1256,7 +1222,7 @@ const char* RegionInfo_ReplicaInfo::_InternalParse(const char* ptr, ::PROTOBUF_N
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     CHK_(ptr);
     switch (tag >> 3) {
-      // repeated .tetris.RegionInfo.ReplicaInfo.ProcessThread process_thread = 1;
+      // repeated .tetris.ProcessInfo process_thread = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
           ptr -= 1;
@@ -1296,7 +1262,7 @@ failure:
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated .tetris.RegionInfo.ReplicaInfo.ProcessThread process_thread = 1;
+  // repeated .tetris.ProcessInfo process_thread = 1;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->_internal_process_thread_size()); i < n; i++) {
     target = stream->EnsureSpace(target);
@@ -1320,7 +1286,7 @@ size_t RegionInfo_ReplicaInfo::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated .tetris.RegionInfo.ReplicaInfo.ProcessThread process_thread = 1;
+  // repeated .tetris.ProcessInfo process_thread = 1;
   total_size += 1UL * this->_internal_process_thread_size();
   for (const auto& msg : this->process_thread_) {
     total_size +=
@@ -1812,289 +1778,6 @@ void RegionThroughput::InternalSwap(RegionThroughput* other) {
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata RegionThroughput::GetMetadata() const {
-  return GetMetadataStatic();
-}
-
-
-// ===================================================================
-
-void RegularProcessInfo::InitAsDefaultInstance() {
-}
-class RegularProcessInfo::_Internal {
- public:
-  using HasBits = decltype(std::declval<RegularProcessInfo>()._has_bits_);
-  static void set_has_name(HasBits* has_bits) {
-    (*has_bits)[0] |= 1u;
-  }
-  static void set_has_thread_id(HasBits* has_bits) {
-    (*has_bits)[0] |= 2u;
-  }
-  static bool MissingRequiredFields(const HasBits& has_bits) {
-    return ((has_bits[0] & 0x00000003) ^ 0x00000003) != 0;
-  }
-};
-
-RegularProcessInfo::RegularProcessInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena)
-  : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
-  SharedCtor();
-  RegisterArenaDtor(arena);
-  // @@protoc_insertion_point(arena_constructor:tetris.RegularProcessInfo)
-}
-RegularProcessInfo::RegularProcessInfo(const RegularProcessInfo& from)
-  : ::PROTOBUF_NAMESPACE_ID::Message(),
-      _has_bits_(from._has_bits_) {
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  if (from._internal_has_name()) {
-    name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from._internal_name(),
-      GetArena());
-  }
-  thread_id_ = from.thread_id_;
-  // @@protoc_insertion_point(copy_constructor:tetris.RegularProcessInfo)
-}
-
-void RegularProcessInfo::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RegularProcessInfo_tetris_2eproto.base);
-  name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  thread_id_ = 0u;
-}
-
-RegularProcessInfo::~RegularProcessInfo() {
-  // @@protoc_insertion_point(destructor:tetris.RegularProcessInfo)
-  SharedDtor();
-  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
-}
-
-void RegularProcessInfo::SharedDtor() {
-  GOOGLE_DCHECK(GetArena() == nullptr);
-  name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-}
-
-void RegularProcessInfo::ArenaDtor(void* object) {
-  RegularProcessInfo* _this = reinterpret_cast< RegularProcessInfo* >(object);
-  (void)_this;
-}
-void RegularProcessInfo::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
-}
-void RegularProcessInfo::SetCachedSize(int size) const {
-  _cached_size_.Set(size);
-}
-const RegularProcessInfo& RegularProcessInfo::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RegularProcessInfo_tetris_2eproto.base);
-  return *internal_default_instance();
-}
-
-
-void RegularProcessInfo::Clear() {
-// @@protoc_insertion_point(message_clear_start:tetris.RegularProcessInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  if (cached_has_bits & 0x00000001u) {
-    name_.ClearNonDefaultToEmpty();
-  }
-  thread_id_ = 0u;
-  _has_bits_.Clear();
-  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
-}
-
-const char* RegularProcessInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
-#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
-  _Internal::HasBits has_bits{};
-  ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
-  while (!ctx->Done(&ptr)) {
-    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
-    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
-    CHK_(ptr);
-    switch (tag >> 3) {
-      // required string name = 1;
-      case 1:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
-          auto str = _internal_mutable_name();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "tetris.RegularProcessInfo.name");
-          #endif  // !NDEBUG
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      // required uint32 thread_id = 2;
-      case 2:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
-          _Internal::set_has_thread_id(&has_bits);
-          thread_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
-          CHK_(ptr);
-        } else goto handle_unusual;
-        continue;
-      default: {
-      handle_unusual:
-        if ((tag & 7) == 4 || tag == 0) {
-          ctx->SetLastTag(tag);
-          goto success;
-        }
-        ptr = UnknownFieldParse(tag,
-            _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
-            ptr, ctx);
-        CHK_(ptr != nullptr);
-        continue;
-      }
-    }  // switch
-  }  // while
-success:
-  _has_bits_.Or(has_bits);
-  return ptr;
-failure:
-  ptr = nullptr;
-  goto success;
-#undef CHK_
-}
-
-::PROTOBUF_NAMESPACE_ID::uint8* RegularProcessInfo::_InternalSerialize(
-    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:tetris.RegularProcessInfo)
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = _has_bits_[0];
-  // required string name = 1;
-  if (cached_has_bits & 0x00000001u) {
-    ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::VerifyUTF8StringNamedField(
-      this->_internal_name().data(), static_cast<int>(this->_internal_name().length()),
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SERIALIZE,
-      "tetris.RegularProcessInfo.name");
-    target = stream->WriteStringMaybeAliased(
-        1, this->_internal_name(), target);
-  }
-
-  // required uint32 thread_id = 2;
-  if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(2, this->_internal_thread_id(), target);
-  }
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
-        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
-  }
-  // @@protoc_insertion_point(serialize_to_array_end:tetris.RegularProcessInfo)
-  return target;
-}
-
-size_t RegularProcessInfo::RequiredFieldsByteSizeFallback() const {
-// @@protoc_insertion_point(required_fields_byte_size_fallback_start:tetris.RegularProcessInfo)
-  size_t total_size = 0;
-
-  if (_internal_has_name()) {
-    // required string name = 1;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_name());
-  }
-
-  if (_internal_has_thread_id()) {
-    // required uint32 thread_id = 2;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-        this->_internal_thread_id());
-  }
-
-  return total_size;
-}
-size_t RegularProcessInfo::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:tetris.RegularProcessInfo)
-  size_t total_size = 0;
-
-  if (((_has_bits_[0] & 0x00000003) ^ 0x00000003) == 0) {  // All required fields are present.
-    // required string name = 1;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
-        this->_internal_name());
-
-    // required uint32 thread_id = 2;
-    total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
-        this->_internal_thread_id());
-
-  } else {
-    total_size += RequiredFieldsByteSizeFallback();
-  }
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
-    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
-        _internal_metadata_, total_size, &_cached_size_);
-  }
-  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
-  SetCachedSize(cached_size);
-  return total_size;
-}
-
-void RegularProcessInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:tetris.RegularProcessInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  const RegularProcessInfo* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RegularProcessInfo>(
-          &from);
-  if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:tetris.RegularProcessInfo)
-    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
-  } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:tetris.RegularProcessInfo)
-    MergeFrom(*source);
-  }
-}
-
-void RegularProcessInfo::MergeFrom(const RegularProcessInfo& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tetris.RegularProcessInfo)
-  GOOGLE_DCHECK_NE(&from, this);
-  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._has_bits_[0];
-  if (cached_has_bits & 0x00000003u) {
-    if (cached_has_bits & 0x00000001u) {
-      _internal_set_name(from._internal_name());
-    }
-    if (cached_has_bits & 0x00000002u) {
-      thread_id_ = from.thread_id_;
-    }
-    _has_bits_[0] |= cached_has_bits;
-  }
-}
-
-void RegularProcessInfo::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:tetris.RegularProcessInfo)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-void RegularProcessInfo::CopyFrom(const RegularProcessInfo& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:tetris.RegularProcessInfo)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-bool RegularProcessInfo::IsInitialized() const {
-  if (_Internal::MissingRequiredFields(_has_bits_)) return false;
-  return true;
-}
-
-void RegularProcessInfo::InternalSwap(RegularProcessInfo* other) {
-  using std::swap;
-  _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
-  swap(_has_bits_[0], other->_has_bits_[0]);
-  name_.Swap(&other->name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-  swap(thread_id_, other->thread_id_);
-}
-
-::PROTOBUF_NAMESPACE_ID::Metadata RegularProcessInfo::GetMetadata() const {
   return GetMetadataStatic();
 }
 
@@ -2878,7 +2561,7 @@ class Configuration::_Internal {
 
 Configuration::Configuration(::PROTOBUF_NAMESPACE_ID::Arena* arena)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena),
-  regular_process_info_(arena),
+  process_info_(arena),
   parallel_region_info_(arena) {
   SharedCtor();
   RegisterArenaDtor(arena);
@@ -2886,7 +2569,7 @@ Configuration::Configuration(::PROTOBUF_NAMESPACE_ID::Arena* arena)
 }
 Configuration::Configuration(const Configuration& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
-      regular_process_info_(from.regular_process_info_),
+      process_info_(from.process_info_),
       parallel_region_info_(from.parallel_region_info_) {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:tetris.Configuration)
@@ -2927,7 +2610,7 @@ void Configuration::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  regular_process_info_.Clear();
+  process_info_.Clear();
   parallel_region_info_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -2940,13 +2623,13 @@ const char* Configuration::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     CHK_(ptr);
     switch (tag >> 3) {
-      // repeated .tetris.RegularProcessInfo regular_process_info = 3;
+      // repeated .tetris.ProcessInfo process_info = 3;
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
           ptr -= 1;
           do {
             ptr += 1;
-            ptr = ctx->ParseMessage(_internal_add_regular_process_info(), ptr);
+            ptr = ctx->ParseMessage(_internal_add_process_info(), ptr);
             CHK_(ptr);
             if (!ctx->DataAvailable(ptr)) break;
           } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
@@ -2992,12 +2675,12 @@ failure:
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated .tetris.RegularProcessInfo regular_process_info = 3;
+  // repeated .tetris.ProcessInfo process_info = 3;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->_internal_regular_process_info_size()); i < n; i++) {
+      n = static_cast<unsigned int>(this->_internal_process_info_size()); i < n; i++) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(3, this->_internal_regular_process_info(i), target, stream);
+      InternalWriteMessage(3, this->_internal_process_info(i), target, stream);
   }
 
   // repeated .tetris.RegionInfo parallel_region_info = 4;
@@ -3024,9 +2707,9 @@ size_t Configuration::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated .tetris.RegularProcessInfo regular_process_info = 3;
-  total_size += 1UL * this->_internal_regular_process_info_size();
-  for (const auto& msg : this->regular_process_info_) {
+  // repeated .tetris.ProcessInfo process_info = 3;
+  total_size += 1UL * this->_internal_process_info_size();
+  for (const auto& msg : this->process_info_) {
     total_size +=
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
@@ -3069,7 +2752,7 @@ void Configuration::MergeFrom(const Configuration& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  regular_process_info_.MergeFrom(from.regular_process_info_);
+  process_info_.MergeFrom(from.process_info_);
   parallel_region_info_.MergeFrom(from.parallel_region_info_);
 }
 
@@ -3088,7 +2771,7 @@ void Configuration::CopyFrom(const Configuration& from) {
 }
 
 bool Configuration::IsInitialized() const {
-  if (!::PROTOBUF_NAMESPACE_ID::internal::AllAreInitialized(regular_process_info_)) return false;
+  if (!::PROTOBUF_NAMESPACE_ID::internal::AllAreInitialized(process_info_)) return false;
   if (!::PROTOBUF_NAMESPACE_ID::internal::AllAreInitialized(parallel_region_info_)) return false;
   return true;
 }
@@ -3096,7 +2779,7 @@ bool Configuration::IsInitialized() const {
 void Configuration::InternalSwap(Configuration* other) {
   using std::swap;
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
-  regular_process_info_.InternalSwap(&other->regular_process_info_);
+  process_info_.InternalSwap(&other->process_info_);
   parallel_region_info_.InternalSwap(&other->parallel_region_info_);
 }
 
@@ -4345,8 +4028,8 @@ PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::tetris::RegionConfiguration* Arena::CreateMaybeMessage< ::tetris::RegionConfiguration >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::RegionConfiguration >(arena);
 }
-template<> PROTOBUF_NOINLINE ::tetris::RegionInfo_ReplicaInfo_ProcessThread* Arena::CreateMaybeMessage< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >(arena);
+template<> PROTOBUF_NOINLINE ::tetris::ProcessInfo* Arena::CreateMaybeMessage< ::tetris::ProcessInfo >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::tetris::ProcessInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tetris::RegionInfo_ReplicaInfo* Arena::CreateMaybeMessage< ::tetris::RegionInfo_ReplicaInfo >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::RegionInfo_ReplicaInfo >(arena);
@@ -4356,9 +4039,6 @@ template<> PROTOBUF_NOINLINE ::tetris::RegionInfo* Arena::CreateMaybeMessage< ::
 }
 template<> PROTOBUF_NOINLINE ::tetris::RegionThroughput* Arena::CreateMaybeMessage< ::tetris::RegionThroughput >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::RegionThroughput >(arena);
-}
-template<> PROTOBUF_NOINLINE ::tetris::RegularProcessInfo* Arena::CreateMaybeMessage< ::tetris::RegularProcessInfo >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::tetris::RegularProcessInfo >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tetris::NewClient* Arena::CreateMaybeMessage< ::tetris::NewClient >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::NewClient >(arena);

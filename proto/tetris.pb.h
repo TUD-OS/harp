@@ -48,7 +48,7 @@ struct TableStruct_tetris_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxillaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[13]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[12]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -65,6 +65,9 @@ extern NewClientDefaultTypeInternal _NewClient_default_instance_;
 class NewClientAck;
 class NewClientAckDefaultTypeInternal;
 extern NewClientAckDefaultTypeInternal _NewClientAck_default_instance_;
+class ProcessInfo;
+class ProcessInfoDefaultTypeInternal;
+extern ProcessInfoDefaultTypeInternal _ProcessInfo_default_instance_;
 class PullRequest;
 class PullRequestDefaultTypeInternal;
 extern PullRequestDefaultTypeInternal _PullRequest_default_instance_;
@@ -86,20 +89,15 @@ extern RegionInfoDefaultTypeInternal _RegionInfo_default_instance_;
 class RegionInfo_ReplicaInfo;
 class RegionInfo_ReplicaInfoDefaultTypeInternal;
 extern RegionInfo_ReplicaInfoDefaultTypeInternal _RegionInfo_ReplicaInfo_default_instance_;
-class RegionInfo_ReplicaInfo_ProcessThread;
-class RegionInfo_ReplicaInfo_ProcessThreadDefaultTypeInternal;
-extern RegionInfo_ReplicaInfo_ProcessThreadDefaultTypeInternal _RegionInfo_ReplicaInfo_ProcessThread_default_instance_;
 class RegionThroughput;
 class RegionThroughputDefaultTypeInternal;
 extern RegionThroughputDefaultTypeInternal _RegionThroughput_default_instance_;
-class RegularProcessInfo;
-class RegularProcessInfoDefaultTypeInternal;
-extern RegularProcessInfoDefaultTypeInternal _RegularProcessInfo_default_instance_;
 }  // namespace tetris
 PROTOBUF_NAMESPACE_OPEN
 template<> ::tetris::Configuration* Arena::CreateMaybeMessage<::tetris::Configuration>(Arena*);
 template<> ::tetris::NewClient* Arena::CreateMaybeMessage<::tetris::NewClient>(Arena*);
 template<> ::tetris::NewClientAck* Arena::CreateMaybeMessage<::tetris::NewClientAck>(Arena*);
+template<> ::tetris::ProcessInfo* Arena::CreateMaybeMessage<::tetris::ProcessInfo>(Arena*);
 template<> ::tetris::PullRequest* Arena::CreateMaybeMessage<::tetris::PullRequest>(Arena*);
 template<> ::tetris::PullResponse* Arena::CreateMaybeMessage<::tetris::PullResponse>(Arena*);
 template<> ::tetris::PushRequest* Arena::CreateMaybeMessage<::tetris::PushRequest>(Arena*);
@@ -107,9 +105,7 @@ template<> ::tetris::PushResponse* Arena::CreateMaybeMessage<::tetris::PushRespo
 template<> ::tetris::RegionConfiguration* Arena::CreateMaybeMessage<::tetris::RegionConfiguration>(Arena*);
 template<> ::tetris::RegionInfo* Arena::CreateMaybeMessage<::tetris::RegionInfo>(Arena*);
 template<> ::tetris::RegionInfo_ReplicaInfo* Arena::CreateMaybeMessage<::tetris::RegionInfo_ReplicaInfo>(Arena*);
-template<> ::tetris::RegionInfo_ReplicaInfo_ProcessThread* Arena::CreateMaybeMessage<::tetris::RegionInfo_ReplicaInfo_ProcessThread>(Arena*);
 template<> ::tetris::RegionThroughput* Arena::CreateMaybeMessage<::tetris::RegionThroughput>(Arena*);
-template<> ::tetris::RegularProcessInfo* Arena::CreateMaybeMessage<::tetris::RegularProcessInfo>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace tetris {
 
@@ -418,23 +414,23 @@ class RegionConfiguration PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
-class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:tetris.RegionInfo.ReplicaInfo.ProcessThread) */ {
+class ProcessInfo PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:tetris.ProcessInfo) */ {
  public:
-  inline RegionInfo_ReplicaInfo_ProcessThread() : RegionInfo_ReplicaInfo_ProcessThread(nullptr) {};
-  virtual ~RegionInfo_ReplicaInfo_ProcessThread();
+  inline ProcessInfo() : ProcessInfo(nullptr) {};
+  virtual ~ProcessInfo();
 
-  RegionInfo_ReplicaInfo_ProcessThread(const RegionInfo_ReplicaInfo_ProcessThread& from);
-  RegionInfo_ReplicaInfo_ProcessThread(RegionInfo_ReplicaInfo_ProcessThread&& from) noexcept
-    : RegionInfo_ReplicaInfo_ProcessThread() {
+  ProcessInfo(const ProcessInfo& from);
+  ProcessInfo(ProcessInfo&& from) noexcept
+    : ProcessInfo() {
     *this = ::std::move(from);
   }
 
-  inline RegionInfo_ReplicaInfo_ProcessThread& operator=(const RegionInfo_ReplicaInfo_ProcessThread& from) {
+  inline ProcessInfo& operator=(const ProcessInfo& from) {
     CopyFrom(from);
     return *this;
   }
-  inline RegionInfo_ReplicaInfo_ProcessThread& operator=(RegionInfo_ReplicaInfo_ProcessThread&& from) noexcept {
+  inline ProcessInfo& operator=(ProcessInfo&& from) noexcept {
     if (GetArena() == from.GetArena()) {
       if (this != &from) InternalSwap(&from);
     } else {
@@ -459,20 +455,20 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
   static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
     return GetMetadataStatic().reflection;
   }
-  static const RegionInfo_ReplicaInfo_ProcessThread& default_instance();
+  static const ProcessInfo& default_instance();
 
   static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const RegionInfo_ReplicaInfo_ProcessThread* internal_default_instance() {
-    return reinterpret_cast<const RegionInfo_ReplicaInfo_ProcessThread*>(
-               &_RegionInfo_ReplicaInfo_ProcessThread_default_instance_);
+  static inline const ProcessInfo* internal_default_instance() {
+    return reinterpret_cast<const ProcessInfo*>(
+               &_ProcessInfo_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
     1;
 
-  friend void swap(RegionInfo_ReplicaInfo_ProcessThread& a, RegionInfo_ReplicaInfo_ProcessThread& b) {
+  friend void swap(ProcessInfo& a, ProcessInfo& b) {
     a.Swap(&b);
   }
-  inline void Swap(RegionInfo_ReplicaInfo_ProcessThread* other) {
+  inline void Swap(ProcessInfo* other) {
     if (other == this) return;
     if (GetArena() == other->GetArena()) {
       InternalSwap(other);
@@ -480,7 +476,7 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
       ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(RegionInfo_ReplicaInfo_ProcessThread* other) {
+  void UnsafeArenaSwap(ProcessInfo* other) {
     if (other == this) return;
     GOOGLE_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
@@ -488,17 +484,17 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
 
   // implements Message ----------------------------------------------
 
-  inline RegionInfo_ReplicaInfo_ProcessThread* New() const final {
-    return CreateMaybeMessage<RegionInfo_ReplicaInfo_ProcessThread>(nullptr);
+  inline ProcessInfo* New() const final {
+    return CreateMaybeMessage<ProcessInfo>(nullptr);
   }
 
-  RegionInfo_ReplicaInfo_ProcessThread* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
-    return CreateMaybeMessage<RegionInfo_ReplicaInfo_ProcessThread>(arena);
+  ProcessInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<ProcessInfo>(arena);
   }
   void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
   void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
-  void CopyFrom(const RegionInfo_ReplicaInfo_ProcessThread& from);
-  void MergeFrom(const RegionInfo_ReplicaInfo_ProcessThread& from);
+  void CopyFrom(const ProcessInfo& from);
+  void MergeFrom(const ProcessInfo& from);
   PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
   bool IsInitialized() const final;
 
@@ -512,13 +508,13 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
   inline void SharedCtor();
   inline void SharedDtor();
   void SetCachedSize(int size) const final;
-  void InternalSwap(RegionInfo_ReplicaInfo_ProcessThread* other);
+  void InternalSwap(ProcessInfo* other);
   friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
   static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "tetris.RegionInfo.ReplicaInfo.ProcessThread";
+    return "tetris.ProcessInfo";
   }
   protected:
-  explicit RegionInfo_ReplicaInfo_ProcessThread(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  explicit ProcessInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena);
   private:
   static void ArenaDtor(void* object);
   inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
@@ -583,7 +579,7 @@ class RegionInfo_ReplicaInfo_ProcessThread PROTOBUF_FINAL :
   void _internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
-  // @@protoc_insertion_point(class_scope:tetris.RegionInfo.ReplicaInfo.ProcessThread)
+  // @@protoc_insertion_point(class_scope:tetris.ProcessInfo)
  private:
   class _Internal;
 
@@ -718,29 +714,27 @@ class RegionInfo_ReplicaInfo PROTOBUF_FINAL :
 
   // nested types ----------------------------------------------------
 
-  typedef RegionInfo_ReplicaInfo_ProcessThread ProcessThread;
-
   // accessors -------------------------------------------------------
 
   enum : int {
     kProcessThreadFieldNumber = 1,
   };
-  // repeated .tetris.RegionInfo.ReplicaInfo.ProcessThread process_thread = 1;
+  // repeated .tetris.ProcessInfo process_thread = 1;
   int process_thread_size() const;
   private:
   int _internal_process_thread_size() const;
   public:
   void clear_process_thread();
-  ::tetris::RegionInfo_ReplicaInfo_ProcessThread* mutable_process_thread(int index);
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >*
+  ::tetris::ProcessInfo* mutable_process_thread(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >*
       mutable_process_thread();
   private:
-  const ::tetris::RegionInfo_ReplicaInfo_ProcessThread& _internal_process_thread(int index) const;
-  ::tetris::RegionInfo_ReplicaInfo_ProcessThread* _internal_add_process_thread();
+  const ::tetris::ProcessInfo& _internal_process_thread(int index) const;
+  ::tetris::ProcessInfo* _internal_add_process_thread();
   public:
-  const ::tetris::RegionInfo_ReplicaInfo_ProcessThread& process_thread(int index) const;
-  ::tetris::RegionInfo_ReplicaInfo_ProcessThread* add_process_thread();
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >&
+  const ::tetris::ProcessInfo& process_thread(int index) const;
+  ::tetris::ProcessInfo* add_process_thread();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >&
       process_thread() const;
 
   // @@protoc_insertion_point(class_scope:tetris.RegionInfo.ReplicaInfo)
@@ -750,7 +744,7 @@ class RegionInfo_ReplicaInfo PROTOBUF_FINAL :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo_ReplicaInfo_ProcessThread > process_thread_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo > process_thread_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_tetris_2eproto;
 };
@@ -1074,189 +1068,6 @@ class RegionThroughput PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
-class RegularProcessInfo PROTOBUF_FINAL :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:tetris.RegularProcessInfo) */ {
- public:
-  inline RegularProcessInfo() : RegularProcessInfo(nullptr) {};
-  virtual ~RegularProcessInfo();
-
-  RegularProcessInfo(const RegularProcessInfo& from);
-  RegularProcessInfo(RegularProcessInfo&& from) noexcept
-    : RegularProcessInfo() {
-    *this = ::std::move(from);
-  }
-
-  inline RegularProcessInfo& operator=(const RegularProcessInfo& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline RegularProcessInfo& operator=(RegularProcessInfo&& from) noexcept {
-    if (GetArena() == from.GetArena()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  inline const ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet& unknown_fields() const {
-    return _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance);
-  }
-  inline ::PROTOBUF_NAMESPACE_ID::UnknownFieldSet* mutable_unknown_fields() {
-    return _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return GetMetadataStatic().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return GetMetadataStatic().reflection;
-  }
-  static const RegularProcessInfo& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const RegularProcessInfo* internal_default_instance() {
-    return reinterpret_cast<const RegularProcessInfo*>(
-               &_RegularProcessInfo_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    5;
-
-  friend void swap(RegularProcessInfo& a, RegularProcessInfo& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(RegularProcessInfo* other) {
-    if (other == this) return;
-    if (GetArena() == other->GetArena()) {
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(RegularProcessInfo* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline RegularProcessInfo* New() const final {
-    return CreateMaybeMessage<RegularProcessInfo>(nullptr);
-  }
-
-  RegularProcessInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
-    return CreateMaybeMessage<RegularProcessInfo>(arena);
-  }
-  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
-  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
-  void CopyFrom(const RegularProcessInfo& from);
-  void MergeFrom(const RegularProcessInfo& from);
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
-      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _cached_size_.Get(); }
-
-  private:
-  inline void SharedCtor();
-  inline void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(RegularProcessInfo* other);
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "tetris.RegularProcessInfo";
-  }
-  protected:
-  explicit RegularProcessInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena);
-  private:
-  static void ArenaDtor(void* object);
-  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
-  public:
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-  private:
-  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
-    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_tetris_2eproto);
-    return ::descriptor_table_tetris_2eproto.file_level_metadata[kIndexInFileMessages];
-  }
-
-  public:
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kNameFieldNumber = 1,
-    kThreadIdFieldNumber = 2,
-  };
-  // required string name = 1;
-  bool has_name() const;
-  private:
-  bool _internal_has_name() const;
-  public:
-  void clear_name();
-  const std::string& name() const;
-  void set_name(const std::string& value);
-  void set_name(std::string&& value);
-  void set_name(const char* value);
-  void set_name(const char* value, size_t size);
-  std::string* mutable_name();
-  std::string* release_name();
-  void set_allocated_name(std::string* name);
-  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  std::string* unsafe_arena_release_name();
-  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  void unsafe_arena_set_allocated_name(
-      std::string* name);
-  private:
-  const std::string& _internal_name() const;
-  void _internal_set_name(const std::string& value);
-  std::string* _internal_mutable_name();
-  public:
-
-  // required uint32 thread_id = 2;
-  bool has_thread_id() const;
-  private:
-  bool _internal_has_thread_id() const;
-  public:
-  void clear_thread_id();
-  ::PROTOBUF_NAMESPACE_ID::uint32 thread_id() const;
-  void set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  private:
-  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_thread_id() const;
-  void _internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:tetris.RegularProcessInfo)
- private:
-  class _Internal;
-
-  // helper for ByteSizeLong()
-  size_t RequiredFieldsByteSizeFallback() const;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
-  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
-  ::PROTOBUF_NAMESPACE_ID::uint32 thread_id_;
-  friend struct ::TableStruct_tetris_2eproto;
-};
-// -------------------------------------------------------------------
-
 class NewClient PROTOBUF_FINAL :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:tetris.NewClient) */ {
  public:
@@ -1306,7 +1117,7 @@ class NewClient PROTOBUF_FINAL :
                &_NewClient_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    5;
 
   friend void swap(NewClient& a, NewClient& b) {
     a.Swap(&b);
@@ -1642,7 +1453,7 @@ class NewClientAck PROTOBUF_FINAL :
                &_NewClientAck_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    6;
 
   friend void swap(NewClientAck& a, NewClientAck& b) {
     a.Swap(&b);
@@ -1809,7 +1620,7 @@ class Configuration PROTOBUF_FINAL :
                &_Configuration_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    7;
 
   friend void swap(Configuration& a, Configuration& b) {
     a.Swap(&b);
@@ -1880,26 +1691,26 @@ class Configuration PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kRegularProcessInfoFieldNumber = 3,
+    kProcessInfoFieldNumber = 3,
     kParallelRegionInfoFieldNumber = 4,
   };
-  // repeated .tetris.RegularProcessInfo regular_process_info = 3;
-  int regular_process_info_size() const;
+  // repeated .tetris.ProcessInfo process_info = 3;
+  int process_info_size() const;
   private:
-  int _internal_regular_process_info_size() const;
+  int _internal_process_info_size() const;
   public:
-  void clear_regular_process_info();
-  ::tetris::RegularProcessInfo* mutable_regular_process_info(int index);
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegularProcessInfo >*
-      mutable_regular_process_info();
+  void clear_process_info();
+  ::tetris::ProcessInfo* mutable_process_info(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >*
+      mutable_process_info();
   private:
-  const ::tetris::RegularProcessInfo& _internal_regular_process_info(int index) const;
-  ::tetris::RegularProcessInfo* _internal_add_regular_process_info();
+  const ::tetris::ProcessInfo& _internal_process_info(int index) const;
+  ::tetris::ProcessInfo* _internal_add_process_info();
   public:
-  const ::tetris::RegularProcessInfo& regular_process_info(int index) const;
-  ::tetris::RegularProcessInfo* add_regular_process_info();
-  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegularProcessInfo >&
-      regular_process_info() const;
+  const ::tetris::ProcessInfo& process_info(int index) const;
+  ::tetris::ProcessInfo* add_process_info();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >&
+      process_info() const;
 
   // repeated .tetris.RegionInfo parallel_region_info = 4;
   int parallel_region_info_size() const;
@@ -1926,7 +1737,7 @@ class Configuration PROTOBUF_FINAL :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegularProcessInfo > regular_process_info_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo > process_info_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo > parallel_region_info_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_tetris_2eproto;
@@ -1982,7 +1793,7 @@ class PullRequest PROTOBUF_FINAL :
                &_PullRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    8;
 
   friend void swap(PullRequest& a, PullRequest& b) {
     a.Swap(&b);
@@ -2203,7 +2014,7 @@ class PullResponse PROTOBUF_FINAL :
                &_PullResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    9;
 
   friend void swap(PullResponse& a, PullResponse& b) {
     a.Swap(&b);
@@ -2419,7 +2230,7 @@ class PushRequest PROTOBUF_FINAL :
                &_PushRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    10;
 
   friend void swap(PushRequest& a, PushRequest& b) {
     a.Swap(&b);
@@ -2638,7 +2449,7 @@ class PushResponse PROTOBUF_FINAL :
                &_PushResponse_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    12;
+    11;
 
   friend void swap(PushResponse& a, PushResponse& b) {
     a.Swap(&b);
@@ -2944,72 +2755,72 @@ inline void RegionConfiguration::set_num_replicas(::PROTOBUF_NAMESPACE_ID::uint3
 
 // -------------------------------------------------------------------
 
-// RegionInfo_ReplicaInfo_ProcessThread
+// ProcessInfo
 
 // required string process_name = 1;
-inline bool RegionInfo_ReplicaInfo_ProcessThread::_internal_has_process_name() const {
+inline bool ProcessInfo::_internal_has_process_name() const {
   bool value = (_has_bits_[0] & 0x00000001u) != 0;
   return value;
 }
-inline bool RegionInfo_ReplicaInfo_ProcessThread::has_process_name() const {
+inline bool ProcessInfo::has_process_name() const {
   return _internal_has_process_name();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::clear_process_name() {
+inline void ProcessInfo::clear_process_name() {
   process_name_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
   _has_bits_[0] &= ~0x00000001u;
 }
-inline const std::string& RegionInfo_ReplicaInfo_ProcessThread::process_name() const {
-  // @@protoc_insertion_point(field_get:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+inline const std::string& ProcessInfo::process_name() const {
+  // @@protoc_insertion_point(field_get:tetris.ProcessInfo.process_name)
   return _internal_process_name();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_process_name(const std::string& value) {
+inline void ProcessInfo::set_process_name(const std::string& value) {
   _internal_set_process_name(value);
-  // @@protoc_insertion_point(field_set:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_set:tetris.ProcessInfo.process_name)
 }
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::mutable_process_name() {
-  // @@protoc_insertion_point(field_mutable:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+inline std::string* ProcessInfo::mutable_process_name() {
+  // @@protoc_insertion_point(field_mutable:tetris.ProcessInfo.process_name)
   return _internal_mutable_process_name();
 }
-inline const std::string& RegionInfo_ReplicaInfo_ProcessThread::_internal_process_name() const {
+inline const std::string& ProcessInfo::_internal_process_name() const {
   return process_name_.Get();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::_internal_set_process_name(const std::string& value) {
+inline void ProcessInfo::_internal_set_process_name(const std::string& value) {
   _has_bits_[0] |= 0x00000001u;
   process_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_process_name(std::string&& value) {
+inline void ProcessInfo::set_process_name(std::string&& value) {
   _has_bits_[0] |= 0x00000001u;
   process_name_.Set(
     &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
-  // @@protoc_insertion_point(field_set_rvalue:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_set_rvalue:tetris.ProcessInfo.process_name)
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_process_name(const char* value) {
+inline void ProcessInfo::set_process_name(const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   _has_bits_[0] |= 0x00000001u;
   process_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
               GetArena());
-  // @@protoc_insertion_point(field_set_char:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_set_char:tetris.ProcessInfo.process_name)
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_process_name(const char* value,
+inline void ProcessInfo::set_process_name(const char* value,
     size_t size) {
   _has_bits_[0] |= 0x00000001u;
   process_name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
       reinterpret_cast<const char*>(value), size), GetArena());
-  // @@protoc_insertion_point(field_set_pointer:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_set_pointer:tetris.ProcessInfo.process_name)
 }
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::_internal_mutable_process_name() {
+inline std::string* ProcessInfo::_internal_mutable_process_name() {
   _has_bits_[0] |= 0x00000001u;
   return process_name_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::release_process_name() {
-  // @@protoc_insertion_point(field_release:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+inline std::string* ProcessInfo::release_process_name() {
+  // @@protoc_insertion_point(field_release:tetris.ProcessInfo.process_name)
   if (!_internal_has_process_name()) {
     return nullptr;
   }
   _has_bits_[0] &= ~0x00000001u;
   return process_name_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_allocated_process_name(std::string* process_name) {
+inline void ProcessInfo::set_allocated_process_name(std::string* process_name) {
   if (process_name != nullptr) {
     _has_bits_[0] |= 0x00000001u;
   } else {
@@ -3017,16 +2828,16 @@ inline void RegionInfo_ReplicaInfo_ProcessThread::set_allocated_process_name(std
   }
   process_name_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), process_name,
       GetArena());
-  // @@protoc_insertion_point(field_set_allocated:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_set_allocated:tetris.ProcessInfo.process_name)
 }
-inline std::string* RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_release_process_name() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+inline std::string* ProcessInfo::unsafe_arena_release_process_name() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:tetris.ProcessInfo.process_name)
   GOOGLE_DCHECK(GetArena() != nullptr);
   _has_bits_[0] &= ~0x00000001u;
   return process_name_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
       GetArena());
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_set_allocated_process_name(
+inline void ProcessInfo::unsafe_arena_set_allocated_process_name(
     std::string* process_name) {
   GOOGLE_DCHECK(GetArena() != nullptr);
   if (process_name != nullptr) {
@@ -3036,42 +2847,42 @@ inline void RegionInfo_ReplicaInfo_ProcessThread::unsafe_arena_set_allocated_pro
   }
   process_name_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
       process_name, GetArena());
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:tetris.RegionInfo.ReplicaInfo.ProcessThread.process_name)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:tetris.ProcessInfo.process_name)
 }
 
 // required uint32 thread_id = 2;
-inline bool RegionInfo_ReplicaInfo_ProcessThread::_internal_has_thread_id() const {
+inline bool ProcessInfo::_internal_has_thread_id() const {
   bool value = (_has_bits_[0] & 0x00000002u) != 0;
   return value;
 }
-inline bool RegionInfo_ReplicaInfo_ProcessThread::has_thread_id() const {
+inline bool ProcessInfo::has_thread_id() const {
   return _internal_has_thread_id();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::clear_thread_id() {
+inline void ProcessInfo::clear_thread_id() {
   thread_id_ = 0u;
   _has_bits_[0] &= ~0x00000002u;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint32 RegionInfo_ReplicaInfo_ProcessThread::_internal_thread_id() const {
+inline ::PROTOBUF_NAMESPACE_ID::uint32 ProcessInfo::_internal_thread_id() const {
   return thread_id_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint32 RegionInfo_ReplicaInfo_ProcessThread::thread_id() const {
-  // @@protoc_insertion_point(field_get:tetris.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
+inline ::PROTOBUF_NAMESPACE_ID::uint32 ProcessInfo::thread_id() const {
+  // @@protoc_insertion_point(field_get:tetris.ProcessInfo.thread_id)
   return _internal_thread_id();
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+inline void ProcessInfo::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _has_bits_[0] |= 0x00000002u;
   thread_id_ = value;
 }
-inline void RegionInfo_ReplicaInfo_ProcessThread::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+inline void ProcessInfo::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _internal_set_thread_id(value);
-  // @@protoc_insertion_point(field_set:tetris.RegionInfo.ReplicaInfo.ProcessThread.thread_id)
+  // @@protoc_insertion_point(field_set:tetris.ProcessInfo.thread_id)
 }
 
 // -------------------------------------------------------------------
 
 // RegionInfo_ReplicaInfo
 
-// repeated .tetris.RegionInfo.ReplicaInfo.ProcessThread process_thread = 1;
+// repeated .tetris.ProcessInfo process_thread = 1;
 inline int RegionInfo_ReplicaInfo::_internal_process_thread_size() const {
   return process_thread_.size();
 }
@@ -3081,30 +2892,30 @@ inline int RegionInfo_ReplicaInfo::process_thread_size() const {
 inline void RegionInfo_ReplicaInfo::clear_process_thread() {
   process_thread_.Clear();
 }
-inline ::tetris::RegionInfo_ReplicaInfo_ProcessThread* RegionInfo_ReplicaInfo::mutable_process_thread(int index) {
+inline ::tetris::ProcessInfo* RegionInfo_ReplicaInfo::mutable_process_thread(int index) {
   // @@protoc_insertion_point(field_mutable:tetris.RegionInfo.ReplicaInfo.process_thread)
   return process_thread_.Mutable(index);
 }
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >*
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >*
 RegionInfo_ReplicaInfo::mutable_process_thread() {
   // @@protoc_insertion_point(field_mutable_list:tetris.RegionInfo.ReplicaInfo.process_thread)
   return &process_thread_;
 }
-inline const ::tetris::RegionInfo_ReplicaInfo_ProcessThread& RegionInfo_ReplicaInfo::_internal_process_thread(int index) const {
+inline const ::tetris::ProcessInfo& RegionInfo_ReplicaInfo::_internal_process_thread(int index) const {
   return process_thread_.Get(index);
 }
-inline const ::tetris::RegionInfo_ReplicaInfo_ProcessThread& RegionInfo_ReplicaInfo::process_thread(int index) const {
+inline const ::tetris::ProcessInfo& RegionInfo_ReplicaInfo::process_thread(int index) const {
   // @@protoc_insertion_point(field_get:tetris.RegionInfo.ReplicaInfo.process_thread)
   return _internal_process_thread(index);
 }
-inline ::tetris::RegionInfo_ReplicaInfo_ProcessThread* RegionInfo_ReplicaInfo::_internal_add_process_thread() {
+inline ::tetris::ProcessInfo* RegionInfo_ReplicaInfo::_internal_add_process_thread() {
   return process_thread_.Add();
 }
-inline ::tetris::RegionInfo_ReplicaInfo_ProcessThread* RegionInfo_ReplicaInfo::add_process_thread() {
+inline ::tetris::ProcessInfo* RegionInfo_ReplicaInfo::add_process_thread() {
   // @@protoc_insertion_point(field_add:tetris.RegionInfo.ReplicaInfo.process_thread)
   return _internal_add_process_thread();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegionInfo_ReplicaInfo_ProcessThread >&
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >&
 RegionInfo_ReplicaInfo::process_thread() const {
   // @@protoc_insertion_point(field_list:tetris.RegionInfo.ReplicaInfo.process_thread)
   return process_thread_;
@@ -3249,131 +3060,6 @@ RegionInfo::replicas() const {
 // -------------------------------------------------------------------
 
 // RegionThroughput
-
-// -------------------------------------------------------------------
-
-// RegularProcessInfo
-
-// required string name = 1;
-inline bool RegularProcessInfo::_internal_has_name() const {
-  bool value = (_has_bits_[0] & 0x00000001u) != 0;
-  return value;
-}
-inline bool RegularProcessInfo::has_name() const {
-  return _internal_has_name();
-}
-inline void RegularProcessInfo::clear_name() {
-  name_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline const std::string& RegularProcessInfo::name() const {
-  // @@protoc_insertion_point(field_get:tetris.RegularProcessInfo.name)
-  return _internal_name();
-}
-inline void RegularProcessInfo::set_name(const std::string& value) {
-  _internal_set_name(value);
-  // @@protoc_insertion_point(field_set:tetris.RegularProcessInfo.name)
-}
-inline std::string* RegularProcessInfo::mutable_name() {
-  // @@protoc_insertion_point(field_mutable:tetris.RegularProcessInfo.name)
-  return _internal_mutable_name();
-}
-inline const std::string& RegularProcessInfo::_internal_name() const {
-  return name_.Get();
-}
-inline void RegularProcessInfo::_internal_set_name(const std::string& value) {
-  _has_bits_[0] |= 0x00000001u;
-  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
-}
-inline void RegularProcessInfo::set_name(std::string&& value) {
-  _has_bits_[0] |= 0x00000001u;
-  name_.Set(
-    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
-  // @@protoc_insertion_point(field_set_rvalue:tetris.RegularProcessInfo.name)
-}
-inline void RegularProcessInfo::set_name(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  _has_bits_[0] |= 0x00000001u;
-  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
-              GetArena());
-  // @@protoc_insertion_point(field_set_char:tetris.RegularProcessInfo.name)
-}
-inline void RegularProcessInfo::set_name(const char* value,
-    size_t size) {
-  _has_bits_[0] |= 0x00000001u;
-  name_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
-      reinterpret_cast<const char*>(value), size), GetArena());
-  // @@protoc_insertion_point(field_set_pointer:tetris.RegularProcessInfo.name)
-}
-inline std::string* RegularProcessInfo::_internal_mutable_name() {
-  _has_bits_[0] |= 0x00000001u;
-  return name_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline std::string* RegularProcessInfo::release_name() {
-  // @@protoc_insertion_point(field_release:tetris.RegularProcessInfo.name)
-  if (!_internal_has_name()) {
-    return nullptr;
-  }
-  _has_bits_[0] &= ~0x00000001u;
-  return name_.ReleaseNonDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline void RegularProcessInfo::set_allocated_name(std::string* name) {
-  if (name != nullptr) {
-    _has_bits_[0] |= 0x00000001u;
-  } else {
-    _has_bits_[0] &= ~0x00000001u;
-  }
-  name_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), name,
-      GetArena());
-  // @@protoc_insertion_point(field_set_allocated:tetris.RegularProcessInfo.name)
-}
-inline std::string* RegularProcessInfo::unsafe_arena_release_name() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:tetris.RegularProcessInfo.name)
-  GOOGLE_DCHECK(GetArena() != nullptr);
-  _has_bits_[0] &= ~0x00000001u;
-  return name_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      GetArena());
-}
-inline void RegularProcessInfo::unsafe_arena_set_allocated_name(
-    std::string* name) {
-  GOOGLE_DCHECK(GetArena() != nullptr);
-  if (name != nullptr) {
-    _has_bits_[0] |= 0x00000001u;
-  } else {
-    _has_bits_[0] &= ~0x00000001u;
-  }
-  name_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
-      name, GetArena());
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:tetris.RegularProcessInfo.name)
-}
-
-// required uint32 thread_id = 2;
-inline bool RegularProcessInfo::_internal_has_thread_id() const {
-  bool value = (_has_bits_[0] & 0x00000002u) != 0;
-  return value;
-}
-inline bool RegularProcessInfo::has_thread_id() const {
-  return _internal_has_thread_id();
-}
-inline void RegularProcessInfo::clear_thread_id() {
-  thread_id_ = 0u;
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 RegularProcessInfo::_internal_thread_id() const {
-  return thread_id_;
-}
-inline ::PROTOBUF_NAMESPACE_ID::uint32 RegularProcessInfo::thread_id() const {
-  // @@protoc_insertion_point(field_get:tetris.RegularProcessInfo.thread_id)
-  return _internal_thread_id();
-}
-inline void RegularProcessInfo::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  _has_bits_[0] |= 0x00000002u;
-  thread_id_ = value;
-}
-inline void RegularProcessInfo::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
-  _internal_set_thread_id(value);
-  // @@protoc_insertion_point(field_set:tetris.RegularProcessInfo.thread_id)
-}
 
 // -------------------------------------------------------------------
 
@@ -3900,43 +3586,43 @@ inline void NewClientAck::set_managed(bool value) {
 
 // Configuration
 
-// repeated .tetris.RegularProcessInfo regular_process_info = 3;
-inline int Configuration::_internal_regular_process_info_size() const {
-  return regular_process_info_.size();
+// repeated .tetris.ProcessInfo process_info = 3;
+inline int Configuration::_internal_process_info_size() const {
+  return process_info_.size();
 }
-inline int Configuration::regular_process_info_size() const {
-  return _internal_regular_process_info_size();
+inline int Configuration::process_info_size() const {
+  return _internal_process_info_size();
 }
-inline void Configuration::clear_regular_process_info() {
-  regular_process_info_.Clear();
+inline void Configuration::clear_process_info() {
+  process_info_.Clear();
 }
-inline ::tetris::RegularProcessInfo* Configuration::mutable_regular_process_info(int index) {
-  // @@protoc_insertion_point(field_mutable:tetris.Configuration.regular_process_info)
-  return regular_process_info_.Mutable(index);
+inline ::tetris::ProcessInfo* Configuration::mutable_process_info(int index) {
+  // @@protoc_insertion_point(field_mutable:tetris.Configuration.process_info)
+  return process_info_.Mutable(index);
 }
-inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegularProcessInfo >*
-Configuration::mutable_regular_process_info() {
-  // @@protoc_insertion_point(field_mutable_list:tetris.Configuration.regular_process_info)
-  return &regular_process_info_;
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >*
+Configuration::mutable_process_info() {
+  // @@protoc_insertion_point(field_mutable_list:tetris.Configuration.process_info)
+  return &process_info_;
 }
-inline const ::tetris::RegularProcessInfo& Configuration::_internal_regular_process_info(int index) const {
-  return regular_process_info_.Get(index);
+inline const ::tetris::ProcessInfo& Configuration::_internal_process_info(int index) const {
+  return process_info_.Get(index);
 }
-inline const ::tetris::RegularProcessInfo& Configuration::regular_process_info(int index) const {
-  // @@protoc_insertion_point(field_get:tetris.Configuration.regular_process_info)
-  return _internal_regular_process_info(index);
+inline const ::tetris::ProcessInfo& Configuration::process_info(int index) const {
+  // @@protoc_insertion_point(field_get:tetris.Configuration.process_info)
+  return _internal_process_info(index);
 }
-inline ::tetris::RegularProcessInfo* Configuration::_internal_add_regular_process_info() {
-  return regular_process_info_.Add();
+inline ::tetris::ProcessInfo* Configuration::_internal_add_process_info() {
+  return process_info_.Add();
 }
-inline ::tetris::RegularProcessInfo* Configuration::add_regular_process_info() {
-  // @@protoc_insertion_point(field_add:tetris.Configuration.regular_process_info)
-  return _internal_add_regular_process_info();
+inline ::tetris::ProcessInfo* Configuration::add_process_info() {
+  // @@protoc_insertion_point(field_add:tetris.Configuration.process_info)
+  return _internal_add_process_info();
 }
-inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::RegularProcessInfo >&
-Configuration::regular_process_info() const {
-  // @@protoc_insertion_point(field_list:tetris.Configuration.regular_process_info)
-  return regular_process_info_;
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::tetris::ProcessInfo >&
+Configuration::process_info() const {
+  // @@protoc_insertion_point(field_list:tetris.Configuration.process_info)
+  return process_info_;
 }
 
 // repeated .tetris.RegionInfo parallel_region_info = 4;
@@ -4529,8 +4215,6 @@ PushResponse::region_throughputs() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
