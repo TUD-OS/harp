@@ -165,6 +165,7 @@ class Client
             if (sched_setaffinity(t.tid, sizeof(cpu_set_t), &mask) != 0)
                 logger->warning("Failed to set cpu affinity for thread '%s': %s\n", t.name.c_str(), strerror(errno));
         }
+        logger->info(" * done\n");
     }
 
     void new_thread(const std::string& name, int tid)
