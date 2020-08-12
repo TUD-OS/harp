@@ -6,7 +6,7 @@
 #define __PUSH_MESSAGE_LISTENER_H__
 
 #include <map>
-#include "tetris_client.h"
+#include "client.h"
 #include "socket.h"
 
 namespace tetris {

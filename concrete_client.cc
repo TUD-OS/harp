@@ -3,7 +3,7 @@
 //
 
 #include "concrete_client.h"
-#include "tetris_client.h"
+#include "client.h"
 #include "push_message_listener.h"
 #include "protobuf_util.h"
 

@@ -1,7 +1,6 @@
-#ifndef __TETRIS_CLIENT_H__
-#define __TETRIS_CLIENT_H__
+#ifndef __CLIENT_H__
+#define __CLIENT_H__
 
-#include "proto/tetris.pb.h"
 #include "feature.h"
 
 #include <string>
@@ -71,4 +70,4 @@ private:
 };
 }
 
-#endif // __TETRIS_CLIENT_H__
+#endif // __CLIENT_H__

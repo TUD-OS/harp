@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <tetris_client.h>
+#include <client.h>
 #include <protobuf_util.h>
 #include <socket.h>
 #include <concrete_client.h>

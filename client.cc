@@ -2,7 +2,7 @@
 // Created by dylan on 06/08/2020.
 //
 
-#include "tetris_client.h"
+#include "client.h"
 #include "concrete_client.h"
 
 std::unique_ptr<tetris::Client> tetris::ClientProvider::_instance;

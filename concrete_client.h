@@ -1,7 +1,7 @@
 #ifndef __CONCRETE_CLIENT_H__
 #define __CONCRETE_CLIENT_H__
 
-#include "tetris_client.h"
+#include "client.h"
 #include "push_message_listener.h"
 #include "connection.h"
 #include "debug_util.h"
