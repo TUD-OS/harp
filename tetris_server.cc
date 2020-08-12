@@ -416,7 +416,7 @@ class Manager
 
         while (!done) {
             TETRiS::ClientRequest request{};
-            auto res = protobuf_util::Receive<TETRiS::ClientRequest>(conn->locked(), request);
+            auto res = protobuf_util::Receive(conn->locked(), request);
             if (res == Connection::InState::DONE) {
                 /* We are done processing. So return. */
                 done = true;
