@@ -1,6 +1,7 @@
 #include "connection.h"
 #include "debug_util.h"
 #include "tetris.h"
+#include "protobuf_util.h"
 
 #include <algorithm>
 #include <atomic>
@@ -18,6 +19,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <proto/tetris.pb.h>
 
 
 /***
@@ -109,72 +111,73 @@ static
 bool tetris_new_client(LockedConnection conn, int pid, const char* exec, char* mapping_type,
         const char* compare_criteria, bool compare_more_is_better, const char* preferred_mapping,
         const char* filter_criteria) {
-    TetrisData data;
+
+
+    tetris::PullRequest request{};
+    request.set_type(tetris::PullRequest::TETRIS_NEW_CLIENT);
+    auto new_client_message = request.mutable_new_client();
 
     /* Send the new-client message to the server. */
-    data.op = TetrisData::NEW_CLIENT;
-    data.new_client_data.pid = pid;
-    std::strncpy(data.new_client_data.exec, exec, sizeof(data.new_client_data.exec));
+    new_client_message->set_pid(getpid());
+    new_client_message->set_exec(exec);
 
     bool dynamic_client = false;
     if (mapping_type) {
-        if (strcmp(mapping_type, "DYNAMIC") == 0) {
+        if (mapping_type == "DYNAMIC") {
             logger->info("Use dynamic/CFS mapping.\n");
             dynamic_client = true;
-        } else if (strcmp(mapping_type, "STATIC")) {
+        } else if (mapping_type == "STATIC") {
             logger->info("Use static TETRiS mapping.\n");
         } else {
             logger->warning("Unknown mapping type: %s\n", mapping_type);
         }
     }
-    data.new_client_data.dynamic_client = dynamic_client;
+    new_client_message->set_mapping_type(dynamic_client ? tetris::NewClient::DYNAMIC : tetris::NewClient::STATIC);
 
     if (compare_criteria) {
         logger->info("Use given compare criteria -- %s.\n", compare_criteria);
-        std::strncpy(data.new_client_data.compare_criteria, compare_criteria, sizeof(data.new_client_data.compare_criteria));
+        new_client_message->set_compare_criteria(compare_criteria);
     } else {
         logger->info("Use default compare criteria -- executionTime.\n");
-        std::strncpy(data.new_client_data.compare_criteria, "executionTime", sizeof(data.new_client_data.compare_criteria));
+        new_client_message->set_compare_criteria("executionTime");
     }
 
     if (compare_more_is_better)
         logger->info("Use greater than comparison for criteria.\n");
     else
         logger->info("Use less then comparison for criteria.\n");
-    data.new_client_data.compare_more_is_better = compare_more_is_better;
+    new_client_message->set_compare_more_is_better(compare_more_is_better);
 
     if (preferred_mapping) {
-        data.new_client_data.has_preferred_mapping = true;
-        std::strncpy(data.new_client_data.preferred_mapping, preferred_mapping, sizeof(data.new_client_data.preferred_mapping));
-    } else {
-        data.new_client_data.has_preferred_mapping = false;
+        new_client_message->set_preferred_mapping(preferred_mapping);
     }
 
     if (filter_criteria) {
-        data.new_client_data.has_filter_criteria = true;
-        std::strncpy(data.new_client_data.filter_criteria, filter_criteria, sizeof(data.new_client_data.filter_criteria));
-    } else {
-        data.new_client_data.has_filter_criteria = false;
+        new_client_message->set_filter_criteria(filter_criteria);
     }
 
-    if (conn->write(data) != Connection::OutState::DONE) {
+    // Send the command.
+    if (protobuf_util::Send(conn->locked(), request) != Connection::OutState::DONE) {
         logger->error("Failed to send new-client message.\n");
         return false;
-    }
+    };
 
-    /* Get the answer. */
-    memset(&data, 0, sizeof(data));
-    if (conn->read(data) != Connection::InState::DONE) {
+    tetris::PullResponse response{};
+    if (protobuf_util::Receive(conn->locked(), response) != Connection::InState::DONE) {
         logger->error("Failed to get answer from server.\n");
         return false;
     }
 
-    if (data.new_client_ack_data.managed)
-        logger->info("TETRIS-ID: %d\n", data.new_client_ack_data.id);
-    else
-        logger->info("TETRIS-ID: not managed\n");
+    // Process the TETRiS server response.
+    if ((response.type() == tetris::PullResponse::TETRIS_NEW_CLIENT_ACK) && response.has_new_client_ack()) {
+        if (response.new_client_ack().managed())
+            logger->info("TETRIS-ID: %d\n", response.new_client_ack().id());
+        else
+            logger->info("TETRIS-ID: not managed\n");
+        return response.new_client_ack().managed();
+    }
 
-    return data.new_client_ack_data.managed;
+    return false;
 }
 
 static
