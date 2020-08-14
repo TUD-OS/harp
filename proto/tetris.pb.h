@@ -191,13 +191,13 @@ inline bool PullResponse_Type_Parse(
     PullResponse_Type_descriptor(), name, value);
 }
 enum PushRequest_Type : int {
-  PushRequest_Type_UPDATE_CONFIGURATION = 0,
-  PushRequest_Type_GET_REGIONS_INFO = 1,
-  PushRequest_Type_GET_REGIONS_THROUGHPUT = 2
+  PushRequest_Type_DPM_UPDATE_CONFIGURATION = 0,
+  PushRequest_Type_DPM_GET_REGIONS_INFO = 1,
+  PushRequest_Type_DPM_GET_REGIONS_THROUGHPUT = 2
 };
 bool PushRequest_Type_IsValid(int value);
-constexpr PushRequest_Type PushRequest_Type_Type_MIN = PushRequest_Type_UPDATE_CONFIGURATION;
-constexpr PushRequest_Type PushRequest_Type_Type_MAX = PushRequest_Type_GET_REGIONS_THROUGHPUT;
+constexpr PushRequest_Type PushRequest_Type_Type_MIN = PushRequest_Type_DPM_UPDATE_CONFIGURATION;
+constexpr PushRequest_Type PushRequest_Type_Type_MAX = PushRequest_Type_DPM_GET_REGIONS_THROUGHPUT;
 constexpr int PushRequest_Type_Type_ARRAYSIZE = PushRequest_Type_Type_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* PushRequest_Type_descriptor();
@@ -217,12 +217,12 @@ inline bool PushRequest_Type_Parse(
 enum PushResponse_Type : int {
   PushResponse_Type_ERROR = 0,
   PushResponse_Type_ACKNOWLEDGE = 1,
-  PushResponse_Type_REGION_INFO = 2,
-  PushResponse_Type_REGION_THROUGHPUT = 3
+  PushResponse_Type_DPM_REGION_INFO = 2,
+  PushResponse_Type_DPM_REGION_THROUGHPUT = 3
 };
 bool PushResponse_Type_IsValid(int value);
 constexpr PushResponse_Type PushResponse_Type_Type_MIN = PushResponse_Type_ERROR;
-constexpr PushResponse_Type PushResponse_Type_Type_MAX = PushResponse_Type_REGION_THROUGHPUT;
+constexpr PushResponse_Type PushResponse_Type_Type_MAX = PushResponse_Type_DPM_REGION_THROUGHPUT;
 constexpr int PushResponse_Type_Type_ARRAYSIZE = PushResponse_Type_Type_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* PushResponse_Type_descriptor();
@@ -2685,12 +2685,12 @@ class PushRequest PROTOBUF_FINAL :
   // nested types ----------------------------------------------------
 
   typedef PushRequest_Type Type;
-  static constexpr Type UPDATE_CONFIGURATION =
-    PushRequest_Type_UPDATE_CONFIGURATION;
-  static constexpr Type GET_REGIONS_INFO =
-    PushRequest_Type_GET_REGIONS_INFO;
-  static constexpr Type GET_REGIONS_THROUGHPUT =
-    PushRequest_Type_GET_REGIONS_THROUGHPUT;
+  static constexpr Type DPM_UPDATE_CONFIGURATION =
+    PushRequest_Type_DPM_UPDATE_CONFIGURATION;
+  static constexpr Type DPM_GET_REGIONS_INFO =
+    PushRequest_Type_DPM_GET_REGIONS_INFO;
+  static constexpr Type DPM_GET_REGIONS_THROUGHPUT =
+    PushRequest_Type_DPM_GET_REGIONS_THROUGHPUT;
   static inline bool Type_IsValid(int value) {
     return PushRequest_Type_IsValid(value);
   }
@@ -2908,10 +2908,10 @@ class PushResponse PROTOBUF_FINAL :
     PushResponse_Type_ERROR;
   static constexpr Type ACKNOWLEDGE =
     PushResponse_Type_ACKNOWLEDGE;
-  static constexpr Type REGION_INFO =
-    PushResponse_Type_REGION_INFO;
-  static constexpr Type REGION_THROUGHPUT =
-    PushResponse_Type_REGION_THROUGHPUT;
+  static constexpr Type DPM_REGION_INFO =
+    PushResponse_Type_DPM_REGION_INFO;
+  static constexpr Type DPM_REGION_THROUGHPUT =
+    PushResponse_Type_DPM_REGION_THROUGHPUT;
   static inline bool Type_IsValid(int value) {
     return PushResponse_Type_IsValid(value);
   }

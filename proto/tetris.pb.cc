@@ -500,18 +500,19 @@ const char descriptor_table_protodef_tetris_2eproto[] PROTOBUF_SECTION_VARIABLE(
   ".NewClientAck\022,\n\016new_thread_ack\030\004 \001(\0132\024."
   "tetris.NewThreadAck\"X\n\004Type\022\t\n\005ERROR\020\000\022\017"
   "\n\013ACKNOWLEDGE\020\001\022\031\n\025TETRIS_NEW_CLIENT_ACK"
-  "\020\002\022\031\n\025TETRIS_NEW_THREAD_ACK\020\003\"\331\001\n\013PushRe"
+  "\020\002\022\031\n\025TETRIS_NEW_THREAD_ACK\020\003\"\345\001\n\013PushRe"
   "quest\022&\n\004type\030\001 \002(\0162\030.tetris.PushRequest"
   ".Type\022\022\n\nfeature_id\030\002 \002(\r\022:\n\025region_conf"
   "igurations\030\003 \003(\0132\033.tetris.RegionConfigur"
-  "ation\"R\n\004Type\022\030\n\024UPDATE_CONFIGURATION\020\000\022"
-  "\024\n\020GET_REGIONS_INFO\020\001\022\032\n\026GET_REGIONS_THR"
-  "OUGHPUT\020\002\"\343\001\n\014PushResponse\022\'\n\004type\030\001 \002(\016"
-  "2\031.tetris.PushResponse.Type\022(\n\014region_in"
-  "fos\030\003 \003(\0132\022.tetris.RegionInfo\0224\n\022region_"
-  "throughputs\030\004 \003(\0132\030.tetris.RegionThrough"
-  "put\"J\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013ACKNOWLEDGE\020\001\022"
-  "\017\n\013REGION_INFO\020\002\022\025\n\021REGION_THROUGHPUT\020\003"
+  "ation\"^\n\004Type\022\034\n\030DPM_UPDATE_CONFIGURATIO"
+  "N\020\000\022\030\n\024DPM_GET_REGIONS_INFO\020\001\022\036\n\032DPM_GET"
+  "_REGIONS_THROUGHPUT\020\002\"\353\001\n\014PushResponse\022\'"
+  "\n\004type\030\001 \002(\0162\031.tetris.PushResponse.Type\022"
+  "(\n\014region_infos\030\003 \003(\0132\022.tetris.RegionInf"
+  "o\0224\n\022region_throughputs\030\004 \003(\0132\030.tetris.R"
+  "egionThroughput\"R\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013AC"
+  "KNOWLEDGE\020\001\022\023\n\017DPM_REGION_INFO\020\002\022\031\n\025DPM_"
+  "REGION_THROUGHPUT\020\003"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_tetris_2eproto_deps[1] = {
 };
@@ -533,7 +534,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tet
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_tetris_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_tetris_2eproto = {
-  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1759,
+  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1779,
   &descriptor_table_tetris_2eproto_once, descriptor_table_tetris_2eproto_sccs, descriptor_table_tetris_2eproto_deps, 14, 0,
   schemas, file_default_instances, TableStruct_tetris_2eproto::offsets,
   file_level_metadata_tetris_2eproto, 14, file_level_enum_descriptors_tetris_2eproto, file_level_service_descriptors_tetris_2eproto,
@@ -629,9 +630,9 @@ bool PushRequest_Type_IsValid(int value) {
 }
 
 #if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
-constexpr PushRequest_Type PushRequest::UPDATE_CONFIGURATION;
-constexpr PushRequest_Type PushRequest::GET_REGIONS_INFO;
-constexpr PushRequest_Type PushRequest::GET_REGIONS_THROUGHPUT;
+constexpr PushRequest_Type PushRequest::DPM_UPDATE_CONFIGURATION;
+constexpr PushRequest_Type PushRequest::DPM_GET_REGIONS_INFO;
+constexpr PushRequest_Type PushRequest::DPM_GET_REGIONS_THROUGHPUT;
 constexpr PushRequest_Type PushRequest::Type_MIN;
 constexpr PushRequest_Type PushRequest::Type_MAX;
 constexpr int PushRequest::Type_ARRAYSIZE;
@@ -655,8 +656,8 @@ bool PushResponse_Type_IsValid(int value) {
 #if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
 constexpr PushResponse_Type PushResponse::ERROR;
 constexpr PushResponse_Type PushResponse::ACKNOWLEDGE;
-constexpr PushResponse_Type PushResponse::REGION_INFO;
-constexpr PushResponse_Type PushResponse::REGION_THROUGHPUT;
+constexpr PushResponse_Type PushResponse::DPM_REGION_INFO;
+constexpr PushResponse_Type PushResponse::DPM_REGION_THROUGHPUT;
 constexpr PushResponse_Type PushResponse::Type_MIN;
 constexpr PushResponse_Type PushResponse::Type_MAX;
 constexpr int PushResponse::Type_ARRAYSIZE;

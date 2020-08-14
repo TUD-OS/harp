@@ -98,9 +98,9 @@ message PullResponse {
 // A push request is sent from the TETRiS server to a TETRiS feature.
 message PushRequest {
   enum Type {
-    UPDATE_CONFIGURATION = 0;               // Send configuration to apply on DPM.
-    GET_REGIONS_INFO = 1;                   // Get parallel regions information from DPM.
-    GET_REGIONS_THROUGHPUT = 2;             // Get parallel regions throughput from DPM.
+    DPM_UPDATE_CONFIGURATION = 0;           // Send configuration to apply on DPM.
+    DPM_GET_REGIONS_INFO = 1;               // Get parallel regions information from DPM.
+    DPM_GET_REGIONS_THROUGHPUT = 2;         // Get parallel regions throughput from DPM.
   }
   required Type type = 1;
   // TETRiS fields.
@@ -115,8 +115,8 @@ message PushResponse {
   enum Type {
     ERROR = 0;                              // Signal an error in the request previously received.
     ACKNOWLEDGE = 1;                        // Generic acknowledge.
-    REGION_INFO = 2;                        // Response contains parallel regions information.
-    REGION_THROUGHPUT = 3;                  // Response contains parallel regions throughput.
+    DPM_REGION_INFO = 2;                    // Response contains parallel regions information.
+    DPM_REGION_THROUGHPUT = 3;              // Response contains parallel regions throughput.
   }
   required Type type = 1;
   // DPM fields.
