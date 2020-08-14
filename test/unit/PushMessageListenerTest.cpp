@@ -53,7 +53,7 @@ tetris::PushResponse SendDummyRequest()
     tetris::PushRequest request{};
     tetris::PushResponse response{};
     request.set_feature_id(0);
-    request.set_type(tetris::PushRequest::UPDATE_CONFIGURATION);
+    request.set_type(tetris::PushRequest::DPM_UPDATE_CONFIGURATION);
     // Send the request.
     protobuf_util::Send(in_conn.locked(), request);
     // Receive the response.
