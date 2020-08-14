@@ -46,6 +46,17 @@ message NewClientAck {
   required bool managed = 2;
 }
 
+// A NewThread message introduces a new process thread to the TETRiS server.
+message NewThread {
+  required uint32 tid = 1;
+  required string name = 2;
+}
+
+// A NewThreadAck message informs the TETRiS client if it the new thread is managed by the TETRiS manager.
+message NewThreadAck {
+  required bool managed = 1;
+}
+
 // A Configuration message holds the whole configuration of a DPM application.
 message Configuration {
   repeated ProcessInfo process_info = 3;
@@ -56,14 +67,16 @@ message Configuration {
 message PullRequest {
   enum Type {
     TETRIS_NEW_CLIENT = 0;                  // Register the client to the TETRiS server.
-    DPM_SUBSCRIBE = 1;                      // Register DPM as a TETRiS feature.
-    DPM_SEND_CONFIGURATION = 2;             // Send DPM configuration to the TETRiS server.
+    TETRIS_NEW_THREAD = 1;                  // Register a new thread to the TETRiS server.
+    DPM_SUBSCRIBE = 2;                      // Register DPM as a TETRiS feature.
+    DPM_SEND_CONFIGURATION = 3;             // Send DPM configuration to the TETRiS server.
   }
   required Type type = 1;
   // TETRiS fields.
   optional NewClient new_client = 2;
+  optional NewThread new_thread = 3;
   // DPM fields.
-  optional Configuration configuration = 3;
+  optional Configuration configuration = 4;
 }
 
 // A pull response is sent from the TETRiS server to a TETRiS feature after processing a request.
@@ -72,12 +85,14 @@ message PullResponse {
     ERROR = 0;                              // Signal an error in the request previously received.
     ACKNOWLEDGE = 1;                        // Generic acknowledge.
     TETRIS_NEW_CLIENT_ACK = 2;              // Acknowledge the new TETRiS client instance.
+    TETRIS_NEW_THREAD_ACK = 3;              // Acknowledge a new thread.
   }
   required Type type = 1;
   // TETRiS fields.
   optional uint32 feature_id = 2;  /* After a subscription, the server returns the feature id allocated
                                       for the TETRiS feature. */
   optional NewClientAck new_client_ack = 3;
+  optional NewThreadAck new_thread_ack = 4;
 }
 
 // A push request is sent from the TETRiS server to a TETRiS feature.
