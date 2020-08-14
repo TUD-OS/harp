@@ -20,7 +20,7 @@ find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 # libtetris client legacy version
-add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc path_util.cc util.cc)
+add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc debug_util.cc path_util.cc util.cc proto/tetris.pb.cc)
 target_link_libraries(tetrisclientlegacy Threads::Threads ${CMAKE_DL_LIBS})
 
 # libtetris client new version
