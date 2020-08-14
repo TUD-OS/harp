@@ -109,7 +109,7 @@ std::atomic_ulong time_ns;
  ***/
 
 static
-bool tetris_new_client(LockedConnection conn, int pid, const char *exec, char *mapping_type,
+bool tetris_new_client(int pid, const char *exec, char *mapping_type,
                        const char *compare_criteria, bool compare_more_is_better, const char *preferred_mapping,
                        const char *filter_criteria)
 {
@@ -159,13 +159,13 @@ bool tetris_new_client(LockedConnection conn, int pid, const char *exec, char *m
     }
 
     // Send the command.
-    if (protobuf_util::Send(conn->locked(), request) != Connection::OutState::DONE) {
+    if (protobuf_util::Send(connection->locked(), request) != Connection::OutState::DONE) {
         logger->error("Failed to send new-client message.\n");
         return false;
     };
-
+    logger->info("Send a message!\n");
     tetris::PullResponse response{};
-    if (protobuf_util::Receive(conn->locked(), response) != Connection::InState::DONE) {
+    if (protobuf_util::Receive(connection->locked(), response) != Connection::InState::DONE) {
         logger->error("Failed to get answer from server.\n");
         return false;
     }
@@ -183,7 +183,7 @@ bool tetris_new_client(LockedConnection conn, int pid, const char *exec, char *m
 }
 
 static
-bool tetris_new_thread(LockedConnection conn, int tid, const char *name)
+bool tetris_new_thread(int tid, const char *name)
 {
     tetris::PullRequest request{};
 
@@ -193,14 +193,14 @@ bool tetris_new_thread(LockedConnection conn, int tid, const char *name)
     new_thread_message->set_tid(tid);
     new_thread_message->set_name(name);
 
-    if (protobuf_util::Send(conn->locked(), request) != Connection::OutState::DONE) {
+    if (protobuf_util::Send(connection->locked(), request) != Connection::OutState::DONE) {
         logger->error("Failed to send new-thread message.\n");
         return false;
     }
 
     /* Get the answer. */
     tetris::PullResponse response{};
-    if (protobuf_util::Receive(conn->locked(), response) != Connection::InState::DONE) {
+    if (protobuf_util::Receive(connection->locked(), response) != Connection::InState::DONE) {
         logger->error("Failed to get answer from server.\n");
         return false;
     }
@@ -243,7 +243,7 @@ void __attribute__((constructor)) setup(void)
 
         char *filter_criteria = getenv("TETRIS_FILTER_CRITERIA");
 
-        if (tetris_new_client(connection->locked(), pid, exec, mapping_type, compare_criteria,
+        if (tetris_new_client(pid, exec, mapping_type, compare_criteria,
                               compare_more_is_better, preferred_mapping, filter_criteria)) {
             logger->info("->> Managed by TETRIS <<-\n");
             managed_by_tetris = true;
@@ -295,7 +295,7 @@ void *thread_wrapper(void *arg)
     ti->ready = true;
 
     if (ti->named && ti->ready)
-        ti->managed = tetris_new_thread(connection->locked(), ti->tid, ti->name);
+        ti->managed = tetris_new_thread(ti->tid, ti->name);
 
     pthread_mutex_unlock(&ti->mtx);
 
@@ -380,7 +380,7 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
                 ti->named = true;
 
                 if (ti->named && ti->ready)
-                    ti->managed = tetris_new_thread(connection->locked(), ti->tid, ti->name);
+                    ti->managed = tetris_new_thread(ti->tid, ti->name);
 
                 pthread_mutex_unlock(&ti->mtx);
 
