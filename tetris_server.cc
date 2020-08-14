@@ -493,10 +493,9 @@ class Manager
                         close = !managed;
                         break;
                     }
-                    case TetrisData::Operations::NEW_THREAD: {
-                        TetrisData message{};
-                        int tid = message.new_thread_data.tid;
-                        std::string name = string_util::strip(message.new_thread_data.name);
+                    case tetris::PullRequest::TETRIS_NEW_THREAD: {
+                        int tid = request.new_thread().tid();
+                        std::string name = request.new_thread().name();
                         bool managed;
                         try {
                             /* Update the client data. */
@@ -509,11 +508,11 @@ class Manager
                         }
 
                         /* We need to acknowledge this message. */
-                        TetrisData ack;
-                        ack.op = TetrisData::NEW_THREAD_ACK;
-                        ack.new_thread_ack_data.managed = managed;
+                        tetris::PullResponse response{};
+                        response.set_type(tetris::PullResponse::TETRIS_NEW_THREAD_ACK);
+                        response.mutable_new_thread_ack()->set_managed(managed);
 
-                        if (conn->write(ack) != Connection::OutState::DONE)
+                        if (protobuf_util::Send(conn->locked(), response) != Connection::OutState::DONE)
                             logger->error("Failed to acknowledge the new-thread message\n");
 
                         break;

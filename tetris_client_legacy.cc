@@ -1,6 +1,5 @@
 #include "connection.h"
 #include "debug_util.h"
-#include "tetris.h"
 #include "protobuf_util.h"
 
 #include <algorithm>
@@ -208,7 +207,6 @@ bool tetris_new_thread(LockedConnection conn, int tid, const char *name)
 
     return response.new_thread_ack().managed();
 }
-
 
 /***
  * Library setup and tierdown
