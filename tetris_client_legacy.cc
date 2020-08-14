@@ -26,17 +26,17 @@
  * Time Keeping
  ***/
 
-template <typename T, typename Clock, typename Resolution>
+template<typename T, typename Clock, typename Resolution>
 class TimeKeeper
 {
-   private:
-    T&      _total;
+private:
+    T &_total;
     typename Clock::time_point _start;
     bool _running;
 
-   public:
-    TimeKeeper(T& total) :
-        _total{total}, _start{}, _running{false}
+public:
+    TimeKeeper(T &total) :
+            _total{total}, _start{}, _running{false}
     {
         start();
     }
@@ -69,20 +69,22 @@ class TimeKeeper
  * Thread management
  ***/
 
-struct ThreadInfo {
-    pthread_t*          pthread_id;
-    pthread_mutex_t     mtx;
+struct ThreadInfo
+{
+    pthread_t *pthread_id;
+    pthread_mutex_t mtx;
 
-    pid_t               tid;
-    char                name[100];
+    pid_t tid;
+    char name[100];
 
-    bool                named = false;
-    bool                ready = false;
+    bool named = false;
+    bool ready = false;
 
-    bool                managed = false;
+    bool managed = false;
 
-    void* (*func)(void*);
-    void* arg;
+    void *(*func)(void *);
+
+    void *arg;
 };
 
 
@@ -92,7 +94,7 @@ struct ThreadInfo {
 
 using Timer = TimeKeeper<std::atomic_ulong, std::chrono::system_clock, std::chrono::nanoseconds>;
 using ConnectionPtr = std::unique_ptr<Connection>;
-using ThreadList = std::vector<ThreadInfo*>;
+using ThreadList = std::vector<ThreadInfo *>;
 using ThreadListPtr = std::unique_ptr<ThreadList>;
 
 debug::LoggerPtr logger;
@@ -108,9 +110,10 @@ std::atomic_ulong time_ns;
  ***/
 
 static
-bool tetris_new_client(LockedConnection conn, int pid, const char* exec, char* mapping_type,
-        const char* compare_criteria, bool compare_more_is_better, const char* preferred_mapping,
-        const char* filter_criteria) {
+bool tetris_new_client(LockedConnection conn, int pid, const char *exec, char *mapping_type,
+                       const char *compare_criteria, bool compare_more_is_better, const char *preferred_mapping,
+                       const char *filter_criteria)
+{
 
 
     tetris::PullRequest request{};
@@ -181,28 +184,29 @@ bool tetris_new_client(LockedConnection conn, int pid, const char* exec, char* m
 }
 
 static
-bool tetris_new_thread(LockedConnection conn, int tid, const char* name)
+bool tetris_new_thread(LockedConnection conn, int tid, const char *name)
 {
-    TetrisData data;
+    tetris::PullRequest request{};
 
     /* Send the new-thread message to the server. */
-    data.op = TetrisData::NEW_THREAD;
-    data.new_thread_data.tid = tid;
-    std::strncpy(data.new_thread_data.name, name, sizeof(data.new_thread_data.name));
+    request.set_type(tetris::PullRequest::TETRIS_NEW_THREAD);
+    auto new_thread_message = request.mutable_new_thread();
+    new_thread_message->set_tid(tid);
+    new_thread_message->set_name(name);
 
-    if (conn->write(data) != Connection::OutState::DONE) {
+    if (protobuf_util::Send(conn->locked(), request) != Connection::OutState::DONE) {
         logger->error("Failed to send new-thread message.\n");
         return false;
     }
 
     /* Get the answer. */
-    memset(&data, 0, sizeof(data));
-    if (conn->read(data) != Connection::InState::DONE) {
+    tetris::PullResponse response{};
+    if (protobuf_util::Receive(conn->locked(), response) != Connection::InState::DONE) {
         logger->error("Failed to get answer from server.\n");
         return false;
     }
 
-    return data.new_thread_ack_data.managed;
+    return response.new_thread_ack().managed();
 }
 
 
@@ -242,7 +246,7 @@ void __attribute__((constructor)) setup(void)
         char *filter_criteria = getenv("TETRIS_FILTER_CRITERIA");
 
         if (tetris_new_client(connection->locked(), pid, exec, mapping_type, compare_criteria,
-                    compare_more_is_better, preferred_mapping, filter_criteria)) {
+                              compare_more_is_better, preferred_mapping, filter_criteria)) {
             logger->info("->> Managed by TETRIS <<-\n");
             managed_by_tetris = true;
         } else {
@@ -250,7 +254,7 @@ void __attribute__((constructor)) setup(void)
             managed_by_tetris = false;
             connection.release();
         }
-    } catch(std::runtime_error& e) {
+    } catch (std::runtime_error &e) {
         logger->error("Failed to connect to TETRIS server.\n--> %s <--\n", e.what());
         managed_by_tetris = false;
         connection.release();
@@ -268,7 +272,7 @@ void __attribute__((destructor)) tierdown(void)
     t.stop();
 
     unsigned long _ns = time_ns;
-    unsigned long ms = _ns/1000000;
+    unsigned long ms = _ns / 1000000;
     unsigned us = (_ns % 1000000) / 1000;
     unsigned ns = _ns % 1000;
     logger->always("Total time spent in TETRIS: %lu.%03u%03lu ms (%lu ns)\n", ms, us, ns, _ns);
@@ -280,11 +284,11 @@ void __attribute__((destructor)) tierdown(void)
  ***/
 
 static
-void* thread_wrapper(void *arg)
+void *thread_wrapper(void *arg)
 {
     Timer t{time_ns};
 
-    auto ti = static_cast<ThreadInfo*>(arg);
+    auto ti = static_cast<ThreadInfo *>(arg);
 
     pthread_mutex_lock(&ti->mtx);
 
@@ -304,9 +308,9 @@ void* thread_wrapper(void *arg)
 
 extern "C"
 int pthread_create(pthread_t *thread_id, const pthread_attr_t *attr,
-        void* (*routine)(void*), void *arg) 
+                   void *(*routine)(void *), void *arg)
 {
-    using real_func_t = int (*)(pthread_t*, const pthread_attr_t*, void*(*)(void*), void*);
+    using real_func_t = int (*)(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
 
     Timer t{time_ns};
 
@@ -351,7 +355,7 @@ int pthread_create(pthread_t *thread_id, const pthread_attr_t *attr,
 extern "C"
 int pthread_setname_np(pthread_t thread_id, const char *name)
 {
-    using real_func_t = int(*)(pthread_t, const char*);
+    using real_func_t = int (*)(pthread_t, const char *);
 
     Timer t{time_ns};
 
@@ -362,8 +366,8 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
     if (real_func != nullptr) {
         if (managed_by_tetris) {
             /* Search for the ThreadInfo struct of this thread. */
-            auto iti = std::find_if(threads->begin(), threads->end(), [&](ThreadInfo* ti) -> bool {
-                    return pthread_equal(*(ti->pthread_id), thread_id) != 0;
+            auto iti = std::find_if(threads->begin(), threads->end(), [&](ThreadInfo *ti) -> bool {
+                return pthread_equal(*(ti->pthread_id), thread_id) != 0;
             });
 
             if (iti != threads->end()) {
@@ -403,9 +407,9 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
 
 extern "C"
 int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
-        const cpu_set_t *cpuset)
+                           const cpu_set_t *cpuset)
 {
-    using real_func_t = int(*)(pthread_t, size_t, const cpu_set_t*);
+    using real_func_t = int (*)(pthread_t, size_t, const cpu_set_t *);
 
     Timer t{time_ns};
 
