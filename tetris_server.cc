@@ -438,7 +438,7 @@ class Manager
                             /* Update the client data. */
                             c.pid = pid;
                             c.exec = exec;
-                            c.dynamic_client = request.new_client().mapping_type();
+                            c.dynamic_client = (request.new_client().mapping_type() == tetris::NewClient::DYNAMIC);
                             c.mappings = _mappings.at(exec);
 
                             c.comp = Client::Comp(string_util::strip(request.new_client().compare_criteria()),
