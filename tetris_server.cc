@@ -48,7 +48,7 @@ debug::LoggerPtr logger;
 
 class NoMappingError : public std::runtime_error
 {
-   public:
+public:
     using std::runtime_error::runtime_error;
 };
 
@@ -59,28 +59,28 @@ class NoMappingError : public std::runtime_error
 
 class Client
 {
-   public:
+public:
     struct Thread
     {
-        std::string     name;
-        int             tid;
-        CPUList         cpus;
+        std::string name;
+        int tid;
+        CPUList cpus;
 
-        Thread(const std::string& name, int tid, CPUList cpus) :
-            name{name}, tid{tid}, cpus{cpus}
+        Thread(const std::string &name, int tid, CPUList cpus) :
+                name{name}, tid{tid}, cpus{cpus}
         {}
     };
 
     class Comp
     {
-       private:
-        std::string     _criteria;
-        bool            _more_is_better;
+    private:
+        std::string _criteria;
+        bool _more_is_better;
         std::function<bool(const double, const double)> _comp;
 
-       public:
+    public:
         Comp(const std::string compare_criteria, bool compare_more_is_better) :
-            _criteria{compare_criteria}, _more_is_better{compare_more_is_better}
+                _criteria{compare_criteria}, _more_is_better{compare_more_is_better}
         {
             if (_more_is_better)
                 _comp = std::greater<double>{};
@@ -89,10 +89,10 @@ class Client
         }
 
         Comp() :
-            _criteria{}, _comp{std::less<double>()}
+                _criteria{}, _comp{std::less<double>()}
         {}
 
-        bool operator()(const Mapping& other, const Mapping& best)
+        bool operator()(const Mapping &other, const Mapping &best)
         {
             return _comp(other.characteristic(_criteria), best.characteristic(_criteria));
         }
@@ -111,25 +111,25 @@ class Client
         }
     };
 
-   public:
-    ConnectionPtr           connection;
-    std::string             exec;
-    int                     pid;
-    bool                    dynamic_client;
-    std::vector<Thread>     threads;
-    std::vector<Mapping>    mappings;
-    Mapping                 active_mapping;
-    bool                    using_dppm;
+public:
+    ConnectionPtr connection;
+    std::string exec;
+    int pid;
+    bool dynamic_client;
+    std::vector<Thread> threads;
+    std::vector<Mapping> mappings;
+    Mapping active_mapping;
+    bool using_dppm;
 
-    Filter                  filter;
-    Comp                    comp;
+    Filter filter;
+    Comp comp;
 
-   public:
-    Client(const Client&) = delete;
+public:
+    Client(const Client &) = delete;
 
-    Client(const ConnectionPtr& conn) :
-        connection{conn}, exec{}, pid{-1}, dynamic_client{false}, threads{}, mappings{}, active_mapping{},
-        using_dppm{false}, filter{}, comp{}
+    Client(const ConnectionPtr &conn) :
+            connection{conn}, exec{}, pid{-1}, dynamic_client{false}, threads{}, mappings{}, active_mapping{},
+            using_dppm{false}, filter{}, comp{}
     {}
 
     ~Client()
@@ -143,7 +143,7 @@ class Client
         return active_mapping.cpus;
     }
 
-    void update_mapping(const Mapping& new_mapping)
+    void update_mapping(const Mapping &new_mapping)
     {
         if (new_mapping.name == active_mapping.name)
             return;
@@ -151,7 +151,7 @@ class Client
         logger->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid, new_mapping.name.c_str());
         active_mapping = new_mapping;
 
-        for (auto& t : threads) {
+        for (auto &t : threads) {
             CPUList cpus;
             if (dynamic_client)
                 cpus = active_mapping.cpus;
@@ -159,8 +159,8 @@ class Client
                 cpus = active_mapping.cpu(t.name);
 
             logger->info(" * remap thread '%s' [%i] from cpu(s) %s to cpu(s) %s\n", t.name.c_str(), t.tid,
-                    string_util::join(t.cpus.cpulist(num_cpus), ",").c_str(),
-                    string_util::join(cpus.cpulist(num_cpus), ",").c_str());
+                         string_util::join(t.cpus.cpulist(num_cpus), ",").c_str(),
+                         string_util::join(cpus.cpulist(num_cpus), ",").c_str());
 
             t.cpus = cpus;
 
@@ -171,20 +171,21 @@ class Client
         logger->info(" * done\n");
     }
 
-    void new_thread(const std::string& name, int tid)
+    void new_thread(const std::string &name, int tid)
     {
         logger->info("New thread '%s' [%i] registered for client '%s' [%d]\n", name.c_str(), tid, exec.c_str(), pid);
 
         CPUList cpus;
         if (dynamic_client) {
             cpus = active_mapping.cpus;
-            logger->info(" * enabled cpu(s) %s (dynamic client)\n", string_util::join(cpus.cpulist(num_cpus), ",").c_str());
+            logger->info(" * enabled cpu(s) %s (dynamic client)\n",
+                         string_util::join(cpus.cpulist(num_cpus), ",").c_str());
         } else {
             cpus = active_mapping.cpu(name);
             logger->info(" * enabled cpu(s) %s\n", string_util::join(cpus.cpulist(num_cpus), ",").c_str());
         }
 
-        auto it = std::find_if(threads.begin(), threads.end(), [&](const auto& t) { return t.name == name; });
+        auto it = std::find_if(threads.begin(), threads.end(), [&](const auto &t) { return t.name == name; });
         if (it == threads.end()) {
             threads.emplace_back(name, tid, cpus);
 
@@ -203,23 +204,23 @@ class Client
 
 class Manager
 {
-   private:
-    std::map<int, Client>   _clients;
-    std::string             _mappings_path;
+private:
+    std::map<int, Client> _clients;
+    std::string _mappings_path;
     std::map<std::string, std::vector<Mapping>> _mappings;
 
-    CPUList                 _blocked_cpus;
+    CPUList _blocked_cpus;
 
-    std::vector<Mapping> parse_mapping(const std::string& file)
+    std::vector<Mapping> parse_mapping(const std::string &file)
     {
         CSVData data{file};
         std::vector<Mapping> mappings;
 
-        for (const auto& row : data.row_iter()) {
+        for (const auto &row : data.row_iter()) {
             std::vector<std::pair<std::string, std::string>> threads;
             std::vector<std::pair<std::string, std::string>> characteristics;
 
-            for (const auto& col : row.names()) {
+            for (const auto &col : row.names()) {
                 if (string_util::starts_with(col, "t_")) {
                     /* Columns starting with 't_' are interpreted as threads */
                     std::string thread_name = col.substr(2);
@@ -243,7 +244,7 @@ class Manager
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
 
-            for (const auto& col : data.columns()) {
+            for (const auto &col : data.columns()) {
                 if (string_util::starts_with(col, "t_"))
                     thread_names.push_back(col.substr(2));
                 else
@@ -252,14 +253,14 @@ class Manager
 
             logger->debug("  * Found %i mapping(s)\n", mappings.size());
             logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
-                    string_util::join(thread_names, ",").c_str());
+                          string_util::join(thread_names, ",").c_str());
             logger->debug("  |-> %i characteristic(s): %s\n", characteristic_names.size(),
-                    string_util::join(characteristic_names, ",").c_str());
+                          string_util::join(characteristic_names, ",").c_str());
 
-            for (const auto& m : mappings) {
+            for (const auto &m : mappings) {
                 std::vector<std::string> mapping_characterisics;
 
-                for (const auto& c : characteristic_names) {
+                for (const auto &c : characteristic_names) {
                     std::stringstream ss;
 
                     ss << std::setprecision(0) << std::fixed << c << ":" << m.characteristic(c);
@@ -267,45 +268,48 @@ class Manager
                 }
 
                 logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
-                        m.equivalence_class().name().c_str(),
-                        string_util::join(mapping_characterisics, ",").c_str());
+                              m.equivalence_class().name().c_str(),
+                              string_util::join(mapping_characterisics, ",").c_str());
             }
         }
 
         return mappings;
     }
 
-    Mapping select_best_mapping(Client& c)
+    Mapping select_best_mapping(Client &c)
     {
-        logger->info("Search for best mapping for '%s' [%d] using criteria %s\n", c.exec.c_str(), c.pid, c.comp.repr().c_str());
+        logger->info("Search for best mapping for '%s' [%d] using criteria %s\n", c.exec.c_str(), c.pid,
+                     c.comp.repr().c_str());
 
         /* First go through all mappings and take those that satisfy our filter criteria */
-        auto filter = [&c] (const Mapping& m) -> bool {
+        auto filter = [&c](const Mapping &m) -> bool {
             return c.filter(m);
         };
 
         std::vector<Mapping> possible_mappings;
-        for (const auto& m : c.mappings) {
+        for (const auto &m : c.mappings) {
             if (filter(m))
                 possible_mappings.push_back(m);
             else
                 logger->debug(" * Mapping %s (%.0f@%s) [%s] doesn't satisfy filter criteria %s: %s=%f\n",
-                        m.name.c_str(), m.characteristic(c.comp.criteria()), c.comp.criteria().c_str(),
-                        m.equivalence_class().name().c_str(), c.filter.repr().c_str(),
-                        c.filter.criteria().c_str(), m.characteristic(c.filter.criteria()));
+                              m.name.c_str(), m.characteristic(c.comp.criteria()), c.comp.criteria().c_str(),
+                              m.equivalence_class().name().c_str(), c.filter.repr().c_str(),
+                              c.filter.criteria().c_str(), m.characteristic(c.filter.criteria()));
         }
 
 
         if (possible_mappings.empty()) {
-            logger->debug("No mappings are available for client '%s' [%i] that satisfy the filter\n", c.exec.c_str(), c.pid);
+            logger->debug("No mappings are available for client '%s' [%i] that satisfy the filter\n", c.exec.c_str(),
+                          c.pid);
             throw NoMappingError("Can't find mapping that satisfies the filter.");
         } else
-            logger->debug(" * There are %i mapping(s) for this client that satisfy the filter\n", possible_mappings.size());
+            logger->debug(" * There are %i mapping(s) for this client that satisfy the filter\n",
+                          possible_mappings.size());
 
         /* Now get all the mappings (containing equivalent ones) from the possible ones,
          * that still fit on the non-occupied CPUs. */
         CPUList occupied_cpus = _blocked_cpus;
-        for (const auto& [name, cl] : _clients) {
+        for (const auto&[name, cl] : _clients) {
             if (cl.pid == c.pid)
                 continue;
 
@@ -315,34 +319,36 @@ class Manager
         if (occupied_cpus.nr_cpus() == 0)
             logger->debug(" * Already taken cpu(s): none\n");
         else
-            logger->debug(" * Already taken cpu(s): %s\n", string_util::join(occupied_cpus.cpulist(num_cpus), ",").c_str());
+            logger->debug(" * Already taken cpu(s): %s\n",
+                          string_util::join(occupied_cpus.cpulist(num_cpus), ",").c_str());
 
         /* Get all the TETRiS mappings for this client */
         auto possible_tetris_mappings = tetris_mappings(possible_mappings, occupied_cpus);
         if (possible_tetris_mappings.empty()) {
-            logger->debug("No TETRiS mappings are available for client '%s' [%i] that fit the available cpu(s)\n", c.exec.c_str(), c.pid);
+            logger->debug("No TETRiS mappings are available for client '%s' [%i] that fit the available cpu(s)\n",
+                          c.exec.c_str(), c.pid);
             throw NoMappingError("Can't find a proper TETRiS mapping for the client.");
         } else
             logger->debug(" * There are %i TETRiS mapping(s) for this client that fit the available cpu(s)\n",
-                    possible_tetris_mappings.size());
+                          possible_tetris_mappings.size());
 
         /* Now select the best one out of the remaining ones. */
-        auto comp = [&c] (const Mapping& other, const Mapping& best) -> bool {
+        auto comp = [&c](const Mapping &other, const Mapping &best) -> bool {
             return c.comp(other, best);
         };
 
         auto best = possible_tetris_mappings.begin();
         logger->debug(" * Start search with mapping: %s (%.0f@%s) [%s]\n", best->name.c_str(),
-                best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
-                best->equivalence_class().name().c_str());
+                      best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
+                      best->equivalence_class().name().c_str());
 
         for (auto m = best; m != possible_tetris_mappings.end(); ++m) {
             if (filter(*m) && comp(*m, *best)) {
                 logger->debug(" * Found better mapping: %s (%.0f@%s) [%s] vs %s (%.0f@%s) [%s]\n",
-                        m->name.c_str(), m->characteristic(c.comp.criteria()),
-                        c.comp.repr().c_str(), m->equivalence_class().name().c_str(),
-                        best->name.c_str(), best->characteristic(c.comp.criteria()),
-                        c.comp.repr().c_str(), best->equivalence_class().name().c_str());
+                              m->name.c_str(), m->characteristic(c.comp.criteria()),
+                              c.comp.repr().c_str(), m->equivalence_class().name().c_str(),
+                              best->name.c_str(), best->characteristic(c.comp.criteria()),
+                              c.comp.repr().c_str(), best->equivalence_class().name().c_str());
 
                 /* Remember this one as best one */
                 best = m;
@@ -350,17 +356,19 @@ class Manager
         }
 
         logger->info("The best mapping: %s (%.0f@%s) [%s]\n", best->name.c_str(),
-                best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
-                best->equivalence_class().name().c_str());
+                     best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
+                     best->equivalence_class().name().c_str());
 
         return *best;
     }
 
-    Mapping use_preferred_mapping(Client& c, const std::string& preferred_mapping_name)
+    Mapping use_preferred_mapping(Client &c, const std::string &preferred_mapping_name)
     {
-        logger->info("Use preferred mapping '%s' for '%s' [%d]\n", preferred_mapping_name.c_str(), c.exec.c_str(), c.pid);
+        logger->info("Use preferred mapping '%s' for '%s' [%d]\n", preferred_mapping_name.c_str(), c.exec.c_str(),
+                     c.pid);
 
-        auto it = std::find_if(c.mappings.begin(), c.mappings.end(), [&](const auto& m) { return m.name == preferred_mapping_name; });
+        auto it = std::find_if(c.mappings.begin(), c.mappings.end(),
+                               [&](const auto &m) { return m.name == preferred_mapping_name; });
         if (it != c.mappings.end())
             return *it;
         else {
@@ -369,14 +377,14 @@ class Manager
         }
     }
 
-   public:
-    explicit Manager(const std::string& mappings_path) :
-        _clients{}, _mappings_path{mappings_path}, _mappings{}
+public:
+    explicit Manager(const std::string &mappings_path) :
+            _clients{}, _mappings_path{mappings_path}, _mappings{}
     {
         update_mappings();
     }
 
-    void client_connect(int fd, const ConnectionPtr& conn)
+    void client_connect(int fd, const ConnectionPtr &conn)
     {
         _clients.emplace(fd, conn);
     }
@@ -386,29 +394,32 @@ class Manager
         _clients.erase(fd);
     }
 
-    void remap(int fd, const std::string& preferred_mapping_name)
-    try {
-        Client& c = _clients.at(fd);
+    void remap(int fd, const std::string &preferred_mapping_name)
+    try
+    {
+        Client &c = _clients.at(fd);
 
         logger->info("Change mapping for client '%s' [%d] to mapping %s\n",
-                c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
+                     c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
 
-        auto it = std::find_if(c.mappings.begin(), c.mappings.end(), [&](const auto& m) { return m.name == preferred_mapping_name; });
+        auto it = std::find_if(c.mappings.begin(), c.mappings.end(),
+                               [&](const auto &m) { return m.name == preferred_mapping_name; });
         if (it == c.mappings.end()) {
             logger->info("Unknown mapping %s for client %i\n", preferred_mapping_name.c_str(), fd);
             return;
         } else {
             logger->info("Changing mapping for client '%s' [%d] to mapping %s\n",
-                    c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
+                         c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
             c.update_mapping(*it);
         }
-    } catch (std::out_of_range&) {
+    } catch (std::out_of_range &) {
         logger->error("Unknown client %i\n", fd);
     }
 
     bool client_message(int fd)
-    try {
-        Client& c = _clients.at(fd);
+    try
+    {
+        Client &c = _clients.at(fd);
         ConnectionPtr conn = c.connection;
 
         bool done = false;
@@ -518,7 +529,7 @@ class Manager
                         break;
                     }
                     case tetris::PullRequest::DPM_SUBSCRIBE: {
-                        logger->always("Client '%s' [%d] use Dppm\n", c.exec.c_str(), c.pid);
+                        logger->always("Client '%s' [%d] use DPM\n", c.exec.c_str(), c.pid);
                         c.using_dppm = true;
 
                         /* We need to acknowledge this message. */
@@ -526,9 +537,41 @@ class Manager
                         ack.set_type(tetris::PullResponse::ACKNOWLEDGE);
                         ack.set_feature_id(0);
                         if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
-                            logger->error("Failed to acknowledge the Dppm registration message\n");
+                            logger->error("Failed to acknowledge the DPM registration message\n");
                             c.using_dppm = false;
                         }
+                        break;
+                    }
+                    case tetris::PullRequest::DPM_SEND_APPLICATION_THREAD_ID: {
+                        logger->always("Client '%s' [%d] send it threads ID\n", c.exec.c_str(), c.pid);
+
+                        auto &application_threads_id = request.application_threads_id();
+                        auto &regular_process_info = application_threads_id.process_info();
+
+                        bool managed = true;
+                        std::string process_name;
+                        pthread_t process_tid;
+                        // Register all regular processes into the TETRiS manager.
+                        try {
+                            for (auto &process: regular_process_info) {
+                                process_name = process.process_name();
+                                process_tid = process.thread_id();
+                                c.new_thread(process_name, process_tid);
+                            }
+                        } catch (std::out_of_range) {
+                            logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name, process_tid,
+                                          c.exec.c_str());
+                            managed = false;
+                        }
+
+                        /* We need to acknowledge this message. */
+                        tetris::PullResponse ack{};
+                        // If all regular processes are managed by TETRiS, set type to ACKNOWLEDGE, otherwise set it to
+                        // ERROR.
+                        ack.set_type(managed ? tetris::PullResponse::ACKNOWLEDGE : tetris::PullResponse::ERROR);
+                        ack.set_feature_id(0);
+                        if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE)
+                            logger->error("Failed to acknowledge the DPM registration message\n");
                         break;
                     }
                     default:
@@ -545,11 +588,12 @@ class Manager
         return true;
     }
 
-    void control_message(ControlData& data)
-    try {
+    void control_message(ControlData &data)
+    try
+    {
         switch (data.op) {
             case ControlData::Operations::UPDATE_CLIENT: {
-                Client& c = _clients.at(data.update_data.client_fd);
+                Client &c = _clients.at(data.update_data.client_fd);
 
                 logger->info("Update client: '%s' [%d]\n", c.exec.c_str(), c.pid);
 
@@ -563,7 +607,7 @@ class Manager
 
                 if (data.update_data.has_compare_criteria) {
                     c.comp = Client::Comp(string_util::strip(data.update_data.compare_criteria),
-                            data.update_data.compare_more_is_better);
+                                          data.update_data.compare_more_is_better);
 
                     logger->info(" * change criteria: %s\n", c.comp.repr().c_str());
                 }
@@ -582,8 +626,8 @@ class Manager
                 }
 
                 logger->info(" * mapping: %s (%.0f@%s) [%s]\n", c.active_mapping.name.c_str(),
-                        c.active_mapping.characteristic(c.comp.criteria()), c.comp.repr().c_str(),
-                        c.active_mapping.equivalence_class().name().c_str());
+                             c.active_mapping.characteristic(c.comp.criteria()), c.comp.repr().c_str(),
+                             c.active_mapping.equivalence_class().name().c_str());
 
                 break;
             }
@@ -604,18 +648,19 @@ class Manager
         logger->warning("Received control message for unknown client\n");
     }
 
-    void print_mappings() {
+    void print_mappings()
+    {
         std::cout << "Currently active mappings:" << std::endl
                   << "==========================" << std::endl;
-        for (const auto& [name, client] : _clients) {
+        for (const auto&[name, client] : _clients) {
             std::cout << "Client '" << client.exec << "' [" << client.pid << "] (ID: " << name << ")" << std::endl;
             std::cout << "-> mapping: " << client.active_mapping.name << " ["
-                << client.active_mapping.equivalence_class().name() << "]" << std::endl;
+                      << client.active_mapping.equivalence_class().name() << "]" << std::endl;
 
             std::cout << "-> threads:" << std::endl;
-            for (const auto& t : client.threads)
+            for (const auto &t : client.threads)
                 std::cout << "--> " << t.name << "(" << t.tid << "): "
-                    << string_util::join(t.cpus.cpulist(num_cpus), ",") << std::endl;
+                          << string_util::join(t.cpus.cpulist(num_cpus), ",") << std::endl;
         }
         std::cout << "======= END OF LIST =======" << std::endl;
     }
@@ -626,7 +671,7 @@ class Manager
         _mappings.clear();
 
         try {
-            path_util::for_each_file(_mappings_path, [&](const std::string& file) -> void {
+            path_util::for_each_file(_mappings_path, [&](const std::string &file) -> void {
                 if (path_util::extension(file) == ".csv") {
                     std::string program = string_util::strip(path_util::filename(file));
                     logger->info(" -> found mapping for '%s'\n", program.c_str());
@@ -634,7 +679,7 @@ class Manager
                     _mappings.emplace(program, parse_mapping(file));
                 }
             });
-        } catch (std::exception& e) {
+        } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());
         }
     }
@@ -644,12 +689,12 @@ class Manager
 void usage()
 {
     std::cout << "usage: tetrisserver [-h] [MAPPINGS]" << std::endl
-        << std::endl
-        << "Options:" << std::endl
-        << "   -h, --help           show this help message." << std::endl
-        << std::endl
-        << "Positionals:" << std::endl
-        << " MAPPINGS               path the folder with the per-app mappings." << std::endl;
+              << std::endl
+              << "Options:" << std::endl
+              << "   -h, --help           show this help message." << std::endl
+              << std::endl
+              << "Positionals:" << std::endl
+              << " MAPPINGS               path the folder with the per-app mappings." << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -688,9 +733,9 @@ int main(int argc, char *argv[])
         server_sock.non_blocking();
         server_sock.listening();
         sock_fd = server_sock.fd();
-    } catch(std::runtime_error& e) {
+    } catch (std::runtime_error &e) {
         std::cerr << "Failed to open socket" << std::endl
-            << e.what() << std::endl;
+                  << e.what() << std::endl;
         return 1;
     }
 
@@ -702,9 +747,9 @@ int main(int argc, char *argv[])
         ctl_sock.non_blocking();
         ctl_sock.listening();
         ctl_fd = ctl_sock.fd();
-    } catch (std::runtime_error& e) {
+    } catch (std::runtime_error &e) {
         std::cerr << "Failed to open control socket" << std::endl
-          << e.what() << std::endl;
+                  << e.what() << std::endl;
         return 1;
     }
 
@@ -731,7 +776,7 @@ int main(int argc, char *argv[])
         sig_fd = signalfd(-1, &sigmask, SFD_NONBLOCK);
         if (sig_fd == -1) {
             std::cerr << "Failed to create signal fd." << std::endl
-                << strerror(errno) << std::endl;
+                      << strerror(errno) << std::endl;
             return 1;
         }
     }
@@ -742,7 +787,7 @@ int main(int argc, char *argv[])
         epoll_fd = epoll_create1(0);
         if (epoll_fd == -1) {
             std::cerr << "Failed to initialize epoll." << std::endl
-                << strerror(errno) << std::endl;
+                      << strerror(errno) << std::endl;
             return 1;
         }
 
@@ -776,7 +821,7 @@ int main(int argc, char *argv[])
                 while (1) {
                     sockaddr_un in_sock;
                     socklen_t in_sock_size = sizeof(in_sock);
-                    int infd = ::accept(cur->data.fd, reinterpret_cast<sockaddr*>(&in_sock), &in_sock_size);
+                    int infd = ::accept(cur->data.fd, reinterpret_cast<sockaddr *>(&in_sock), &in_sock_size);
                     if (infd == -1) {
                         if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                             /* We connected to all possible connections already.
@@ -811,7 +856,7 @@ int main(int argc, char *argv[])
                 while (1) {
                     sockaddr_un in_sock;
                     socklen_t in_sock_size = sizeof(in_sock);
-                    int infd = ::accept(cur->data.fd, reinterpret_cast<sockaddr*>(&in_sock), &in_sock_size);
+                    int infd = ::accept(cur->data.fd, reinterpret_cast<sockaddr *>(&in_sock), &in_sock_size);
                     if (infd == -1) {
                         if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                             /* We connected to all possible connections already.
