@@ -12,7 +12,7 @@
 
 tetris::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
         : Client(), _push_message_listener(get_push_listener_socket_path()),
-          _managed(false)
+          _managed(false), _communication_mutex()
 {
     _logger = debug::Logger::get();
     try {
@@ -42,8 +42,10 @@ void tetris::ConcreteClient::bind(tetris::Feature *feature)
 tetris::PullResponse tetris::ConcreteClient::send(const tetris::PullRequest &request)
 {
     tetris::PullResponse response{};
+    _communication_mutex.lock();
     protobuf_util::Send(_tetris_server_connection.locked(), request);
     protobuf_util::Receive(_tetris_server_connection.locked(), response);
+    _communication_mutex.unlock();
     return response;
 }
 

@@ -55,6 +55,9 @@ private:
 
     /// \brief If true, the client is connected to the TETRiS server and is managed.
     bool _managed;
+
+    /// \brief Mutex preventing multiple features to send/receive through the server socket at the same time.
+    std::mutex _communication_mutex;
 };
 }
 
