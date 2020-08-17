@@ -57,8 +57,8 @@ message NewThreadAck {
   required bool managed = 1;
 }
 
-// A Configuration message holds the whole configuration of a DPM application.
-message Configuration {
+// A ApplicationThreadsID message holds all threads ID for all process and parallel region replica of a DPM application.
+message ApplicationThreadsID {
   repeated ProcessInfo process_info = 3;
   repeated RegionInfo parallel_region_info = 4;
 }
@@ -69,14 +69,14 @@ message PullRequest {
     TETRIS_NEW_CLIENT = 0;                  // Register the client to the TETRiS server.
     TETRIS_NEW_THREAD = 1;                  // Register a new thread to the TETRiS server.
     DPM_SUBSCRIBE = 2;                      // Register DPM as a TETRiS feature.
-    DPM_SEND_CONFIGURATION = 3;             // Send DPM configuration to the TETRiS server.
+    DPM_SEND_APPLICATION_THREAD_ID = 3;     // Send application threads ID to the TETRiS server.
   }
   required Type type = 1;
   // TETRiS fields.
   optional NewClient new_client = 2;
   optional NewThread new_thread = 3;
   // DPM fields.
-  optional Configuration configuration = 4;
+  optional ApplicationThreadsID application_threads_id = 4;
 }
 
 // A pull response is sent from the TETRiS server to a TETRiS feature after processing a request.

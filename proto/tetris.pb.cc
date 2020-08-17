@@ -14,7 +14,7 @@
 #include <google/protobuf/wire_format.h>
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
-extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Configuration_tetris_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_ApplicationThreadsID_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewClient_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewClientAck_tetris_2eproto;
 extern PROTOBUF_INTERNAL_EXPORT_tetris_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_NewThread_tetris_2eproto;
@@ -61,10 +61,10 @@ class NewThreadAckDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<NewThreadAck> _instance;
 } _NewThreadAck_default_instance_;
-class ConfigurationDefaultTypeInternal {
+class ApplicationThreadsIDDefaultTypeInternal {
  public:
-  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Configuration> _instance;
-} _Configuration_default_instance_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ApplicationThreadsID> _instance;
+} _ApplicationThreadsID_default_instance_;
 class PullRequestDefaultTypeInternal {
  public:
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<PullRequest> _instance;
@@ -82,19 +82,19 @@ class PushResponseDefaultTypeInternal {
   ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<PushResponse> _instance;
 } _PushResponse_default_instance_;
 }  // namespace tetris
-static void InitDefaultsscc_info_Configuration_tetris_2eproto() {
+static void InitDefaultsscc_info_ApplicationThreadsID_tetris_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
-    void* ptr = &::tetris::_Configuration_default_instance_;
-    new (ptr) ::tetris::Configuration();
+    void* ptr = &::tetris::_ApplicationThreadsID_default_instance_;
+    new (ptr) ::tetris::ApplicationThreadsID();
     ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::tetris::Configuration::InitAsDefaultInstance();
+  ::tetris::ApplicationThreadsID::InitAsDefaultInstance();
 }
 
-::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_Configuration_tetris_2eproto =
-    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_Configuration_tetris_2eproto}, {
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_ApplicationThreadsID_tetris_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_ApplicationThreadsID_tetris_2eproto}, {
       &scc_info_ProcessInfo_tetris_2eproto.base,
       &scc_info_RegionInfo_tetris_2eproto.base,}};
 
@@ -183,7 +183,7 @@ static void InitDefaultsscc_info_PullRequest_tetris_2eproto() {
     {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_PullRequest_tetris_2eproto}, {
       &scc_info_NewClient_tetris_2eproto.base,
       &scc_info_NewThread_tetris_2eproto.base,
-      &scc_info_Configuration_tetris_2eproto.base,}};
+      &scc_info_ApplicationThreadsID_tetris_2eproto.base,}};
 
 static void InitDefaultsscc_info_PullResponse_tetris_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
@@ -378,12 +378,12 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
   PROTOBUF_FIELD_OFFSET(::tetris::NewThreadAck, managed_),
   0,
   ~0u,  // no _has_bits_
-  PROTOBUF_FIELD_OFFSET(::tetris::Configuration, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ApplicationThreadsID, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  PROTOBUF_FIELD_OFFSET(::tetris::Configuration, process_info_),
-  PROTOBUF_FIELD_OFFSET(::tetris::Configuration, parallel_region_info_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ApplicationThreadsID, process_info_),
+  PROTOBUF_FIELD_OFFSET(::tetris::ApplicationThreadsID, parallel_region_info_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, _has_bits_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -392,7 +392,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_tetris_2eproto::offsets[] PROT
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, type_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, new_client_),
   PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, new_thread_),
-  PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, configuration_),
+  PROTOBUF_FIELD_OFFSET(::tetris::PullRequest, application_threads_id_),
   3,
   0,
   1,
@@ -443,7 +443,7 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOB
   { 57, 64, sizeof(::tetris::NewClientAck)},
   { 66, 73, sizeof(::tetris::NewThread)},
   { 75, 81, sizeof(::tetris::NewThreadAck)},
-  { 82, -1, sizeof(::tetris::Configuration)},
+  { 82, -1, sizeof(::tetris::ApplicationThreadsID)},
   { 89, 98, sizeof(::tetris::PullRequest)},
   { 102, 111, sizeof(::tetris::PullResponse)},
   { 115, 123, sizeof(::tetris::PushRequest)},
@@ -460,7 +460,7 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_NewClientAck_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_NewThread_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_NewThreadAck_default_instance_),
-  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_Configuration_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_ApplicationThreadsID_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_PullRequest_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_PullResponse_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::tetris::_PushRequest_default_instance_),
@@ -484,40 +484,41 @@ const char descriptor_table_protodef_tetris_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "YNAMIC\020\000\022\n\n\006STATIC\020\001\"+\n\014NewClientAck\022\n\n\002"
   "id\030\001 \002(\r\022\017\n\007managed\030\002 \002(\010\"&\n\tNewThread\022\013"
   "\n\003tid\030\001 \002(\r\022\014\n\004name\030\002 \002(\t\"\037\n\014NewThreadAc"
-  "k\022\017\n\007managed\030\001 \002(\010\"l\n\rConfiguration\022)\n\014p"
-  "rocess_info\030\003 \003(\0132\023.tetris.ProcessInfo\0220"
-  "\n\024parallel_region_info\030\004 \003(\0132\022.tetris.Re"
-  "gionInfo\"\226\002\n\013PullRequest\022&\n\004type\030\001 \002(\0162\030"
-  ".tetris.PullRequest.Type\022%\n\nnew_client\030\002"
-  " \001(\0132\021.tetris.NewClient\022%\n\nnew_thread\030\003 "
-  "\001(\0132\021.tetris.NewThread\022,\n\rconfiguration\030"
-  "\004 \001(\0132\025.tetris.Configuration\"c\n\004Type\022\025\n\021"
-  "TETRIS_NEW_CLIENT\020\000\022\025\n\021TETRIS_NEW_THREAD"
-  "\020\001\022\021\n\rDPM_SUBSCRIBE\020\002\022\032\n\026DPM_SEND_CONFIG"
-  "URATION\020\003\"\201\002\n\014PullResponse\022\'\n\004type\030\001 \002(\016"
-  "2\031.tetris.PullResponse.Type\022\022\n\nfeature_i"
-  "d\030\002 \001(\r\022,\n\016new_client_ack\030\003 \001(\0132\024.tetris"
-  ".NewClientAck\022,\n\016new_thread_ack\030\004 \001(\0132\024."
-  "tetris.NewThreadAck\"X\n\004Type\022\t\n\005ERROR\020\000\022\017"
-  "\n\013ACKNOWLEDGE\020\001\022\031\n\025TETRIS_NEW_CLIENT_ACK"
-  "\020\002\022\031\n\025TETRIS_NEW_THREAD_ACK\020\003\"\345\001\n\013PushRe"
-  "quest\022&\n\004type\030\001 \002(\0162\030.tetris.PushRequest"
-  ".Type\022\022\n\nfeature_id\030\002 \002(\r\022:\n\025region_conf"
-  "igurations\030\003 \003(\0132\033.tetris.RegionConfigur"
-  "ation\"^\n\004Type\022\034\n\030DPM_UPDATE_CONFIGURATIO"
-  "N\020\000\022\030\n\024DPM_GET_REGIONS_INFO\020\001\022\036\n\032DPM_GET"
-  "_REGIONS_THROUGHPUT\020\002\"\353\001\n\014PushResponse\022\'"
-  "\n\004type\030\001 \002(\0162\031.tetris.PushResponse.Type\022"
-  "(\n\014region_infos\030\003 \003(\0132\022.tetris.RegionInf"
-  "o\0224\n\022region_throughputs\030\004 \003(\0132\030.tetris.R"
-  "egionThroughput\"R\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013AC"
-  "KNOWLEDGE\020\001\022\023\n\017DPM_REGION_INFO\020\002\022\031\n\025DPM_"
-  "REGION_THROUGHPUT\020\003"
+  "k\022\017\n\007managed\030\001 \002(\010\"s\n\024ApplicationThreads"
+  "ID\022)\n\014process_info\030\003 \003(\0132\023.tetris.Proces"
+  "sInfo\0220\n\024parallel_region_info\030\004 \003(\0132\022.te"
+  "tris.RegionInfo\"\256\002\n\013PullRequest\022&\n\004type\030"
+  "\001 \002(\0162\030.tetris.PullRequest.Type\022%\n\nnew_c"
+  "lient\030\002 \001(\0132\021.tetris.NewClient\022%\n\nnew_th"
+  "read\030\003 \001(\0132\021.tetris.NewThread\022<\n\026applica"
+  "tion_threads_id\030\004 \001(\0132\034.tetris.Applicati"
+  "onThreadsID\"k\n\004Type\022\025\n\021TETRIS_NEW_CLIENT"
+  "\020\000\022\025\n\021TETRIS_NEW_THREAD\020\001\022\021\n\rDPM_SUBSCRI"
+  "BE\020\002\022\"\n\036DPM_SEND_APPLICATION_THREAD_ID\020\003"
+  "\"\201\002\n\014PullResponse\022\'\n\004type\030\001 \002(\0162\031.tetris"
+  ".PullResponse.Type\022\022\n\nfeature_id\030\002 \001(\r\022,"
+  "\n\016new_client_ack\030\003 \001(\0132\024.tetris.NewClien"
+  "tAck\022,\n\016new_thread_ack\030\004 \001(\0132\024.tetris.Ne"
+  "wThreadAck\"X\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013ACKNOWL"
+  "EDGE\020\001\022\031\n\025TETRIS_NEW_CLIENT_ACK\020\002\022\031\n\025TET"
+  "RIS_NEW_THREAD_ACK\020\003\"\345\001\n\013PushRequest\022&\n\004"
+  "type\030\001 \002(\0162\030.tetris.PushRequest.Type\022\022\n\n"
+  "feature_id\030\002 \002(\r\022:\n\025region_configuration"
+  "s\030\003 \003(\0132\033.tetris.RegionConfiguration\"^\n\004"
+  "Type\022\034\n\030DPM_UPDATE_CONFIGURATION\020\000\022\030\n\024DP"
+  "M_GET_REGIONS_INFO\020\001\022\036\n\032DPM_GET_REGIONS_"
+  "THROUGHPUT\020\002\"\353\001\n\014PushResponse\022\'\n\004type\030\001 "
+  "\002(\0162\031.tetris.PushResponse.Type\022(\n\014region"
+  "_infos\030\003 \003(\0132\022.tetris.RegionInfo\0224\n\022regi"
+  "on_throughputs\030\004 \003(\0132\030.tetris.RegionThro"
+  "ughput\"R\n\004Type\022\t\n\005ERROR\020\000\022\017\n\013ACKNOWLEDGE"
+  "\020\001\022\023\n\017DPM_REGION_INFO\020\002\022\031\n\025DPM_REGION_TH"
+  "ROUGHPUT\020\003"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_tetris_2eproto_deps[1] = {
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tetris_2eproto_sccs[14] = {
-  &scc_info_Configuration_tetris_2eproto.base,
+  &scc_info_ApplicationThreadsID_tetris_2eproto.base,
   &scc_info_NewClient_tetris_2eproto.base,
   &scc_info_NewClientAck_tetris_2eproto.base,
   &scc_info_NewThread_tetris_2eproto.base,
@@ -534,7 +535,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_tet
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_tetris_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_tetris_2eproto = {
-  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1779,
+  false, false, descriptor_table_protodef_tetris_2eproto, "tetris.proto", 1810,
   &descriptor_table_tetris_2eproto_once, descriptor_table_tetris_2eproto_sccs, descriptor_table_tetris_2eproto_deps, 14, 0,
   schemas, file_default_instances, TableStruct_tetris_2eproto::offsets,
   file_level_metadata_tetris_2eproto, 14, file_level_enum_descriptors_tetris_2eproto, file_level_service_descriptors_tetris_2eproto,
@@ -584,7 +585,7 @@ bool PullRequest_Type_IsValid(int value) {
 constexpr PullRequest_Type PullRequest::TETRIS_NEW_CLIENT;
 constexpr PullRequest_Type PullRequest::TETRIS_NEW_THREAD;
 constexpr PullRequest_Type PullRequest::DPM_SUBSCRIBE;
-constexpr PullRequest_Type PullRequest::DPM_SEND_CONFIGURATION;
+constexpr PullRequest_Type PullRequest::DPM_SEND_APPLICATION_THREAD_ID;
 constexpr PullRequest_Type PullRequest::Type_MIN;
 constexpr PullRequest_Type PullRequest::Type_MAX;
 constexpr int PullRequest::Type_ARRAYSIZE;
@@ -3121,59 +3122,59 @@ void NewThreadAck::InternalSwap(NewThreadAck* other) {
 
 // ===================================================================
 
-void Configuration::InitAsDefaultInstance() {
+void ApplicationThreadsID::InitAsDefaultInstance() {
 }
-class Configuration::_Internal {
+class ApplicationThreadsID::_Internal {
  public:
 };
 
-Configuration::Configuration(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+ApplicationThreadsID::ApplicationThreadsID(::PROTOBUF_NAMESPACE_ID::Arena* arena)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena),
   process_info_(arena),
   parallel_region_info_(arena) {
   SharedCtor();
   RegisterArenaDtor(arena);
-  // @@protoc_insertion_point(arena_constructor:tetris.Configuration)
+  // @@protoc_insertion_point(arena_constructor:tetris.ApplicationThreadsID)
 }
-Configuration::Configuration(const Configuration& from)
+ApplicationThreadsID::ApplicationThreadsID(const ApplicationThreadsID& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       process_info_(from.process_info_),
       parallel_region_info_(from.parallel_region_info_) {
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:tetris.Configuration)
+  // @@protoc_insertion_point(copy_constructor:tetris.ApplicationThreadsID)
 }
 
-void Configuration::SharedCtor() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Configuration_tetris_2eproto.base);
+void ApplicationThreadsID::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ApplicationThreadsID_tetris_2eproto.base);
 }
 
-Configuration::~Configuration() {
-  // @@protoc_insertion_point(destructor:tetris.Configuration)
+ApplicationThreadsID::~ApplicationThreadsID() {
+  // @@protoc_insertion_point(destructor:tetris.ApplicationThreadsID)
   SharedDtor();
   _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-void Configuration::SharedDtor() {
+void ApplicationThreadsID::SharedDtor() {
   GOOGLE_DCHECK(GetArena() == nullptr);
 }
 
-void Configuration::ArenaDtor(void* object) {
-  Configuration* _this = reinterpret_cast< Configuration* >(object);
+void ApplicationThreadsID::ArenaDtor(void* object) {
+  ApplicationThreadsID* _this = reinterpret_cast< ApplicationThreadsID* >(object);
   (void)_this;
 }
-void Configuration::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+void ApplicationThreadsID::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
 }
-void Configuration::SetCachedSize(int size) const {
+void ApplicationThreadsID::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const Configuration& Configuration::default_instance() {
-  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Configuration_tetris_2eproto.base);
+const ApplicationThreadsID& ApplicationThreadsID::default_instance() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ApplicationThreadsID_tetris_2eproto.base);
   return *internal_default_instance();
 }
 
 
-void Configuration::Clear() {
-// @@protoc_insertion_point(message_clear_start:tetris.Configuration)
+void ApplicationThreadsID::Clear() {
+// @@protoc_insertion_point(message_clear_start:tetris.ApplicationThreadsID)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -3183,7 +3184,7 @@ void Configuration::Clear() {
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
-const char* Configuration::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+const char* ApplicationThreadsID::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
 #define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
   ::PROTOBUF_NAMESPACE_ID::Arena* arena = GetArena(); (void)arena;
   while (!ctx->Done(&ptr)) {
@@ -3237,9 +3238,9 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Configuration::_InternalSerialize(
+::PROTOBUF_NAMESPACE_ID::uint8* ApplicationThreadsID::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
-  // @@protoc_insertion_point(serialize_to_array_start:tetris.Configuration)
+  // @@protoc_insertion_point(serialize_to_array_start:tetris.ApplicationThreadsID)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -3263,12 +3264,12 @@ failure:
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:tetris.Configuration)
+  // @@protoc_insertion_point(serialize_to_array_end:tetris.ApplicationThreadsID)
   return target;
 }
 
-size_t Configuration::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:tetris.Configuration)
+size_t ApplicationThreadsID::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:tetris.ApplicationThreadsID)
   size_t total_size = 0;
 
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -3298,23 +3299,23 @@ size_t Configuration::ByteSizeLong() const {
   return total_size;
 }
 
-void Configuration::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:tetris.Configuration)
+void ApplicationThreadsID::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_merge_from_start:tetris.ApplicationThreadsID)
   GOOGLE_DCHECK_NE(&from, this);
-  const Configuration* source =
-      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<Configuration>(
+  const ApplicationThreadsID* source =
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ApplicationThreadsID>(
           &from);
   if (source == nullptr) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:tetris.Configuration)
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:tetris.ApplicationThreadsID)
     ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:tetris.Configuration)
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:tetris.ApplicationThreadsID)
     MergeFrom(*source);
   }
 }
 
-void Configuration::MergeFrom(const Configuration& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:tetris.Configuration)
+void ApplicationThreadsID::MergeFrom(const ApplicationThreadsID& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:tetris.ApplicationThreadsID)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -3324,34 +3325,34 @@ void Configuration::MergeFrom(const Configuration& from) {
   parallel_region_info_.MergeFrom(from.parallel_region_info_);
 }
 
-void Configuration::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:tetris.Configuration)
+void ApplicationThreadsID::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+// @@protoc_insertion_point(generalized_copy_from_start:tetris.ApplicationThreadsID)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-void Configuration::CopyFrom(const Configuration& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:tetris.Configuration)
+void ApplicationThreadsID::CopyFrom(const ApplicationThreadsID& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:tetris.ApplicationThreadsID)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool Configuration::IsInitialized() const {
+bool ApplicationThreadsID::IsInitialized() const {
   if (!::PROTOBUF_NAMESPACE_ID::internal::AllAreInitialized(process_info_)) return false;
   if (!::PROTOBUF_NAMESPACE_ID::internal::AllAreInitialized(parallel_region_info_)) return false;
   return true;
 }
 
-void Configuration::InternalSwap(Configuration* other) {
+void ApplicationThreadsID::InternalSwap(ApplicationThreadsID* other) {
   using std::swap;
   _internal_metadata_.Swap<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(&other->_internal_metadata_);
   process_info_.InternalSwap(&other->process_info_);
   parallel_region_info_.InternalSwap(&other->parallel_region_info_);
 }
 
-::PROTOBUF_NAMESPACE_ID::Metadata Configuration::GetMetadata() const {
+::PROTOBUF_NAMESPACE_ID::Metadata ApplicationThreadsID::GetMetadata() const {
   return GetMetadataStatic();
 }
 
@@ -3363,8 +3364,8 @@ void PullRequest::InitAsDefaultInstance() {
       ::tetris::NewClient::internal_default_instance());
   ::tetris::_PullRequest_default_instance_._instance.get_mutable()->new_thread_ = const_cast< ::tetris::NewThread*>(
       ::tetris::NewThread::internal_default_instance());
-  ::tetris::_PullRequest_default_instance_._instance.get_mutable()->configuration_ = const_cast< ::tetris::Configuration*>(
-      ::tetris::Configuration::internal_default_instance());
+  ::tetris::_PullRequest_default_instance_._instance.get_mutable()->application_threads_id_ = const_cast< ::tetris::ApplicationThreadsID*>(
+      ::tetris::ApplicationThreadsID::internal_default_instance());
 }
 class PullRequest::_Internal {
  public:
@@ -3380,8 +3381,8 @@ class PullRequest::_Internal {
   static void set_has_new_thread(HasBits* has_bits) {
     (*has_bits)[0] |= 2u;
   }
-  static const ::tetris::Configuration& configuration(const PullRequest* msg);
-  static void set_has_configuration(HasBits* has_bits) {
+  static const ::tetris::ApplicationThreadsID& application_threads_id(const PullRequest* msg);
+  static void set_has_application_threads_id(HasBits* has_bits) {
     (*has_bits)[0] |= 4u;
   }
   static bool MissingRequiredFields(const HasBits& has_bits) {
@@ -3397,9 +3398,9 @@ const ::tetris::NewThread&
 PullRequest::_Internal::new_thread(const PullRequest* msg) {
   return *msg->new_thread_;
 }
-const ::tetris::Configuration&
-PullRequest::_Internal::configuration(const PullRequest* msg) {
-  return *msg->configuration_;
+const ::tetris::ApplicationThreadsID&
+PullRequest::_Internal::application_threads_id(const PullRequest* msg) {
+  return *msg->application_threads_id_;
 }
 PullRequest::PullRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena) {
@@ -3421,10 +3422,10 @@ PullRequest::PullRequest(const PullRequest& from)
   } else {
     new_thread_ = nullptr;
   }
-  if (from._internal_has_configuration()) {
-    configuration_ = new ::tetris::Configuration(*from.configuration_);
+  if (from._internal_has_application_threads_id()) {
+    application_threads_id_ = new ::tetris::ApplicationThreadsID(*from.application_threads_id_);
   } else {
-    configuration_ = nullptr;
+    application_threads_id_ = nullptr;
   }
   type_ = from.type_;
   // @@protoc_insertion_point(copy_constructor:tetris.PullRequest)
@@ -3447,7 +3448,7 @@ void PullRequest::SharedDtor() {
   GOOGLE_DCHECK(GetArena() == nullptr);
   if (this != internal_default_instance()) delete new_client_;
   if (this != internal_default_instance()) delete new_thread_;
-  if (this != internal_default_instance()) delete configuration_;
+  if (this != internal_default_instance()) delete application_threads_id_;
 }
 
 void PullRequest::ArenaDtor(void* object) {
@@ -3482,8 +3483,8 @@ void PullRequest::Clear() {
       new_thread_->Clear();
     }
     if (cached_has_bits & 0x00000004u) {
-      GOOGLE_DCHECK(configuration_ != nullptr);
-      configuration_->Clear();
+      GOOGLE_DCHECK(application_threads_id_ != nullptr);
+      application_threads_id_->Clear();
     }
   }
   type_ = 0;
@@ -3526,10 +3527,10 @@ const char* PullRequest::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // optional .tetris.Configuration configuration = 4;
+      // optional .tetris.ApplicationThreadsID application_threads_id = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
-          ptr = ctx->ParseMessage(_internal_mutable_configuration(), ptr);
+          ptr = ctx->ParseMessage(_internal_mutable_application_threads_id(), ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -3586,12 +3587,12 @@ failure:
         3, _Internal::new_thread(this), target, stream);
   }
 
-  // optional .tetris.Configuration configuration = 4;
+  // optional .tetris.ApplicationThreadsID application_threads_id = 4;
   if (cached_has_bits & 0x00000004u) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        4, _Internal::configuration(this), target, stream);
+        4, _Internal::application_threads_id(this), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -3631,11 +3632,11 @@ size_t PullRequest::ByteSizeLong() const {
           *new_thread_);
     }
 
-    // optional .tetris.Configuration configuration = 4;
+    // optional .tetris.ApplicationThreadsID application_threads_id = 4;
     if (cached_has_bits & 0x00000004u) {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *configuration_);
+          *application_threads_id_);
     }
 
   }
@@ -3679,7 +3680,7 @@ void PullRequest::MergeFrom(const PullRequest& from) {
       _internal_mutable_new_thread()->::tetris::NewThread::MergeFrom(from._internal_new_thread());
     }
     if (cached_has_bits & 0x00000004u) {
-      _internal_mutable_configuration()->::tetris::Configuration::MergeFrom(from._internal_configuration());
+      _internal_mutable_application_threads_id()->::tetris::ApplicationThreadsID::MergeFrom(from._internal_application_threads_id());
     }
     if (cached_has_bits & 0x00000008u) {
       type_ = from.type_;
@@ -3710,8 +3711,8 @@ bool PullRequest::IsInitialized() const {
   if (_internal_has_new_thread()) {
     if (!new_thread_->IsInitialized()) return false;
   }
-  if (_internal_has_configuration()) {
-    if (!configuration_->IsInitialized()) return false;
+  if (_internal_has_application_threads_id()) {
+    if (!application_threads_id_->IsInitialized()) return false;
   }
   return true;
 }
@@ -4720,8 +4721,8 @@ template<> PROTOBUF_NOINLINE ::tetris::NewThread* Arena::CreateMaybeMessage< ::t
 template<> PROTOBUF_NOINLINE ::tetris::NewThreadAck* Arena::CreateMaybeMessage< ::tetris::NewThreadAck >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::NewThreadAck >(arena);
 }
-template<> PROTOBUF_NOINLINE ::tetris::Configuration* Arena::CreateMaybeMessage< ::tetris::Configuration >(Arena* arena) {
-  return Arena::CreateMessageInternal< ::tetris::Configuration >(arena);
+template<> PROTOBUF_NOINLINE ::tetris::ApplicationThreadsID* Arena::CreateMaybeMessage< ::tetris::ApplicationThreadsID >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::tetris::ApplicationThreadsID >(arena);
 }
 template<> PROTOBUF_NOINLINE ::tetris::PullRequest* Arena::CreateMaybeMessage< ::tetris::PullRequest >(Arena* arena) {
   return Arena::CreateMessageInternal< ::tetris::PullRequest >(arena);
