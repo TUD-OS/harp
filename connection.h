@@ -168,7 +168,7 @@ class Connection : public Lockable<Connection>
             throw std::runtime_error{"Connection not initialized."};
         }
         // Read the vector size through the socket.
-        ssize_t vector_size = 0;
+        uint32_t vector_size = 0;
         InState read_state = read(vector_size);
         if (!_blocking && (read_state != InState::MORE))
             return read_state;
@@ -212,7 +212,7 @@ class Connection : public Lockable<Connection>
             throw std::runtime_error{"Connection not initialized."};
         }
         // Write the size of the vector before sending it.
-        ssize_t vector_size = data.size();
+        uint32_t vector_size = data.size();
         OutState write_state = write(vector_size);
         if (write_state == OutState::RETRY)
             return OutState::RETRY;
