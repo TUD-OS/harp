@@ -556,7 +556,7 @@ public:
                             for (auto &process: regular_process_info) {
                                 process_name = process.process_name();
                                 process_tid = process.thread_id();
-                                c.new_thread(process_name, process_tid);
+                                c.new_thread("t_" + process_name, process_tid);
                             }
                         } catch (std::out_of_range) {
                             logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name, process_tid,
