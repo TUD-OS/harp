@@ -471,7 +471,7 @@ const char descriptor_table_protodef_tetris_2eproto[] PROTOBUF_SECTION_VARIABLE(
   "\n\014tetris.proto\022\006tetris\"9\n\023RegionConfigur"
   "ation\022\014\n\004name\030\001 \002(\t\022\024\n\014num_replicas\030\002 \002("
   "\r\"6\n\013ProcessInfo\022\024\n\014process_name\030\001 \002(\t\022\021"
-  "\n\tthread_id\030\002 \002(\004\"\210\001\n\nRegionInfo\022\014\n\004name"
+  "\n\tthread_id\030\002 \002(\r\"\210\001\n\nRegionInfo\022\014\n\004name"
   "\030\001 \002(\t\0220\n\010replicas\030\002 \003(\0132\036.tetris.Region"
   "Info.ReplicaInfo\032:\n\013ReplicaInfo\022+\n\016proce"
   "ss_thread\030\001 \003(\0132\023.tetris.ProcessInfo\"\022\n\020"
@@ -987,7 +987,7 @@ ProcessInfo::ProcessInfo(const ProcessInfo& from)
 void ProcessInfo::SharedCtor() {
   ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ProcessInfo_tetris_2eproto.base);
   process_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
-  thread_id_ = PROTOBUF_ULONGLONG(0);
+  thread_id_ = 0u;
 }
 
 ProcessInfo::~ProcessInfo() {
@@ -1026,7 +1026,7 @@ void ProcessInfo::Clear() {
   if (cached_has_bits & 0x00000001u) {
     process_name_.ClearNonDefaultToEmpty();
   }
-  thread_id_ = PROTOBUF_ULONGLONG(0);
+  thread_id_ = 0u;
   _has_bits_.Clear();
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
@@ -1051,11 +1051,11 @@ const char* ProcessInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
-      // required uint64 thread_id = 2;
+      // required uint32 thread_id = 2;
       case 2:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
           _Internal::set_has_thread_id(&has_bits);
-          thread_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          thread_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -1099,10 +1099,10 @@ failure:
         1, this->_internal_process_name(), target);
   }
 
-  // required uint64 thread_id = 2;
+  // required uint32 thread_id = 2;
   if (cached_has_bits & 0x00000002u) {
     target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(2, this->_internal_thread_id(), target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(2, this->_internal_thread_id(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1125,9 +1125,9 @@ size_t ProcessInfo::RequiredFieldsByteSizeFallback() const {
   }
 
   if (_internal_has_thread_id()) {
-    // required uint64 thread_id = 2;
+    // required uint32 thread_id = 2;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_thread_id());
   }
 
@@ -1143,9 +1143,9 @@ size_t ProcessInfo::ByteSizeLong() const {
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_process_name());
 
-    // required uint64 thread_id = 2;
+    // required uint32 thread_id = 2;
     total_size += 1 +
-      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
         this->_internal_thread_id());
 
   } else {

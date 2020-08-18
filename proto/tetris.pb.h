@@ -576,17 +576,17 @@ class ProcessInfo PROTOBUF_FINAL :
   std::string* _internal_mutable_process_name();
   public:
 
-  // required uint64 thread_id = 2;
+  // required uint32 thread_id = 2;
   bool has_thread_id() const;
   private:
   bool _internal_has_thread_id() const;
   public:
   void clear_thread_id();
-  ::PROTOBUF_NAMESPACE_ID::uint64 thread_id() const;
-  void set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::uint32 thread_id() const;
+  void set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
   private:
-  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_thread_id() const;
-  void _internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_thread_id() const;
+  void _internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value);
   public:
 
   // @@protoc_insertion_point(class_scope:tetris.ProcessInfo)
@@ -602,7 +602,7 @@ class ProcessInfo PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::HasBits<1> _has_bits_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr process_name_;
-  ::PROTOBUF_NAMESPACE_ID::uint64 thread_id_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 thread_id_;
   friend struct ::TableStruct_tetris_2eproto;
 };
 // -------------------------------------------------------------------
@@ -3236,7 +3236,7 @@ inline void ProcessInfo::unsafe_arena_set_allocated_process_name(
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:tetris.ProcessInfo.process_name)
 }
 
-// required uint64 thread_id = 2;
+// required uint32 thread_id = 2;
 inline bool ProcessInfo::_internal_has_thread_id() const {
   bool value = (_has_bits_[0] & 0x00000002u) != 0;
   return value;
@@ -3245,21 +3245,21 @@ inline bool ProcessInfo::has_thread_id() const {
   return _internal_has_thread_id();
 }
 inline void ProcessInfo::clear_thread_id() {
-  thread_id_ = PROTOBUF_ULONGLONG(0);
+  thread_id_ = 0u;
   _has_bits_[0] &= ~0x00000002u;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 ProcessInfo::_internal_thread_id() const {
+inline ::PROTOBUF_NAMESPACE_ID::uint32 ProcessInfo::_internal_thread_id() const {
   return thread_id_;
 }
-inline ::PROTOBUF_NAMESPACE_ID::uint64 ProcessInfo::thread_id() const {
+inline ::PROTOBUF_NAMESPACE_ID::uint32 ProcessInfo::thread_id() const {
   // @@protoc_insertion_point(field_get:tetris.ProcessInfo.thread_id)
   return _internal_thread_id();
 }
-inline void ProcessInfo::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void ProcessInfo::_internal_set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _has_bits_[0] |= 0x00000002u;
   thread_id_ = value;
 }
-inline void ProcessInfo::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+inline void ProcessInfo::set_thread_id(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   _internal_set_thread_id(value);
   // @@protoc_insertion_point(field_set:tetris.ProcessInfo.thread_id)
 }
