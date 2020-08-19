@@ -5,7 +5,7 @@
 #include "concrete_client.h"
 #include "client.h"
 #include "push_message_listener.h"
-#include "protobuf_util.h"
+#include "util/protobuf_util.h"
 
 #include <memory>
 #include <sstream>

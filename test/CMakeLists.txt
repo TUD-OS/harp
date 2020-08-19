@@ -43,5 +43,5 @@ endif()
 
 # Now simply link against gtest or gtest_main as needed.
 add_executable(${TEST_TARGET_NAME} ${${TEST_TARGET_NAME}_SRC})
-target_link_libraries(${TEST_TARGET_NAME} tetrisclient gtest_main gmock_main)
+target_link_libraries(${TEST_TARGET_NAME} tetrisclient gtest_main gmock_main ${Protobuf_LIBRARIES})
 add_test(NAME run-tests COMMAND ${TEST_TARGET_NAME})

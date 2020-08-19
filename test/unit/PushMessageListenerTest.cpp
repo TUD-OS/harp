@@ -4,9 +4,9 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <push_message_listener.h>
-#include <connection.h>
-#include <protobuf_util.h>
+#include <client/push_message_listener.h>
+#include <util/connection.h>
+#include <util/protobuf_util.h>
 #include <proto/tetris.pb.h>
 
 #define SOCKET_PATH "/tmp/test_socket_tetris_push_listener"

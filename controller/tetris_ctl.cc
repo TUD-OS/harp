@@ -1,9 +1,9 @@
-#include "config.h"
-#include "connection.h"
-#include "cpulist.h"
-#include "socket.h"
-#include "string_util.h"
-#include "tetris.h"
+#include "server/config.h"
+#include "util/connection.h"
+#include "server/cpulist.h"
+#include "util/socket.h"
+#include "util/string_util.h"
+#include "util/tetris.h"
 
 #include <iostream>
 #include <memory>

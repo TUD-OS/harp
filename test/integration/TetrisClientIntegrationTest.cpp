@@ -4,10 +4,10 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <client.h>
-#include <protobuf_util.h>
-#include <socket.h>
-#include <concrete_client.h>
+#include <client/client.h>
+#include <util/protobuf_util.h>
+#include <util/socket.h>
+#include <client/concrete_client.h>
 
 class MockFeature : public tetris::Feature {
 public:

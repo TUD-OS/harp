@@ -7,7 +7,7 @@
 
 #include <map>
 #include "client.h"
-#include "socket.h"
+#include "util/socket.h"
 
 namespace tetris {
     /**

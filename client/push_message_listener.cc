@@ -3,8 +3,8 @@
 //
 
 #include "push_message_listener.h"
-#include "connection.h"
-#include "protobuf_util.h"
+#include "util/connection.h"
+#include "util/protobuf_util.h"
 #include "proto/tetris.pb.h"
 
 tetris::PushMessageListener::PushMessageListener(const std::string &socket_path) : _listener_thread(0) {

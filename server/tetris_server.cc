@@ -1,15 +1,15 @@
 #include "algorithm.h"
-#include "connection.h"
+#include "util/connection.h"
 #include "csv.h"
-#include "debug_util.h"
+#include "util/debug_util.h"
 #include "filter.h"
 #include "mapping.h"
-#include "path_util.h"
-#include "socket.h"
-#include "string_util.h"
-#include "tetris.h"
+#include "util/path_util.h"
+#include "util/socket.h"
+#include "util/string_util.h"
+#include "util/tetris.h"
 #include "proto/tetris.pb.h"
-#include "protobuf_util.h"
+#include "util/protobuf_util.h"
 
 #include <algorithm>
 #include <deque>

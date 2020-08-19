@@ -3,8 +3,8 @@
 
 #include "client.h"
 #include "push_message_listener.h"
-#include "connection.h"
-#include "debug_util.h"
+#include "util/connection.h"
+#include "util/debug_util.h"
 
 namespace tetris {
 

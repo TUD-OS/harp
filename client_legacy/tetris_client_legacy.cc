@@ -1,6 +1,6 @@
-#include "connection.h"
-#include "debug_util.h"
-#include "protobuf_util.h"
+#include "util/connection.h"
+#include "util/debug_util.h"
+#include "util/protobuf_util.h"
 
 #include <algorithm>
 #include <atomic>
