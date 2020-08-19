@@ -1,2 +1,3 @@
-add_library(tetrisclientlegacy SHARED tetris_client_legacy.cc)
-target_link_libraries(tetrisclientlegacy util proto)
+add_library(tetrisclientlegacy SHARED
+        tetris_client_legacy.cc
+        ${CMAKE_SOURCE_DIR}/proto/tetris.pb.cc)

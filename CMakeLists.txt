@@ -22,8 +22,6 @@ find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
 
 # Add every component of the TETRiS system.
-add_subdirectory(util)
-add_subdirectory(proto)
 add_subdirectory(client)
 add_subdirectory(client_legacy)
 add_subdirectory(server)

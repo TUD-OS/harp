@@ -1,1 +1,0 @@
-add_library(proto STATIC tetris.pb.cc)
