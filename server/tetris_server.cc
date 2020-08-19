@@ -214,8 +214,6 @@ private:
 
     std::vector<Mapping> parse_mappings(const std::string &dir)
     {
-
-        logger->error("processing this folder: %s\n", dir.data());
         std::vector<Mapping> mappings;
         try {
             path_util::for_each_file(dir, [&](const std::string &file) -> void {
@@ -269,23 +267,23 @@ private:
     {
         std::vector<std::pair<std::string, std::string>> threads;
         std::vector<std::pair<std::string, std::string>> characteristics;
-
-        for (auto &item : json_mapping.items()) {
-            if (item.key() == "mapping") {
-                for (auto &mapping : json_mapping["mapping"]) {
-                    if (mapping["type"] == "process") {
-                        std::string thread_name = mapping["name"];
-                        std::string cpu_name = mapping["core"];
-                        threads.emplace_back(thread_name, cpu_name);
-                    }
-                }
-            } else if (item.key() != "name") {
-                /* All the other columns are characteristics of the mapping */
-                characteristics.emplace_back(item.key(), json_mapping[item.key()]);
+        /* Get all processes mapping information. */
+        for (auto &mapping : json_mapping["mapping"]) {
+            if (mapping["type"] == "process") {
+                std::string thread_name = mapping["name"];
+                std::string cpu_name = mapping["core"];
+                threads.emplace_back(thread_name, cpu_name);
             }
         }
-
+        /* Get name of the mapping. */
         auto name = json_mapping["name"];
+        /* All the other attributes are characteristics of the mapping */
+        for (auto &item : json_mapping.items()) {
+            auto attribute = item.key();
+            if (attribute != "name" && attribute != "mapping") {
+                characteristics.emplace_back(attribute, json_mapping[attribute]);
+            }
+        }
         return Mapping{name, threads, characteristics};
     }
 
@@ -569,7 +567,7 @@ public:
                             for (auto &process: regular_process_info) {
                                 process_name = process.process_name();
                                 process_tid = process.thread_id();
-                                c.new_thread("t_" + process_name, process_tid);
+                                c.new_thread(process_name, process_tid);
                             }
                         } catch (std::out_of_range) {
                             logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name, process_tid,
@@ -685,9 +683,8 @@ public:
 
         try {
             path_util::for_each_folder(_mappings_path, [&](const std::string &dir) -> void {
-                std::string program = string_util::strip(path_util::filename(dir));
-                logger->info(" -> found mapping for '%s'\n", program.c_str());
-                _mappings.emplace(program, parse_mappings(dir));
+                logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
+                _mappings.emplace(path_util::basename(dir), parse_mappings(dir));
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());
