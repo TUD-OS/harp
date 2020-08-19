@@ -10,6 +10,7 @@
 #include "util/tetris.h"
 #include "proto/tetris.pb.h"
 #include "util/protobuf_util.h"
+#include "json.h"
 
 #include <algorithm>
 #include <deque>
@@ -211,45 +212,33 @@ private:
 
     CPUList _blocked_cpus;
 
-    std::vector<Mapping> parse_mapping(const std::string &file)
+    std::vector<Mapping> parse_mappings(const std::string &dir)
     {
-        CSVData data{file};
+
+        logger->error("processing this folder: %s\n", dir.data());
         std::vector<Mapping> mappings;
-
-        for (const auto &row : data.row_iter()) {
-            std::vector<std::pair<std::string, std::string>> threads;
-            std::vector<std::pair<std::string, std::string>> characteristics;
-
-            for (const auto &col : row.names()) {
-                if (string_util::starts_with(col, "t_")) {
-                    /* Columns starting with 't_' are interpreted as threads */
-                    std::string thread_name = col.substr(2);
-                    std::string cpu_name = row(col);
-
-                    threads.emplace_back(thread_name, cpu_name);
-                } else {
-                    /* All the other columns are characteristics of the mapping */
-                    std::string value = row(col);
-
-                    characteristics.emplace_back(col, value);
+        try {
+            path_util::for_each_file(dir, [&](const std::string &file) -> void {
+                if (path_util::extension(file) == ".json") {
+                    // Parse the JSON mapping file.
+                    std::ifstream json_mapping_file{file};
+                    nlohmann::json json_mapping;
+                    json_mapping_file >> json_mapping;
+                    mappings.emplace_back(parse_mapping(json_mapping));
                 }
-            }
-
-            auto name = row.fixed();
-
-            mappings.emplace_back(name, threads, characteristics);
+            });
+        } catch (std::exception &e) {
+            logger->error("Reading mappings failed with: %s\n", e.what());
         }
 
         {
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
-
-            for (const auto &col : data.columns()) {
-                if (string_util::starts_with(col, "t_"))
-                    thread_names.push_back(col.substr(2));
-                else
-                    characteristic_names.push_back(col);
-            }
+            Mapping mapping = mappings.back();
+            for (auto &key_val : mapping.thread_map)
+                thread_names.push_back(key_val.first);
+            for (auto &key_val : mapping.characteristics_map)
+                characteristic_names.push_back(key_val.first);
 
             logger->debug("  * Found %i mapping(s)\n", mappings.size());
             logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
@@ -274,6 +263,30 @@ private:
         }
 
         return mappings;
+    }
+
+    Mapping parse_mapping(const nlohmann::json &json_mapping)
+    {
+        std::vector<std::pair<std::string, std::string>> threads;
+        std::vector<std::pair<std::string, std::string>> characteristics;
+
+        for (auto &item : json_mapping.items()) {
+            if (item.key() == "mapping") {
+                for (auto &mapping : json_mapping["mapping"]) {
+                    if (mapping["type"] == "process") {
+                        std::string thread_name = mapping["name"];
+                        std::string cpu_name = mapping["core"];
+                        threads.emplace_back(thread_name, cpu_name);
+                    }
+                }
+            } else if (item.key() != "name") {
+                /* All the other columns are characteristics of the mapping */
+                characteristics.emplace_back(item.key(), json_mapping[item.key()]);
+            }
+        }
+
+        auto name = json_mapping["name"];
+        return Mapping{name, threads, characteristics};
     }
 
     Mapping select_best_mapping(Client &c)
@@ -671,13 +684,10 @@ public:
         _mappings.clear();
 
         try {
-            path_util::for_each_file(_mappings_path, [&](const std::string &file) -> void {
-                if (path_util::extension(file) == ".csv") {
-                    std::string program = string_util::strip(path_util::filename(file));
-                    logger->info(" -> found mapping for '%s'\n", program.c_str());
-
-                    _mappings.emplace(program, parse_mapping(file));
-                }
+            path_util::for_each_folder(_mappings_path, [&](const std::string &dir) -> void {
+                std::string program = string_util::strip(path_util::filename(dir));
+                logger->info(" -> found mapping for '%s'\n", program.c_str());
+                _mappings.emplace(program, parse_mappings(dir));
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());

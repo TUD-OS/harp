@@ -69,8 +69,23 @@ void for_each_file(const string &path, const function<void(const string &)> &cb)
     }
 }
 
-string getcwd()
-{
+void for_each_folder(const std::string &path, const std::function<void(const std::string &)> &cb) {
+    auto dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        throw std::runtime_error{"Failed to open directory at " + path};
+    }
+
+    dirent *cur;
+    while ((cur = readdir(dir)) != nullptr) {
+        if ((cur->d_type == DT_DIR) && (*cur->d_name != '.')) {
+            std::string dir_name{cur->d_name};
+
+            cb(join(path, dir_name));
+        }
+    }
+}
+
+string getcwd() {
     char cwd[512];
     ::getcwd(cwd, sizeof(cwd));
 
