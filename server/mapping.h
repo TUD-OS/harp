@@ -29,17 +29,17 @@ int cpu_nr_for_name(const std::string& name)
 
 } /* Anonymous namespace */
 
-/// \brief ProcessAffinities stores process names and corresponding thread IDs with CPU affinities.
+/// \brief ProcessAffinities stores process names and corresponding CPU affinity.
 template <typename T>
 using ProcessAffinities = std::map<std::string, T>;
 
 /// \brief ReplicasAffinities stores processes inside a region replica with CPU affinities.
 template <typename T>
-using ReplicasAffinities = std::vector<ProcessAffinities<T>>;
+using ReplicaAffinities = std::vector<ProcessAffinities<T>>;
 
 /// \brief RegionAffinities stores replicas inside a region with CPU affinities.
 template <typename T>
-using RegionAffinities = std::map<std::string, ReplicasAffinities<T>>;
+using RegionAffinities = std::map<std::string, ReplicaAffinities<T>>;
 
 
 class Mapping
@@ -55,6 +55,7 @@ class Mapping
     Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
         name{base.name}, thread_map{}, region_map{}, characteristics_map{base.characteristics_map}, cpus{}
     {
+        // Convert thread CPU affinity.
         for (const auto& [name, orig_cpu] : base.thread_map) {
             if (conv_map.find(orig_cpu) != conv_map.end()) {
                 thread_map.emplace(name, conv_map.at(orig_cpu));
@@ -63,6 +64,24 @@ class Mapping
                 thread_map.emplace(name, orig_cpu);
                 cpus.set(orig_cpu);
             }
+        }
+        // Convert thread CPU affinity in parallel regions.
+        for (const auto& [region_name, replicas] : base.region_map) {
+            ReplicaAffinities<int> replica_affinities{};
+            for (const auto& replica : replicas) {
+                ProcessAffinities<int> process_affinities{};
+                for (const auto& [process_name, orig_cpu] : replica) {
+                    if (conv_map.find(orig_cpu) != conv_map.end()) {
+                        process_affinities.emplace(process_name, conv_map.at(orig_cpu));
+                        cpus.set(conv_map.at(orig_cpu));
+                    } else {
+                        process_affinities.emplace(process_name, orig_cpu);
+                        cpus.set(orig_cpu);
+                    }
+                }
+                replica_affinities.push_back(process_affinities);
+            }
+            region_map.emplace(region_name, replica_affinities);
         }
     }
 
@@ -80,7 +99,7 @@ class Mapping
         }
 
         for (const auto& [region_name, replicas] : region_threads) {
-            ReplicasAffinities<int> replica_affinities{};
+            ReplicaAffinities<int> replica_affinities{};
             for (const auto& replica : replicas) {
                 ProcessAffinities<int> process_affinities{};
                 for (const auto& [process_name, affinity] : replica) {

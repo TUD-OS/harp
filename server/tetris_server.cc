@@ -169,7 +169,76 @@ public:
             if (sched_setaffinity(t.tid, sizeof(cpu_set_t), &mask) != 0)
                 logger->warning("Failed to set cpu affinity for thread '%s': %s\n", t.name.c_str(), strerror(errno));
         }
+
+        update_mapping_regions();
+
         logger->info(" * done\n");
+    }
+
+    void update_mapping_regions() {
+        // If the region map is not empty, update parallel region mappings.
+        if (using_dppm) {
+            auto response_with_tids = set_parallel_regions_number_num_replicas();
+            set_parallel_regions_cpu_affinities(response_with_tids);
+        }
+    }
+
+    tetris::PushResponse set_parallel_regions_number_num_replicas() const
+    {
+        // Connect to the push listener.
+        std::stringstream path{};
+        path << "/tmp/tetris_push_listener_" << pid;
+        Connection conn(path.str());
+        // Set the number of replicas in all parallel regions according to the mapping.
+        tetris::PushRequest request{};
+        tetris::PushResponse response{};
+        request.set_type(tetris::PushRequest::DPM_UPDATE_CONFIGURATION);
+        request.set_feature_id(0);
+        for (const auto &[region_name, replicas] : active_mapping.region_map) {
+            auto configuration = request.add_region_configurations();
+            configuration->set_name(region_name);
+            configuration->set_num_replicas(replicas.size());
+            logger->info(" * set %d replicas in parallel region '%s'\n", replicas.size(), region_name.c_str());
+        }
+        // Send the push request.
+        protobuf_util::Send(conn.locked(), request);
+        // Wait for the response.
+        protobuf_util::Receive(conn.locked(), response);
+        if (response.type() != tetris::PushResponse::DPM_REGION_INFO)
+            logger->error("Failed to set the number of replicas for parallel region\n");
+        return response;
+    }
+
+    void set_parallel_regions_cpu_affinities(const tetris::PushResponse& response) const
+    {
+        // Set CPU affinity for each process in each replica of each parallel region.
+        auto regions_info = response.region_infos();
+        for (auto &region_info : regions_info) {
+            auto region_name = region_info.name();
+            auto replica_affinities = active_mapping.region_map.at(region_name);
+            int replica_number = 0;
+            for (auto &replica : region_info.replicas()) {
+                auto process_affinities = replica_affinities.back();
+                replica_affinities.pop_back();
+                ++replica_number;
+                for (auto &process : replica.process_thread()) {
+                    CPUList cpus;
+                    auto process_name = process.process_name();
+                    auto tid = process.thread_id();
+                    if (dynamic_client)
+                        cpus = active_mapping.cpus;
+                    else
+                        cpus = CPUList({process_affinities.at(process_name)});
+                    logger->info(" * map thread '%s::%s@%d' [%i] to cpu(s) %s\n", region_name.c_str(),
+                                 process_name.c_str(), replica_number, tid,
+                                 string_util::join(cpus.cpulist(num_cpus), ",").c_str());
+                    cpu_set_t mask = cpus.cpu_set();
+                    if (sched_setaffinity(tid, sizeof(cpu_set_t), &mask) != 0)
+                        logger->warning("Failed to set cpu affinity for thread '%s::%s': %s\n", region_name.c_str(),
+                                        process_name.c_str(), strerror(errno));
+                }
+            }
+        }
     }
 
     void new_thread(const std::string &name, int tid)
@@ -233,11 +302,15 @@ private:
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
             Mapping mapping = mappings.back();
-            for (auto &key_val : mapping.thread_map)
+            for (const auto &key_val : mapping.thread_map)
                 thread_names.push_back(key_val.first);
-            for (auto &key_val : mapping.region_map)
-                thread_names.push_back(key_val.first);
-            for (auto &key_val : mapping.characteristics_map)
+            for (const auto & [region_name, replicas] : mapping.region_map) {
+                for (const auto &key_val : replicas.back()) {
+                    auto process_name = key_val.first;
+                    thread_names.push_back(region_name + "::" + key_val.first);
+                }
+            }
+            for (const auto &key_val : mapping.characteristics_map)
                 characteristic_names.push_back(key_val.first);
 
             logger->debug("  * Found %i mapping(s)\n", mappings.size());
@@ -271,32 +344,32 @@ private:
         RegionAffinities<std::string> regions{};
         std::vector<std::pair<std::string, std::string>> characteristics;
         /* Get all processes mapping information. */
-        for (auto &mapping : json_mapping["mapping"]) {
+        for (const auto &mapping : json_mapping["mapping"]) {
             if (mapping["type"] == "process") {
+                /* Regular process. */
                 std::string thread_name = mapping["name"];
                 std::string cpu_name = mapping["core"];
                 threads.emplace_back(thread_name, cpu_name);
             } else if (mapping["type"] == "DLP") {
-                ReplicasAffinities<std::string> replicas_affinities{};
-                for (auto& replica : mapping["replicas"]) {
+                /* Parallel region. */
+                ReplicaAffinities<std::string> replica_affinities{};
+                for (const auto& replica : mapping["replicas"]) {
                     ProcessAffinities<std::string> process_affinities{};
-                    for (auto &process : replica) {
-                        // We don't mind about different processes in this current
-                        // implementation, just set the affinity.
+                    for (const auto &process : replica) {
                         std::string process_name = process["name"];
                         std::string cpu_name = process["core"];
                         process_affinities.emplace(process_name, cpu_name);
                     }
-                    replicas_affinities.push_back(process_affinities);
+                    replica_affinities.push_back(process_affinities);
                 }
-                regions.emplace(mapping["name"], replicas_affinities);
+                regions.emplace(mapping["name"], replica_affinities);
             }
         }
         /* Get name of the mapping. */
         auto name = json_mapping["name"];
         /* All the other attributes are characteristics of the mapping */
-        for (auto &item : json_mapping.items()) {
-            auto attribute = item.key();
+        for (const auto &item : json_mapping.items()) {
+            const auto attribute = item.key();
             if (attribute != "name" && attribute != "mapping") {
                 characteristics.emplace_back(attribute, json_mapping[attribute]);
             }
@@ -592,6 +665,8 @@ public:
                             managed = false;
                         }
 
+                        c.update_mapping_regions();
+
                         /* We need to acknowledge this message. */
                         tetris::PullResponse ack{};
                         // If all regular processes are managed by TETRiS, set type to ACKNOWLEDGE, otherwise set it to
@@ -600,6 +675,7 @@ public:
                         ack.set_feature_id(0);
                         if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE)
                             logger->error("Failed to acknowledge the DPM registration message\n");
+
                         break;
                     }
                     default:
