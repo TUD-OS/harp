@@ -235,6 +235,8 @@ private:
             Mapping mapping = mappings.back();
             for (auto &key_val : mapping.thread_map)
                 thread_names.push_back(key_val.first);
+            for (auto &key_val : mapping.region_map)
+                thread_names.push_back(key_val.first);
             for (auto &key_val : mapping.characteristics_map)
                 characteristic_names.push_back(key_val.first);
 
@@ -266,6 +268,7 @@ private:
     Mapping parse_mapping(const nlohmann::json &json_mapping)
     {
         std::vector<std::pair<std::string, std::string>> threads;
+        RegionAffinities<std::string> regions{};
         std::vector<std::pair<std::string, std::string>> characteristics;
         /* Get all processes mapping information. */
         for (auto &mapping : json_mapping["mapping"]) {
@@ -273,6 +276,20 @@ private:
                 std::string thread_name = mapping["name"];
                 std::string cpu_name = mapping["core"];
                 threads.emplace_back(thread_name, cpu_name);
+            } else if (mapping["type"] == "DLP") {
+                ReplicasAffinities<std::string> replicas_affinities{};
+                for (auto& replica : mapping["replicas"]) {
+                    ProcessAffinities<std::string> process_affinities{};
+                    for (auto &process : replica) {
+                        // We don't mind about different processes in this current
+                        // implementation, just set the affinity.
+                        std::string process_name = process["name"];
+                        std::string cpu_name = process["core"];
+                        process_affinities.emplace(process_name, cpu_name);
+                    }
+                    replicas_affinities.push_back(process_affinities);
+                }
+                regions.emplace(mapping["name"], replicas_affinities);
             }
         }
         /* Get name of the mapping. */
@@ -284,7 +301,7 @@ private:
                 characteristics.emplace_back(attribute, json_mapping[attribute]);
             }
         }
-        return Mapping{name, threads, characteristics};
+        return Mapping{name, threads, regions, characteristics};
     }
 
     Mapping select_best_mapping(Client &c)
