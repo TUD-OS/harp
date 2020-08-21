@@ -119,7 +119,7 @@ bool tetris::ConcreteClient::send_new_client_command()
     } catch (std::exception &e) {}
 
     try {
-        auto filter_criteria = env_variables.at("TETRIS_FILTERED_CRITERIA");
+        auto filter_criteria = env_variables.at("TETRIS_FILTER_CRITERIA");
         new_client_message->set_filter_criteria(filter_criteria);
     } catch (std::exception &e) {}
 
