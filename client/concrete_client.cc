@@ -9,7 +9,9 @@
 #include <memory>
 #include <sstream>
 
-tetris::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
+namespace tetris {
+
+ConcreteClient::ConcreteClient(const std::string &server_socket_path)
         : Client(), _push_message_listener(get_push_listener_socket_path()),
           _managed(false), _communication_mutex()
 {
@@ -23,7 +25,7 @@ tetris::ConcreteClient::ConcreteClient(const std::string &server_socket_path)
     }
 }
 
-void tetris::ConcreteClient::bind(tetris::Feature *feature)
+void ConcreteClient::bind(Feature *feature)
 {
     // If the client is not connected to the server, do not bind the feature.
     if (!_managed)
@@ -38,9 +40,9 @@ void tetris::ConcreteClient::bind(tetris::Feature *feature)
     }
 }
 
-tetris::PullResponse tetris::ConcreteClient::send(const tetris::PullRequest &request)
+PullResponse ConcreteClient::send(const PullRequest &request)
 {
-    tetris::PullResponse response{};
+    PullResponse response{};
     _communication_mutex.lock();
     protobuf_util::Send(_tetris_server_connection.locked(), request);
     protobuf_util::Receive(_tetris_server_connection.locked(), response);
@@ -48,7 +50,7 @@ tetris::PullResponse tetris::ConcreteClient::send(const tetris::PullRequest &req
     return response;
 }
 
-std::string tetris::ConcreteClient::get_push_listener_socket_path()
+std::string ConcreteClient::get_push_listener_socket_path()
 {
     std::stringstream string_stream{};
     string_stream << "/tmp/tetris_push_listener_" << getpid();
@@ -66,7 +68,7 @@ std::map<std::string, std::string> retrieve_env_variables()
     return env_variables;
 }
 
-bool tetris::ConcreteClient::send_new_client_command()
+bool ConcreteClient::send_new_client_command()
 {
 
     auto env_variables = retrieve_env_variables();
@@ -94,7 +96,7 @@ bool tetris::ConcreteClient::send_new_client_command()
             _logger->warning("Unknown mapping type: %s\n", mapping_type->second);
         }
     }
-    new_client_message->set_mapping_type(dynamic_client ? tetris::NewClient::DYNAMIC : tetris::NewClient::STATIC);
+    new_client_message->set_mapping_type(dynamic_client ? NewClient::DYNAMIC : NewClient::STATIC);
 
     auto compare_criteria = env_variables.find("TETRIS_COMPARE_CRITERIA");
     if (compare_criteria != env_variables.end()) {
@@ -135,4 +137,6 @@ bool tetris::ConcreteClient::send_new_client_command()
     }
 
     return false;
+}
+
 }

@@ -5,15 +5,19 @@
 #include "client.h"
 #include "concrete_client.h"
 
-std::unique_ptr<tetris::Client> tetris::ClientProvider::_instance;
+namespace tetris {
 
-void tetris::ClientProvider::initialize(const std::string &socket_path)
+std::unique_ptr<Client> ClientProvider::_instance;
+
+void ClientProvider::initialize(const std::string &socket_path)
 {
-    _instance = std::make_unique<tetris::ConcreteClient>(socket_path);
+    _instance = std::make_unique<ConcreteClient>(socket_path);
 }
 
-void tetris::ClientProvider::finalize()
+void ClientProvider::finalize()
 { _instance.reset(); }
 
-tetris::Client *tetris::ClientProvider::get_instance()
+Client *ClientProvider::get_instance()
 { return _instance.get(); }
+
+}

@@ -4,14 +4,18 @@
 
 #include "feature.h"
 
-tetris::Feature::Feature() : _client(nullptr)
+namespace tetris {
+
+Feature::Feature() : _client(nullptr)
 {}
 
-void tetris::Feature::accept(tetris::Client *client)
+void Feature::accept(Client *client)
 { _client = client; }
 
-bool tetris::Feature::is_bounded() const
+bool Feature::is_bounded() const
 { return _client != nullptr; }
 
-tetris::Client *tetris::Feature::get_client() const
+Client *Feature::get_client() const
 { return _client; }
+
+}
