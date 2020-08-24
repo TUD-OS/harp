@@ -6,24 +6,31 @@
 
 using namespace std;
 
+namespace path_util {
+
 /* Implementations */
-string path_util::abspath(const string &path) {
+string abspath(const string &path)
+{
     return isabs(path) ? path : join(getcwd(), path);
 }
 
-string path_util::basename(const string &path) {
+string basename(const string &path)
+{
     return split(path).second;
 }
 
-string path_util::dirname(const string &path) {
+string dirname(const string &path)
+{
     return split(path).first;
 }
 
-bool path_util::exists(const string &path) {
+bool exists(const string &path)
+{
     return ::access(path.c_str(), F_OK) == 0;
 }
 
-string path_util::expanduser(const string &path) {
+string expanduser(const string &path)
+{
     if (path.empty()) {
         return path;
     } else {
@@ -35,15 +42,18 @@ string path_util::expanduser(const string &path) {
     }
 }
 
-string path_util::extension(const string &path) {
+string extension(const string &path)
+{
     return splitext(path).second;
 }
 
-string path_util::filename(const string &path) {
+string filename(const string &path)
+{
     return splitext(split(path).second).first;
 }
 
-void path_util::for_each_file(const string &path, const function<void(const string &)> &cb) {
+void for_each_file(const string &path, const function<void(const string &)> &cb)
+{
     auto dir = opendir(path.c_str());
     if (dir == nullptr) {
         throw runtime_error{"Failed to open directory at " + path};
@@ -59,24 +69,28 @@ void path_util::for_each_file(const string &path, const function<void(const stri
     }
 }
 
-string path_util::getcwd() {
+string getcwd()
+{
     char cwd[512];
     ::getcwd(cwd, sizeof(cwd));
 
     return string{cwd};
 }
 
-bool path_util::isabs(const string &path) {
+bool isabs(const string &path)
+{
     if (path.empty())
         return false;
     return path[0] == '/';
 }
 
-string path_util::join(const string &first, const string &second, char delim) {
+string join(const string &first, const string &second, char delim)
+{
     return first + delim + second;
 }
 
-pair<string, string> path_util::split(const string &path, char delim) {
+pair<string, string> split(const string &path, char delim)
+{
     size_t dpos = string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
@@ -96,7 +110,8 @@ pair<string, string> path_util::split(const string &path, char delim) {
     return make_pair(path, "");
 }
 
-pair<string, string> path_util::splitext(const string &path, char delim) {
+pair<string, string> splitext(const string &path, char delim)
+{
     size_t dpos = string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
@@ -114,4 +129,6 @@ pair<string, string> path_util::splitext(const string &path, char delim) {
     }
 
     return make_pair(path, "");
+}
+
 }
