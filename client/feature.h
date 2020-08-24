@@ -31,6 +31,11 @@ public:
     Feature();
 
     /**
+     * \brief Virtual default destructor.
+     */
+    virtual ~Feature() = default;
+
+    /**
      * \brief Accepts the TETRiS client to bind the feature.
      * \param client Pointer to the client.
      */
