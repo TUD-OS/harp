@@ -4,7 +4,6 @@
 
 #include "concrete_client.h"
 #include "client.h"
-#include "push_message_listener.h"
 #include "util/protobuf_util.h"
 
 #include <memory>
@@ -84,24 +83,24 @@ bool tetris::ConcreteClient::send_new_client_command()
     new_client_message->set_exec(exec);
 
     bool dynamic_client = false;
-    try {
-        auto mapping_type = env_variables.at("TETRIS_MAPPING_TYPE");
-        if (mapping_type == "DYNAMIC") {
+    auto mapping_type = env_variables.find("TETRIS_MAPPING_TYPE");
+    if (mapping_type != env_variables.end()) {
+        if (mapping_type->second == "DYNAMIC") {
             _logger->info("Use dynamic/CFS mapping.\n");
             dynamic_client = true;
-        } else if (mapping_type == "STATIC") {
+        } else if (mapping_type->second == "STATIC") {
             _logger->info("Use static TETRiS mapping.\n");
         } else {
-            _logger->warning("Unknown mapping type: %s\n", mapping_type);
+            _logger->warning("Unknown mapping type: %s\n", mapping_type->second);
         }
-    } catch (std::exception &e) { /* Do nothing */ }
+    }
     new_client_message->set_mapping_type(dynamic_client ? tetris::NewClient::DYNAMIC : tetris::NewClient::STATIC);
 
-    try {
-        auto compare_criteria = env_variables.at("TETRIS_COMPARE_CRITERIA");
-        _logger->info("Use given compare criteria -- %s.\n", compare_criteria);
-        new_client_message->set_compare_criteria(compare_criteria);
-    } catch (std::exception &e) {
+    auto compare_criteria = env_variables.find("TETRIS_COMPARE_CRITERIA");
+    if (compare_criteria != env_variables.end()) {
+        _logger->info("Use given compare criteria -- %s.\n", compare_criteria->second);
+        new_client_message->set_compare_criteria(compare_criteria->second);
+    } else {
         _logger->info("Use default compare criteria -- executionTime.\n");
         new_client_message->set_compare_criteria("executionTime");
     }
@@ -113,15 +112,15 @@ bool tetris::ConcreteClient::send_new_client_command()
         _logger->info("Use less then comparison for criteria.\n");
     new_client_message->set_compare_more_is_better(compare_more_is_better);
 
-    try {
-        auto preferred_mapping = env_variables.at("TETRIS_PREFERRED_MAPPING");
-        new_client_message->set_preferred_mapping(preferred_mapping);
-    } catch (std::exception &e) {}
+    auto preferred_mapping = env_variables.find("TETRIS_PREFERRED_MAPPING");
+    if (preferred_mapping != env_variables.end()) {
+        new_client_message->set_preferred_mapping(preferred_mapping->second);
+    }
 
-    try {
-        auto filter_criteria = env_variables.at("TETRIS_FILTER_CRITERIA");
-        new_client_message->set_filter_criteria(filter_criteria);
-    } catch (std::exception &e) {}
+    auto filter_criteria = env_variables.find("TETRIS_FILTER_CRITERIA");
+    if (filter_criteria != env_variables.end()) {
+        new_client_message->set_filter_criteria(filter_criteria->second);
+    }
 
     // Send the command.
     auto response = send(request);
