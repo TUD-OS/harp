@@ -4,112 +4,114 @@
 
 #include "path_util.h"
 
+using namespace std;
+
 /* Implementations */
-std::string path_util::abspath(const std::string &path) {
+string path_util::abspath(const string &path) {
     return isabs(path) ? path : join(getcwd(), path);
 }
 
-std::string path_util::basename(const std::string &path) {
+string path_util::basename(const string &path) {
     return split(path).second;
 }
 
-std::string path_util::dirname(const std::string &path) {
+string path_util::dirname(const string &path) {
     return split(path).first;
 }
 
-bool path_util::exists(const std::string &path) {
+bool path_util::exists(const string &path) {
     return ::access(path.c_str(), F_OK) == 0;
 }
 
-std::string path_util::expanduser(const std::string &path) {
+string path_util::expanduser(const string &path) {
     if (path.empty()) {
         return path;
     } else {
         if (path[0] == '~') {
-            return std::string{getpwuid(getuid())->pw_dir} + path.substr(1);
+            return string{getpwuid(getuid())->pw_dir} + path.substr(1);
         } else {
             return path;
         }
     }
 }
 
-std::string path_util::extension(const std::string &path) {
+string path_util::extension(const string &path) {
     return splitext(path).second;
 }
 
-std::string path_util::filename(const std::string &path) {
+string path_util::filename(const string &path) {
     return splitext(split(path).second).first;
 }
 
-void path_util::for_each_file(const std::string &path, const std::function<void(const std::string &)> &cb) {
+void path_util::for_each_file(const string &path, const function<void(const string &)> &cb) {
     auto dir = opendir(path.c_str());
     if (dir == nullptr) {
-        throw std::runtime_error{"Failed to open directory at " + path};
+        throw runtime_error{"Failed to open directory at " + path};
     }
 
     dirent *cur;
     while ((cur = readdir(dir)) != nullptr) {
         if (cur->d_type == DT_REG || cur->d_type == DT_LNK || cur->d_type == DT_UNKNOWN) {
-            std::string file_name{cur->d_name};
+            string file_name{cur->d_name};
 
             cb(join(path, file_name));
         }
     }
 }
 
-std::string path_util::getcwd() {
+string path_util::getcwd() {
     char cwd[512];
     ::getcwd(cwd, sizeof(cwd));
 
-    return std::string{cwd};
+    return string{cwd};
 }
 
-bool path_util::isabs(const std::string &path) {
+bool path_util::isabs(const string &path) {
     if (path.empty())
         return false;
     return path[0] == '/';
 }
 
-std::string path_util::join(const std::string &first, const std::string &second, char delim) {
+string path_util::join(const string &first, const string &second, char delim) {
     return first + delim + second;
 }
 
-std::pair<std::string, std::string> path_util::split(const std::string &path, char delim) {
-    size_t dpos = std::string::npos;
+pair<string, string> path_util::split(const string &path, char delim) {
+    size_t dpos = string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
 
-        if (dpos == std::string::npos) {
-            return std::make_pair("", path);
+        if (dpos == string::npos) {
+            return make_pair("", path);
         } else if (dpos != 0) {
             if (path[dpos - 1] == '\\')
                 continue;
 
-            return std::make_pair(path.substr(0, dpos), path.substr(dpos + 1));
+            return make_pair(path.substr(0, dpos), path.substr(dpos + 1));
         } else {
-            return std::make_pair("/", path.substr(1));
+            return make_pair("/", path.substr(1));
         }
     }
 
-    return std::make_pair(path, "");
+    return make_pair(path, "");
 }
 
-std::pair<std::string, std::string> path_util::splitext(const std::string &path, char delim) {
-    size_t dpos = std::string::npos;
+pair<string, string> path_util::splitext(const string &path, char delim) {
+    size_t dpos = string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
 
-        if (dpos == std::string::npos) {
-            return std::make_pair(path, "");
+        if (dpos == string::npos) {
+            return make_pair(path, "");
         } else if (dpos != 0) {
             if (path[dpos - 1] == '\\')
                 continue;
 
-            return std::make_pair(path.substr(0, dpos), path.substr(dpos));
+            return make_pair(path.substr(0, dpos), path.substr(dpos));
         } else if (dpos == 0) {
-            return std::make_pair(path, "");
+            return make_pair(path, "");
         }
     }
 
-    return std::make_pair(path, "");
+    return make_pair(path, "");
 }
