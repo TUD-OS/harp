@@ -163,6 +163,32 @@ class Connection : public Lockable<Connection>
         return _blocking ? InState::DONE : InState::MORE;
     }
 
+    InState read(std::vector<uint8_t>& data) {
+        if (_fd == -1) {
+            throw std::runtime_error{"Connection not initialized."};
+        }
+        // Read the vector size through the socket.
+        uint32_t vector_size = 0;
+        InState read_state = read(vector_size);
+        if (!_blocking && (read_state != InState::MORE))
+            return read_state;
+        // Resize the vector.
+        data.resize(vector_size);
+        // Read the vector through the socket.
+        ssize_t size = ::read(_fd, data.data(), data.size());
+        if (size == -1) {
+            if (errno == EAGAIN && !_blocking)
+                return InState::DONE;
+            throw std::runtime_error{"Read failed."};
+        } else if (size == 0) {
+            return InState::CLOSED;
+        } else if (size != data.size()) {
+            throw std::runtime_error{"Failed to read complete data!"};
+        }
+
+        return _blocking ? InState::DONE : InState::MORE;
+    }
+
     template<typename T>
     OutState write(const T& data) {
         if (_fd == -1) {
@@ -173,7 +199,6 @@ class Connection : public Lockable<Connection>
         if (size == -1) {
             if (errno == EAGAIN && !_blocking)
                 return OutState::RETRY;
-
             throw std::runtime_error{"Write failed."};
         } else if (size != sizeof(data)) {
             throw std::runtime_error{"Failed to write complete data!"};
@@ -181,6 +206,29 @@ class Connection : public Lockable<Connection>
 
         return OutState::DONE;
     }
+
+    OutState write(const std::vector<uint8_t>& data) {
+        if (_fd == -1) {
+            throw std::runtime_error{"Connection not initialized."};
+        }
+        // Write the size of the vector before sending it.
+        uint32_t vector_size = data.size();
+        OutState write_state = write(vector_size);
+        if (write_state == OutState::RETRY)
+            return OutState::RETRY;
+        // Write the data contained in the vector.
+        ssize_t size = ::write(_fd, data.data(), data.size());
+        if (size == -1) {
+            if (errno == EAGAIN && !_blocking)
+                return OutState::RETRY;
+            throw std::runtime_error{"Write failed."};
+        } else if (size != data.size()) {
+            throw std::runtime_error{"Failed to write complete data!"};
+        }
+
+        return OutState::DONE;
+    }
+
 };
 
 using LockedConnection = Locked<Connection>;

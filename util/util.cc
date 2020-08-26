@@ -1,17 +1,10 @@
-#ifndef __UTIL_H__
-#define __UTIL_H__
+//
+// Created by dylan on 07/08/2020.
+//
 
-#pragma once
+#include "util.h"
 
-
-#include <stdexcept>
-
-#include <fcntl.h>
-
-
-namespace util {
-
-void make_fd_non_blocking(int fd)
+void util::make_fd_non_blocking(int fd)
 {
     int flags;
 
@@ -25,7 +18,3 @@ void make_fd_non_blocking(int fd)
         }
     }
 }
-
-} /* namespace util */
-
-#endif /* __UTIL_H__ */
