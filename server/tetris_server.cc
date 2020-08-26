@@ -170,14 +170,16 @@ public:
                 logger->warning("Failed to set cpu affinity for thread '%s': %s\n", t.name.c_str(), strerror(errno));
         }
 
-        update_mapping_regions();
+        // If the client is using DPM, update potential regions.
+        if (using_dppm)
+            update_mapping_regions();
 
         logger->info(" * done\n");
     }
 
     void update_mapping_regions() {
-        // If the region map is not empty, update parallel region mappings.
-        if (using_dppm) {
+        // Update parallel regions configuration.
+        if (!active_mapping.region_map.empty()) {
             auto response_with_tids = set_parallel_regions_number_num_replicas();
             set_parallel_regions_cpu_affinities(response_with_tids);
         }
@@ -189,11 +191,11 @@ public:
         std::stringstream path{};
         path << "/tmp/tetris_push_listener_" << pid;
         Connection conn(path.str());
-        // Set the number of replicas in all parallel regions according to the mapping.
         tetris::PushRequest request{};
         tetris::PushResponse response{};
         request.set_type(tetris::PushRequest::DPM_UPDATE_CONFIGURATION);
         request.set_feature_id(0);
+        // Set the number of replicas in all parallel regions according to the mapping.
         for (const auto &[region_name, replicas] : active_mapping.region_map) {
             auto configuration = request.add_region_configurations();
             configuration->set_name(region_name);
@@ -302,8 +304,10 @@ private:
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
             Mapping mapping = mappings.back();
+            // Add regular processes names.
             for (const auto &key_val : mapping.thread_map)
                 thread_names.push_back(key_val.first);
+            // Add parallel regions and inside processes names.
             for (const auto & [region_name, replicas] : mapping.region_map) {
                 for (const auto &key_val : replicas.back()) {
                     auto process_name = key_val.first;
@@ -320,18 +324,18 @@ private:
                           string_util::join(characteristic_names, ",").c_str());
 
             for (const auto &m : mappings) {
-                std::vector<std::string> mapping_characterisics;
+                std::vector<std::string> mapping_characteristics;
 
                 for (const auto &c : characteristic_names) {
                     std::stringstream ss;
 
                     ss << std::setprecision(0) << std::fixed << c << ":" << m.characteristic(c);
-                    mapping_characterisics.push_back(ss.str());
+                    mapping_characteristics.push_back(ss.str());
                 }
 
                 logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
                               m.equivalence_class().name().c_str(),
-                              string_util::join(mapping_characterisics, ",").c_str());
+                              string_util::join(mapping_characteristics, ",").c_str());
             }
         }
 
