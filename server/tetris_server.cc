@@ -1,6 +1,5 @@
 #include "algorithm.h"
 #include "util/connection.h"
-#include "csv.h"
 #include "util/debug_util.h"
 #include "filter.h"
 #include "mapping.h"
@@ -10,11 +9,13 @@
 #include "util/tetris.h"
 #include "proto/tetris.pb.h"
 #include "util/protobuf_util.h"
+#include "json.h"
 
 #include <algorithm>
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
@@ -168,7 +169,78 @@ public:
             if (sched_setaffinity(t.tid, sizeof(cpu_set_t), &mask) != 0)
                 logger->warning("Failed to set cpu affinity for thread '%s': %s\n", t.name.c_str(), strerror(errno));
         }
+
+        // If the client is using DPM, update potential regions.
+        if (using_dppm)
+            update_mapping_regions();
+
         logger->info(" * done\n");
+    }
+
+    void update_mapping_regions() {
+        // Update parallel regions configuration.
+        if (!active_mapping.region_map.empty()) {
+            auto response_with_tids = set_parallel_regions_number_num_replicas();
+            set_parallel_regions_cpu_affinities(response_with_tids);
+        }
+    }
+
+    tetris::PushResponse set_parallel_regions_number_num_replicas() const
+    {
+        // Connect to the push listener.
+        std::stringstream path{};
+        path << "/tmp/tetris_push_listener_" << pid;
+        Connection conn(path.str());
+        tetris::PushRequest request{};
+        tetris::PushResponse response{};
+        request.set_type(tetris::PushRequest::DPM_UPDATE_CONFIGURATION);
+        request.set_feature_id(0);
+        // Set the number of replicas in all parallel regions according to the mapping.
+        for (const auto &[region_name, replicas] : active_mapping.region_map) {
+            auto configuration = request.add_region_configurations();
+            configuration->set_name(region_name);
+            configuration->set_num_replicas(replicas.size());
+            logger->info(" * set %d replicas in parallel region '%s'\n", replicas.size(), region_name.c_str());
+        }
+        // Send the push request.
+        protobuf_util::Send(conn.locked(), request);
+        // Wait for the response.
+        protobuf_util::Receive(conn.locked(), response);
+        if (response.type() != tetris::PushResponse::DPM_REGION_INFO)
+            logger->error("Failed to set the number of replicas for parallel region\n");
+        return response;
+    }
+
+    void set_parallel_regions_cpu_affinities(const tetris::PushResponse& response) const
+    {
+        // Set CPU affinity for each process in each replica of each parallel region.
+        auto regions_info = response.region_infos();
+        for (auto &region_info : regions_info) {
+            auto region_name = region_info.name();
+            auto replica_affinities = active_mapping.region_map.at(region_name);
+            int replica_number = 0;
+            for (auto &replica : region_info.replicas()) {
+                auto process_affinities = replica_affinities.back();
+                replica_affinities.pop_back();
+                ++replica_number;
+                for (auto &process : replica.process_thread()) {
+                    CPUList cpus;
+                    auto process_name = process.process_name();
+                    auto tid = process.thread_id();
+                    if (dynamic_client)
+                        cpus = active_mapping.cpus;
+                    else
+                        cpus = CPUList({process_affinities.at(process_name)});
+                    logger->info(" * map thread '%s::%s@%d' [%i] to cpu(s) %s\n", region_name.c_str(),
+                                 process_name.c_str(), replica_number, tid,
+                                 string_util::join(cpus.cpulist(num_cpus), ",").c_str());
+                    cpu_set_t mask = cpus.cpu_set();
+                    if (sched_setaffinity(tid, sizeof(cpu_set_t), &mask) != 0)
+                        logger->warning("Failed to set cpu affinity for thread '%s::%s': %s\n", region_name.c_str(),
+                                        process_name.c_str(), strerror(errno));
+                }
+            }
+        }
     }
 
     void new_thread(const std::string &name, int tid)
@@ -211,45 +283,39 @@ private:
 
     CPUList _blocked_cpus;
 
-    std::vector<Mapping> parse_mapping(const std::string &file)
+    std::vector<Mapping> parse_mappings(const std::string &dir)
     {
-        CSVData data{file};
         std::vector<Mapping> mappings;
-
-        for (const auto &row : data.row_iter()) {
-            std::vector<std::pair<std::string, std::string>> threads;
-            std::vector<std::pair<std::string, std::string>> characteristics;
-
-            for (const auto &col : row.names()) {
-                if (string_util::starts_with(col, "t_")) {
-                    /* Columns starting with 't_' are interpreted as threads */
-                    std::string thread_name = col.substr(2);
-                    std::string cpu_name = row(col);
-
-                    threads.emplace_back(thread_name, cpu_name);
-                } else {
-                    /* All the other columns are characteristics of the mapping */
-                    std::string value = row(col);
-
-                    characteristics.emplace_back(col, value);
+        try {
+            path_util::for_each_file(dir, [&](const std::string &file) -> void {
+                if (path_util::extension(file) == ".json") {
+                    // Parse the JSON mapping file.
+                    std::ifstream json_mapping_file{file};
+                    nlohmann::json json_mapping;
+                    json_mapping_file >> json_mapping;
+                    mappings.emplace_back(parse_mapping(json_mapping));
                 }
-            }
-
-            auto name = row.fixed();
-
-            mappings.emplace_back(name, threads, characteristics);
+            });
+        } catch (std::exception &e) {
+            logger->error("Reading mappings failed with: %s\n", e.what());
         }
 
         {
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
-
-            for (const auto &col : data.columns()) {
-                if (string_util::starts_with(col, "t_"))
-                    thread_names.push_back(col.substr(2));
-                else
-                    characteristic_names.push_back(col);
+            Mapping mapping = mappings.back();
+            // Add regular processes names.
+            for (const auto &key_val : mapping.thread_map)
+                thread_names.push_back(key_val.first);
+            // Add parallel regions and inside processes names.
+            for (const auto & [region_name, replicas] : mapping.region_map) {
+                for (const auto &key_val : replicas.back()) {
+                    auto process_name = key_val.first;
+                    thread_names.push_back(region_name + "::" + key_val.first);
+                }
             }
+            for (const auto &key_val : mapping.characteristics_map)
+                characteristic_names.push_back(key_val.first);
 
             logger->debug("  * Found %i mapping(s)\n", mappings.size());
             logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
@@ -258,22 +324,61 @@ private:
                           string_util::join(characteristic_names, ",").c_str());
 
             for (const auto &m : mappings) {
-                std::vector<std::string> mapping_characterisics;
+                std::vector<std::string> mapping_characteristics;
 
                 for (const auto &c : characteristic_names) {
                     std::stringstream ss;
 
                     ss << std::setprecision(0) << std::fixed << c << ":" << m.characteristic(c);
-                    mapping_characterisics.push_back(ss.str());
+                    mapping_characteristics.push_back(ss.str());
                 }
 
                 logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
                               m.equivalence_class().name().c_str(),
-                              string_util::join(mapping_characterisics, ",").c_str());
+                              string_util::join(mapping_characteristics, ",").c_str());
             }
         }
 
         return mappings;
+    }
+
+    Mapping parse_mapping(const nlohmann::json &json_mapping)
+    {
+        std::vector<std::pair<std::string, std::string>> threads;
+        RegionAffinities<std::string> regions{};
+        std::vector<std::pair<std::string, std::string>> characteristics;
+        /* Get all processes mapping information. */
+        for (const auto &mapping : json_mapping["mapping"]) {
+            if (mapping["type"] == "process") {
+                /* Regular process. */
+                std::string thread_name = mapping["name"];
+                std::string cpu_name = mapping["core"];
+                threads.emplace_back(thread_name, cpu_name);
+            } else if (mapping["type"] == "DLP") {
+                /* Parallel region. */
+                ReplicaAffinities<std::string> replica_affinities{};
+                for (const auto& replica : mapping["replicas"]) {
+                    ProcessAffinities<std::string> process_affinities{};
+                    for (const auto &process : replica) {
+                        std::string process_name = process["name"];
+                        std::string cpu_name = process["core"];
+                        process_affinities.emplace(process_name, cpu_name);
+                    }
+                    replica_affinities.push_back(process_affinities);
+                }
+                regions.emplace(mapping["name"], replica_affinities);
+            }
+        }
+        /* Get name of the mapping. */
+        auto name = json_mapping["name"];
+        /* All the other attributes are characteristics of the mapping */
+        for (const auto &item : json_mapping.items()) {
+            const auto attribute = item.key();
+            if (attribute != "name" && attribute != "mapping") {
+                characteristics.emplace_back(attribute, json_mapping[attribute]);
+            }
+        }
+        return Mapping{name, threads, regions, characteristics};
     }
 
     Mapping select_best_mapping(Client &c)
@@ -556,13 +661,15 @@ public:
                             for (auto &process: regular_process_info) {
                                 process_name = process.process_name();
                                 process_tid = process.thread_id();
-                                c.new_thread("t_" + process_name, process_tid);
+                                c.new_thread(process_name, process_tid);
                             }
                         } catch (std::out_of_range) {
                             logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name, process_tid,
                                           c.exec.c_str());
                             managed = false;
                         }
+
+                        c.update_mapping_regions();
 
                         /* We need to acknowledge this message. */
                         tetris::PullResponse ack{};
@@ -572,6 +679,7 @@ public:
                         ack.set_feature_id(0);
                         if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE)
                             logger->error("Failed to acknowledge the DPM registration message\n");
+
                         break;
                     }
                     default:
@@ -671,13 +779,9 @@ public:
         _mappings.clear();
 
         try {
-            path_util::for_each_file(_mappings_path, [&](const std::string &file) -> void {
-                if (path_util::extension(file) == ".csv") {
-                    std::string program = string_util::strip(path_util::filename(file));
-                    logger->info(" -> found mapping for '%s'\n", program.c_str());
-
-                    _mappings.emplace(program, parse_mapping(file));
-                }
+            path_util::for_each_folder(_mappings_path, [&](const std::string &dir) -> void {
+                logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
+                _mappings.emplace(path_util::basename(dir), parse_mappings(dir));
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());

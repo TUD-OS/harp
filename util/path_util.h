@@ -25,6 +25,7 @@ std::string extension(const std::string&);
 std::string expanduser(const std::string&);
 std::string filename(const std::string&);
 void for_each_file(const std::string&, const std::function<void(const std::string&)>&);
+void for_each_folder(const std::string &path, const std::function<void(const std::string &)> &cb);
 std::string getcwd();
 bool isabs(const std::string&);
 std::string join(const std::string&, const std::string&, char delim='/');

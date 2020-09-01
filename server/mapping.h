@@ -29,19 +29,33 @@ int cpu_nr_for_name(const std::string& name)
 
 } /* Anonymous namespace */
 
+/// \brief ProcessAffinities stores process names and corresponding CPU affinity.
+template <typename T>
+using ProcessAffinities = std::map<std::string, T>;
+
+/// \brief ReplicasAffinities stores processes inside a region replica with CPU affinities.
+template <typename T>
+using ReplicaAffinities = std::vector<ProcessAffinities<T>>;
+
+/// \brief RegionAffinities stores replicas inside a region with CPU affinities.
+template <typename T>
+using RegionAffinities = std::map<std::string, ReplicaAffinities<T>>;
+
 
 class Mapping
 {
    public:
     std::string     name;
     std::map<std::string, int> thread_map;
+    RegionAffinities<int> region_map;
     std::map<std::string, double> characteristics_map;
     CPUList         cpus;
 
    private:
     Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
-        name{base.name}, thread_map{}, characteristics_map{base.characteristics_map}, cpus{}
+        name{base.name}, thread_map{}, region_map{}, characteristics_map{base.characteristics_map}, cpus{}
     {
+        // Convert thread CPU affinity.
         for (const auto& [name, orig_cpu] : base.thread_map) {
             if (conv_map.find(orig_cpu) != conv_map.end()) {
                 thread_map.emplace(name, conv_map.at(orig_cpu));
@@ -51,18 +65,50 @@ class Mapping
                 cpus.set(orig_cpu);
             }
         }
+        // Convert thread CPU affinity in parallel regions.
+        for (const auto& [region_name, replicas] : base.region_map) {
+            ReplicaAffinities<int> replica_affinities{};
+            for (const auto& replica : replicas) {
+                ProcessAffinities<int> process_affinities{};
+                for (const auto& [process_name, orig_cpu] : replica) {
+                    if (conv_map.find(orig_cpu) != conv_map.end()) {
+                        process_affinities.emplace(process_name, conv_map.at(orig_cpu));
+                        cpus.set(conv_map.at(orig_cpu));
+                    } else {
+                        process_affinities.emplace(process_name, orig_cpu);
+                        cpus.set(orig_cpu);
+                    }
+                }
+                replica_affinities.push_back(process_affinities);
+            }
+            region_map.emplace(region_name, replica_affinities);
+        }
     }
 
    public:
     Mapping() = default;
 
     Mapping(const std::string& name, const std::vector<std::pair<std::string, std::string>>& threads,
+            const RegionAffinities<std::string>& region_threads,
             const std::vector<std::pair<std::string, std::string>>& characteristics) :
-        name{name}, thread_map{}, characteristics_map{}, cpus{}
+        name{name}, thread_map{}, region_map{}, characteristics_map{}, cpus{}
     {
         for (const auto& t : threads) {
             thread_map.emplace(t.first, cpu_nr_for_name(t.second));
             cpus.set(cpu_nr_for_name(t.second));
+        }
+
+        for (const auto& [region_name, replicas] : region_threads) {
+            ReplicaAffinities<int> replica_affinities{};
+            for (const auto& replica : replicas) {
+                ProcessAffinities<int> process_affinities{};
+                for (const auto& [process_name, affinity] : replica) {
+                    process_affinities.emplace(process_name, cpu_nr_for_name(affinity));
+                    cpus.set(cpu_nr_for_name(affinity));
+                }
+                replica_affinities.push_back(process_affinities);
+            }
+            region_map.emplace(region_name, replica_affinities);
         }
 
         for (const auto& c : characteristics) {
