@@ -77,10 +77,18 @@ void for_each_folder(const std::string &path, const std::function<void(const std
 
     dirent *cur;
     while ((cur = readdir(dir)) != nullptr) {
+        std::string name{cur->d_name};
         if ((cur->d_type == DT_DIR) && (*cur->d_name != '.')) {
-            std::string dir_name{cur->d_name};
-
-            cb(join(path, dir_name));
+            cb(join(path, name));
+        } else if (cur->d_type == DT_LNK) {
+            std::string symbolic_link_path{join(path, name)};
+            // Test if the symbolic link refers to a directory.
+            auto symbolic_dir = opendir(symbolic_link_path.c_str());
+            if (symbolic_dir != nullptr) {
+                closedir(symbolic_dir);
+                // Call the callback on the directory path.
+                cb(symbolic_link_path);
+            }
         }
     }
 }
