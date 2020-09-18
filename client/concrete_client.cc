@@ -79,7 +79,7 @@ bool ConcreteClient::send_new_client_command()
 
     /* Send the new-client message to the server. */
     new_client_message->set_pid(getpid());
-    char exec[100];
+    char exec[512];
     memset(exec, 0, sizeof(exec));
     readlink("/proc/self/exe", exec, sizeof(exec));
     new_client_message->set_exec(exec);

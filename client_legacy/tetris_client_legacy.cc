@@ -226,7 +226,7 @@ void __attribute__((constructor)) setup(void)
     try {
         connection = std::make_unique<Connection>(SERVER_SOCKET);
 
-        char exec[100];
+        char exec[512];
         memset(exec, 0, sizeof(exec));
 
         readlink("/proc/self/exe", exec, sizeof(exec));
