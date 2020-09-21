@@ -300,8 +300,10 @@ private:
         std::vector<Mapping> mappings;
         auto knob_description = parse_knob_description(dir);
         // If the knob description is empty, return zero mapping.
-        if (knob_description.region_specifications.empty() && knob_description.regular_process_specifications.empty())
+        if (!knob_description.is_valid()) {
+            logger->warning("Knob description file '%s' is using an incorrect format.\n", dir.c_str());
             return mappings;
+        }
 
         try {
             path_util::for_each_file(dir, [&](const std::string &file) -> void {
@@ -314,6 +316,9 @@ private:
                     // Check if the mapping is valid, otherwise discard it.
                     if (parsed_mapping.is_valid(knob_description))
                         mappings.emplace_back(parsed_mapping);
+                    else
+                        logger->warning("Mapping file '%s' does not comply to the knob description of %s.\n",
+                                        path_util::basename(file).c_str(), path_util::basename(dir).c_str());
                 }
             });
         } catch (std::exception &e) {

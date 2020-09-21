@@ -198,12 +198,19 @@ class Mapping
             auto nb_replicas = region_map_entry->second.size();
             if (max_nb_replicas != 0 && max_nb_replicas < nb_replicas)
                 return false;
-            // Check for cores/mapping consistency
+            // Check for consistency in core mappings
             auto replicas = region_map_entry->second;
             for (const auto& replica : replicas) {
                 if (!check_validity_process(region_body.process_specifications, replica))
                     return false;
             }
+        }
+        // Check validity of characteristics.
+        for (const auto& characteristic_item : knob_description.characteristic_specifications) {
+            auto characteristic_name = characteristic_item.first;
+            auto characteristic_map_entry = characteristics_map.find(characteristic_name);
+            if (characteristic_map_entry == characteristics_map.end())
+                return false;
         }
         // Check validity of regular process mappings.
         return check_validity_process(knob_description.regular_process_specifications, thread_map);

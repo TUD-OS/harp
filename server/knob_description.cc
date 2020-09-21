@@ -4,9 +4,9 @@
 
 #include "knob_description.h"
 
-KnobDescription::KnobDescription(const nlohmann::json &json_knob_description) {
+KnobDescription::KnobDescription(const nlohmann::json &json_knob_description) : valid{true} {
     // Explore the json structure and grab every information from the knob description.
-    for (const auto &process : json_knob_description) {
+    for (const auto &process : json_knob_description["processes"]) {
         if (process["type"] == "process") {
             /* Regular process. Get the name and potential core constraints. */
             std::string process_name = process["name"];
@@ -36,4 +36,24 @@ KnobDescription::KnobDescription(const nlohmann::json &json_knob_description) {
             region_specifications.emplace(region_name, body_specification);
         }
     }
+    // If there are no processes at all, the knob description is incorrect.
+    if (region_specifications.empty() && regular_process_specifications.empty())
+        valid = false;
+    // Grab every characteristic information.
+    for (const auto &characteristic : json_knob_description["characteristics"].items()) {
+        auto characteristic_name = characteristic.key();
+        auto characteristic_compare = characteristic.value().get<std::string>();
+        if (characteristic_compare == "less_is_better")
+            characteristic_specifications.emplace(characteristic_name, CharacteristicComparison::LessIsBetter);
+        else if (characteristic_compare == "more_is_better")
+            characteristic_specifications.emplace(characteristic_name, CharacteristicComparison::MoreIsBetter);
+        else
+            // The characteristic specification is incorrect in regard to the given comparison type.
+            valid = false;
+    }
+}
+
+bool KnobDescription::is_valid() const
+{
+    return valid;
 }
