@@ -298,9 +298,9 @@ private:
     std::vector<Mapping> parse_mappings(const std::string &dir)
     {
         std::vector<Mapping> mappings;
-        auto knob = parse_knob_description(dir);
+        auto knob_description = parse_knob_description(dir);
         // If the knob description is empty, return zero mapping.
-        if (knob.region_specifications.empty() && knob.regular_process_specifications.empty())
+        if (knob_description.region_specifications.empty() && knob_description.regular_process_specifications.empty())
             return mappings;
 
         try {
@@ -310,7 +310,9 @@ private:
                     std::ifstream json_mapping_file{file};
                     nlohmann::json json_mapping;
                     json_mapping_file >> json_mapping;
-                    mappings.emplace_back(parse_mapping(json_mapping));
+                    auto parsed_mapping = parse_mapping(json_mapping);
+                    if (parsed_mapping.is_valid(knob_description))
+                        mappings.emplace_back(parsed_mapping);
                 }
             });
         } catch (std::exception &e) {
