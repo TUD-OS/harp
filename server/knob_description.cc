@@ -32,7 +32,7 @@ KnobDescription::KnobDescription(const nlohmann::json &json_knob_description) {
             }
             /* Get the maximum number of replicas if defined. */
             if (process.find("max_replicas") != process.end())
-                body_specification.max_nb_replicas = process["max_replicas"].get<unsigned int>();
+                body_specification.max_replicas = process["max_replicas"].get<unsigned int>();
             region_specifications.emplace(region_name, body_specification);
         }
     }

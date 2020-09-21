@@ -86,6 +86,27 @@ class Mapping
         }
     }
 
+    bool check_validity_process(const KnobDescription::ProcessSpecifications &specifications, const ProcessAffinities<int> &process_affinities)
+    {
+        for (const auto& [process_name, core_affinities] : specifications) {
+            auto thread_map_entry = process_affinities.find(process_name);
+            if (thread_map_entry == process_affinities.end())
+                return false;
+            // Check core validity
+            auto core_affinity = thread_map_entry->second;
+            if (!core_affinities.empty()) {
+                std::set<int> cpu_set{};
+                std::for_each(core_affinities.begin(), core_affinities.end(),
+                              [&cpu_set](const auto& affinity) {
+                                  cpu_set.emplace(cpu_nr_for_name(affinity));
+                              });
+                if (cpu_set.find(core_affinity) == cpu_set.end())
+                    return false;
+            }
+        }
+        return true;
+    }
+
    public:
     Mapping() = default;
 
@@ -166,7 +187,7 @@ class Mapping
     bool is_valid(const KnobDescription& knob_description) {
         // Check validity of region mappings.
         for (const auto& [region_name, region_body] : knob_description.region_specifications) {
-            auto max_nb_replicas = region_body.max_nb_replicas;
+            auto max_nb_replicas = region_body.max_replicas;
             // Search for the region in the region map.
             // If the region cannot be found in the region map, then the mapping does not respect the
             // knob description, returning false.
@@ -186,27 +207,6 @@ class Mapping
         }
         // Check validity of regular process mappings.
         return check_validity_process(knob_description.regular_process_specifications, thread_map);
-    }
-
-    bool check_validity_process(const KnobDescription::ProcessSpecifications &specifications, const ProcessAffinities<int> &process_affinities)
-    {
-        for (const auto& [process_name, core_affinities] : specifications) {
-            auto thread_map_entry = process_affinities.find(process_name);
-            if (thread_map_entry == process_affinities.end())
-                return false;
-            // Check core validity
-            auto core_affinity = thread_map_entry->second;
-            if (!core_affinities.empty()) {
-                std::set<int> cpu_set{};
-                std::for_each(core_affinities.begin(), core_affinities.end(),
-                              [&cpu_set](const auto& affinity) {
-                                  cpu_set.emplace(cpu_nr_for_name(affinity));
-                              });
-                if (cpu_set.find(core_affinity) == cpu_set.end())
-                    return false;
-            }
-        }
-        return true;
     }
 
 };

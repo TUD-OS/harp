@@ -311,6 +311,7 @@ private:
                     nlohmann::json json_mapping;
                     json_mapping_file >> json_mapping;
                     auto parsed_mapping = parse_mapping(json_mapping);
+                    // Check if the mapping is valid, otherwise discard it.
                     if (parsed_mapping.is_valid(knob_description))
                         mappings.emplace_back(parsed_mapping);
                 }
@@ -319,7 +320,7 @@ private:
             logger->error("Reading mappings failed with: %s\n", e.what());
         }
 
-        {
+        if (!mappings.empty()) {
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
             Mapping mapping = mappings.back();
@@ -799,8 +800,11 @@ public:
 
         try {
             path_util::for_each_folder(_mappings_path, [&](const std::string &dir) -> void {
-                logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
-                _mappings.emplace(path_util::basename(dir), parse_mappings(dir));
+                auto parsed_mappings = parse_mappings(dir);
+                if (!parsed_mappings.empty()) {
+                    logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
+                    _mappings.emplace(path_util::basename(dir), parsed_mappings);
+                }
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());

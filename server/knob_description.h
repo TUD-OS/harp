@@ -25,7 +25,7 @@ public:
         /// \brief Regular process specifications.
         ProcessSpecifications process_specifications;
         /// \brief Maximum number of replicas. If this field equals zero then there are no maximum number of replicas.
-        unsigned int max_nb_replicas{0};
+        unsigned int max_replicas{0};
     };
     /// \brief Defines specifications for parallel regions.
     using RegionSpecifications = std::map<std::string, RegionBodySpecification>;
@@ -41,6 +41,7 @@ public:
      * \param json_mapping json structure to parse.
      */
     explicit KnobDescription(const nlohmann::json &json_knob_description);
+
 
 };
 
