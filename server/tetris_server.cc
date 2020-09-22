@@ -283,12 +283,29 @@ private:
 
     CPUList _blocked_cpus;
 
+    const std::string knob_description_filename = "__confdefs__.json";
+
+    KnobDescription parse_knob_description(const std::string &dir) const
+    {
+        std::stringstream confdefs_filepath_stream{};
+        confdefs_filepath_stream << dir << "/" << knob_description_filename;
+        std::ifstream json_knob_file{confdefs_filepath_stream.str()};
+        nlohmann::json json_knob;
+        json_knob_file >> json_knob;
+        return KnobDescription(json_knob);
+    }
+
     std::vector<Mapping> parse_mappings(const std::string &dir)
     {
         std::vector<Mapping> mappings;
+        auto knob = parse_knob_description(dir);
+        // If the knob description is empty, return zero mapping.
+        if (knob.region_specifications.empty() && knob.regular_process_specifications.empty())
+            return mappings;
+
         try {
             path_util::for_each_file(dir, [&](const std::string &file) -> void {
-                if (path_util::extension(file) == ".json") {
+                if ((path_util::extension(file) == ".json") && (path_util::basename(file) != knob_description_filename)) {
                     // Parse the JSON mapping file.
                     std::ifstream json_mapping_file{file};
                     nlohmann::json json_mapping;
