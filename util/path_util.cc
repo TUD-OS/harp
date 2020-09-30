@@ -4,65 +4,63 @@
 
 #include "path_util.h"
 
-using namespace std;
-
 namespace path_util {
 
 /* Implementations */
-string abspath(const string &path)
+std::string abspath(const std::string &path)
 {
     return isabs(path) ? path : join(getcwd(), path);
 }
 
-string basename(const string &path)
+std::string basename(const std::string &path)
 {
     return split(path).second;
 }
 
-string dirname(const string &path)
+std::string dirname(const std::string &path)
 {
     return split(path).first;
 }
 
-bool exists(const string &path)
+bool exists(const std::string &path)
 {
     return ::access(path.c_str(), F_OK) == 0;
 }
 
-string expanduser(const string &path)
+std::string expanduser(const std::string &path)
 {
     if (path.empty()) {
         return path;
     } else {
         if (path[0] == '~') {
-            return string{getpwuid(getuid())->pw_dir} + path.substr(1);
+            return std::string{getpwuid(getuid())->pw_dir} + path.substr(1);
         } else {
             return path;
         }
     }
 }
 
-string extension(const string &path)
+std::string extension(const std::string &path)
 {
     return splitext(path).second;
 }
 
-string filename(const string &path)
+std::string filename(const std::string &path)
 {
     return splitext(split(path).second).first;
 }
 
-void for_each_file(const string &path, const function<void(const string &)> &cb)
+void for_each_file(const std::string &path, const std::function<void(const std::string &)> &cb)
 {
     auto dir = opendir(path.c_str());
     if (dir == nullptr) {
-        throw runtime_error{"Failed to open directory at " + path};
+        throw std::runtime_error{"Failed to open directory at " + path};
     }
 
     dirent *cur;
     while ((cur = readdir(dir)) != nullptr) {
         if (cur->d_type == DT_REG || cur->d_type == DT_LNK || cur->d_type == DT_UNKNOWN) {
-            string file_name{cur->d_name};
+            std::string file_name{cur->d_name};
 
             cb(join(path, file_name));
         }
@@ -78,10 +76,12 @@ void for_each_folder(const std::string &path, const std::function<void(const std
     dirent *cur;
     while ((cur = readdir(dir)) != nullptr) {
         std::string name{cur->d_name};
+
         if ((cur->d_type == DT_DIR) && (*cur->d_name != '.')) {
             cb(join(path, name));
         } else if (cur->d_type == DT_LNK) {
             std::string symbolic_link_path{join(path, name)};
+
             // Test if the symbolic link refers to a directory.
             auto symbolic_dir = opendir(symbolic_link_path.c_str());
             if (symbolic_dir != nullptr) {
@@ -93,32 +93,32 @@ void for_each_folder(const std::string &path, const std::function<void(const std
     }
 }
 
-string getcwd() {
+std::string getcwd() {
     char cwd[512];
     ::getcwd(cwd, sizeof(cwd));
 
-    return string{cwd};
+    return std::string{cwd};
 }
 
-bool isabs(const string &path)
+bool isabs(const std::string &path)
 {
     if (path.empty())
         return false;
     return path[0] == '/';
 }
 
-string join(const string &first, const string &second, char delim)
+std::string join(const std::string &first, const std::string &second, char delim)
 {
     return first + delim + second;
 }
 
-pair<string, string> split(const string &path, char delim)
+std::pair<std::string, std::string> split(const std::string &path, char delim)
 {
-    size_t dpos = string::npos;
+    size_t dpos = std::string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
 
-        if (dpos == string::npos) {
+        if (dpos == std::string::npos) {
             return make_pair("", path);
         } else if (dpos != 0) {
             if (path[dpos - 1] == '\\')
@@ -133,13 +133,13 @@ pair<string, string> split(const string &path, char delim)
     return make_pair(path, "");
 }
 
-pair<string, string> splitext(const string &path, char delim)
+std::pair<std::string, std::string> splitext(const std::string &path, char delim)
 {
-    size_t dpos = string::npos;
+    size_t dpos = std::string::npos;
     while (dpos != 0) {
         dpos = path.rfind(delim, dpos);
 
-        if (dpos == string::npos) {
+        if (dpos == std::string::npos) {
             return make_pair(path, "");
         } else if (dpos != 0) {
             if (path[dpos - 1] == '\\')
