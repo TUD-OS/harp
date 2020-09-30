@@ -154,4 +154,4 @@ std::pair<std::string, std::string> splitext(const std::string &path, char delim
     return make_pair(path, "");
 }
 
-}
+} /* namespace path_util */
