@@ -4,6 +4,7 @@ add_executable(tetrisserver
         tetris_server.cc
         algorithm.cc
         equivalence.cc
+        knob_description.cc
         ${PROTO_OUTPUT_SOURCES}
         ${CMAKE_SOURCE_DIR}/util/path_util.cc
         ${CMAKE_SOURCE_DIR}/util/util.cc

@@ -283,24 +283,49 @@ private:
 
     CPUList _blocked_cpus;
 
+    const std::string knob_description_filename = "__confdefs__.json";
+
+    KnobDescription parse_knob_description(const std::string &dir) const
+    {
+        std::stringstream confdefs_filepath_stream{};
+        confdefs_filepath_stream << dir << "/" << knob_description_filename;
+        std::ifstream json_knob_file{confdefs_filepath_stream.str()};
+        nlohmann::json json_knob;
+        json_knob_file >> json_knob;
+        return KnobDescription(json_knob);
+    }
+
     std::vector<Mapping> parse_mappings(const std::string &dir)
     {
         std::vector<Mapping> mappings;
+        auto knob_description = parse_knob_description(dir);
+        // If the knob description is empty, return zero mapping.
+        if (!knob_description.is_valid()) {
+            logger->warning("Knob description file '%s' is using an incorrect format.\n", dir.c_str());
+            return mappings;
+        }
+
         try {
             path_util::for_each_file(dir, [&](const std::string &file) -> void {
-                if (path_util::extension(file) == ".json") {
+                if ((path_util::extension(file) == ".json") && (path_util::basename(file) != knob_description_filename)) {
                     // Parse the JSON mapping file.
                     std::ifstream json_mapping_file{file};
                     nlohmann::json json_mapping;
                     json_mapping_file >> json_mapping;
-                    mappings.emplace_back(parse_mapping(json_mapping));
+                    auto parsed_mapping = parse_mapping(json_mapping);
+                    // Check if the mapping is valid, otherwise discard it.
+                    if (parsed_mapping.is_valid(knob_description))
+                        mappings.emplace_back(parsed_mapping);
+                    else
+                        logger->warning("Mapping file '%s' does not comply to the knob description of %s.\n",
+                                        path_util::basename(file).c_str(), path_util::basename(dir).c_str());
                 }
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());
         }
 
-        {
+        if (!mappings.empty()) {
             std::vector<std::string> thread_names;
             std::vector<std::string> characteristic_names;
             Mapping mapping = mappings.back();
@@ -780,8 +805,11 @@ public:
 
         try {
             path_util::for_each_folder(_mappings_path, [&](const std::string &dir) -> void {
-                logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
-                _mappings.emplace(path_util::basename(dir), parse_mappings(dir));
+                auto parsed_mappings = parse_mappings(dir);
+                if (!parsed_mappings.empty()) {
+                    logger->info(" -> found mapping for '%s'\n", path_util::basename(dir).c_str());
+                    _mappings.emplace(path_util::basename(dir), parsed_mappings);
+                }
             });
         } catch (std::exception &e) {
             logger->error("Reading mappings failed with: %s\n", e.what());
