@@ -7,6 +7,7 @@
 #include <memory>
 
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 
@@ -57,8 +58,8 @@ class Logger
 
         char buffer[255];
         std::snprintf(buffer, 255, "%s %s: %s", lvl, timestr, fmt);
-        printf(buffer, args...);
-        fflush(stdout);
+        std::printf(buffer, args...);
+        std::fflush(stdout);
     }
 
    public:
@@ -93,8 +94,8 @@ class Logger
     template <typename... Args>
     void always(const char* fmt, Args... args)
     {
-        printf(fmt, args...);
-        fflush(stdout);
+        std::printf(fmt, args...);
+        std::fflush(stdout);
     }
 
    private:
