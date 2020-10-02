@@ -558,6 +558,7 @@ public:
         while (!done) {
             tetris::PullRequest request{};
             auto res = protobuf_util::Receive(conn->locked(), request);
+
             if (res == Connection::InState::DONE) {
                 /* We are done processing. So return. */
                 done = true;
@@ -721,38 +722,47 @@ public:
         return true;
     }
 
-    void control_message(ControlData &data)
+    void control_message(tetris::ControllerAction &ca)
     try
     {
-        switch (data.op) {
-            case ControlData::Operations::UPDATE_CLIENT: {
-                Client &c = _clients.at(data.update_data.client_fd);
+        switch (ca.type()) {
+            case tetris::ControllerAction::UPDATE_MAPPINGS:
+                logger->info("Update mappings\n");
+                update_mappings();
+                break;
+            case tetris::ControllerAction::UPDATE_CLIENT: {
+                if (!ca.has_client_data()) {
+                    logger->error("Received 'UPDATE_CLIENT' message but missing data\n");
+                    break;
+                }
+
+                tetris::ControllerAction::ClientData cd = ca.client_data();
+                Client &c = _clients.at(cd.client_id());
 
                 logger->info("Update client: '%s' [%d]\n", c.exec.c_str(), c.pid);
 
                 /* Update the client's options according to the given new
                  * values and select a new mapping based on the new criteria. */
-                if (data.update_data.has_dynamic_client) {
-                    c.dynamic_client = data.update_data.dynamic_client;
+                if (cd.has_mapping_type()) {
+                    c.dynamic_client = cd.mapping_type() == tetris::ControllerAction::ClientData::DYNAMIC;
 
                     logger->info(" * change thread placement: %s\n", c.dynamic_client ? "CFS" : "static");
                 }
 
-                if (data.update_data.has_compare_criteria) {
-                    c.comp = Client::Comp(string_util::strip(data.update_data.compare_criteria),
-                                          data.update_data.compare_more_is_better);
+                if (cd.has_compare_criteria()) {
+                    c.comp = Client::Comp(string_util::strip(cd.compare_criteria()), cd.compare_more_is_better());
 
                     logger->info(" * change criteria: %s\n", c.comp.repr().c_str());
                 }
 
-                if (data.update_data.has_filter_criteria) {
-                    c.filter = Filter(data.update_data.filter_criteria);
+                if (cd.has_filter_criteria()) {
+                    c.filter = Filter(cd.filter_criteria());
 
                     logger->info(" * change filter: %s\n", c.filter.repr().c_str());
                 }
 
-                if (data.update_data.has_preferred_mapping) {
-                    std::string preferred_mapping = string_util::strip(data.update_data.preferred_mapping);
+                if (cd.has_preferred_mapping()) {
+                    std::string preferred_mapping = string_util::strip(cd.preferred_mapping());
                     c.update_mapping(use_preferred_mapping(c, preferred_mapping));
                 } else {
                     c.update_mapping(select_best_mapping(c));
@@ -764,16 +774,26 @@ public:
 
                 break;
             }
-            case ControlData::Operations::BLOCK_CPUS:
-                logger->info("Update blocked cpus\n");
+            case tetris::ControllerAction::BLOCK_CPUS: {
+                if (!ca.has_cpu_list()) {
+                    logger->error("Received 'BLOCK_CPUS' message but missing data\n");
+                    break;
 
-                _blocked_cpus = data.block_cpus_data.cpus;
+                }
+
+                logger->info("Update blocked cpus\n");
+                _blocked_cpus.zero();
+
+                tetris::ControllerAction::CPUList cl = ca.cpu_list();
+                for (int i = 0; i < cl.cpus_size(); ++i)
+                    _blocked_cpus.set(cl.cpus(i));
 
                 if (_blocked_cpus.nr_cpus() == 0)
                     logger->info(" * blocked: none\n");
                 else
                     logger->info(" * blocked: %s\n", string_util::join(_blocked_cpus.cpulist(num_cpus), ",").c_str());
                 break;
+            }
             default:
                 logger->warning("Other control message received\n");
         }
@@ -1002,17 +1022,15 @@ int main(int argc, char *argv[])
 
                     /* Control connection are usually single shot. So just open this connection
                      * and directly read out the data */
-                    ControlData cd;
-                    Connection(infd, in_sock).read(cd);
+                    auto con = Connection(infd, in_sock);
+                    tetris::ControllerAction ca;
 
-                    switch (cd.op) {
-                        case ControlData::Operations::UPDATE_MAPPINGS:
-                            manager.update_mappings();
-                            break;
-                        default:
-                            /* All the other control messages are directly handled in the manager */
-                            manager.control_message(cd);
+                    if (protobuf_util::Receive(con.locked(), ca) != Connection::InState::DONE) {
+                        logger->error("An error happened while reading the control message\n");
+                        break;
                     }
+
+                    manager.control_message(ca);
                 }
             } else if (cur->data.fd == sig_fd) {
                 /* There was a signal delivered to this process. */

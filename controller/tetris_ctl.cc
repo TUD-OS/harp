@@ -4,6 +4,8 @@
 #include "util/socket.h"
 #include "util/string_util.h"
 #include "util/tetris.h"
+#include "util/protobuf_util.h"
+#include "proto/tetris.pb.h"
 
 #include <iostream>
 #include <memory>
@@ -68,40 +70,32 @@ try {
 
     /* Connect to the server and transmit the data */
     auto conn = std::make_unique<Connection>(CONTROL_SOCKET);
-    ControlData cd;
 
-    cd.op = ControlData::Operations::UPDATE_CLIENT;
-    cd.update_data.client_fd = client_id;
+    tetris::ControllerAction ca;
+    ca.set_type(tetris::ControllerAction::UPDATE_CLIENT);
+
+    auto cd = ca.mutable_client_data();
+    cd->set_client_id(client_id);
 
     if (mapping_type) {
-        cd.update_data.has_dynamic_client = true;
         if (strcmp(mapping_type, "DYNAMIC") == 0)
-            cd.update_data.dynamic_client = true;
+            cd->set_mapping_type(tetris::ControllerAction::ClientData::DYNAMIC);
         else
-            cd.update_data.dynamic_client = false;
+            cd->set_mapping_type(tetris::ControllerAction::ClientData::STATIC);
     }
  
     if (compare_criteria) {
-        cd.update_data.has_compare_criteria = true;
-        std::strncpy(cd.update_data.compare_criteria, compare_criteria, sizeof(cd.update_data.compare_criteria));
-        cd.update_data.compare_more_is_better = compare_more_is_better;
-    } else
-        cd.update_data.has_compare_criteria = false;
+        cd->set_compare_criteria(compare_criteria);
+        cd->set_compare_more_is_better(compare_more_is_better);
+    }
 
+    if (preferred_mapping)
+        cd->set_preferred_mapping(preferred_mapping);
 
-    if (preferred_mapping) {
-        cd.update_data.has_preferred_mapping = true;
-        std::strncpy(cd.update_data.preferred_mapping, preferred_mapping, sizeof(cd.update_data.preferred_mapping));
-    } else
-        cd.update_data.has_preferred_mapping = false;
+    if (filter_criteria)
+        cd->set_filter_criteria(filter_criteria);
 
-    if (filter_criteria) {
-        cd.update_data.has_filter_criteria = true;
-        std::strncpy(cd.update_data.filter_criteria, filter_criteria, sizeof(cd.update_data.filter_criteria));
-    } else
-        cd.update_data.has_filter_criteria = false;
-
-    conn->write(cd);
+    protobuf_util::Send(conn->locked(), ca);
 
     return 0;
 } catch (std::runtime_error& e) {
@@ -117,7 +111,8 @@ void usage_upd_mappings()
         << "   -h, --help           show this help message" << std::endl;
 }
 
-int op_update_mappings(int argc, char* argv[])try {
+int op_update_mappings(int argc, char* argv[])
+try {
    if (argc > 3) {
         usage_upd_mappings();
         return 1;
@@ -136,11 +131,11 @@ int op_update_mappings(int argc, char* argv[])try {
 
     /* Connect to the server and transmit the data */
     auto conn = std::make_unique<Connection>(CONTROL_SOCKET);
-    ControlData cd;
 
-    cd.op = ControlData::Operations::UPDATE_MAPPINGS;
+    tetris::ControllerAction ca;
+    ca.set_type(tetris::ControllerAction::UPDATE_MAPPINGS);
 
-    conn->write(cd);
+    protobuf_util::Send(conn->locked(), ca);
 
     return 0;
 } catch (std::runtime_error& e) {
@@ -189,7 +184,7 @@ try {
             sub = string_util::strip(sub);
             if (sub.empty())
                 throw std::runtime_error("cpu definition is empty.");
-            
+
             int cur = std::stoi(sub);
             last_was_range = true;
             last = cur;
@@ -227,7 +222,7 @@ try {
 
     if (argc == 2) {
         std::cout << "Really unblocking all cpus? [Y/n]";
-        
+
         char in;
         std::cin >> in;
 
@@ -266,12 +261,16 @@ try {
 
     /* Connect to the server and transmit the data */
     auto conn = std::make_unique<Connection>(CONTROL_SOCKET);
-    ControlData cd;
 
-    cd.op = ControlData::Operations::BLOCK_CPUS;
-    cd.block_cpus_data.cpus = cpus.cpu_set();
+    tetris::ControllerAction ca;
+    ca.set_type(tetris::ControllerAction::BLOCK_CPUS);
 
-    conn->write(cd);
+    auto cl = ca.mutable_cpu_list();
+    for (const auto &cpu : cpus.cpulist(num_cpus)) {
+        cl->add_cpus(cpu);
+    }
+
+    protobuf_util::Send(conn->locked(), ca);
 
     return 0;
 } catch (std::runtime_error& e) {

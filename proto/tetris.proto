@@ -123,3 +123,32 @@ message PushResponse {
   repeated RegionInfo region_infos = 3;
   repeated RegionThroughput region_throughputs = 4;
 }
+
+// A message from the TETRiS controller program
+message ControllerAction {
+  enum Type {
+    UPDATE_MAPPINGS = 0;
+    UPDATE_CLIENT = 1;
+    BLOCK_CPUS = 2;
+  }
+  required Type type = 1;
+
+  message ClientData {
+    required uint32 client_id = 1;
+    enum MappingType {
+      DYNAMIC = 0;
+      STATIC = 1;
+    }
+    optional MappingType mapping_type = 2;
+    optional string compare_criteria = 3;
+    optional bool compare_more_is_better = 4;
+    optional string preferred_mapping = 5;
+    optional string filter_criteria = 6;
+  }
+  optional ClientData client_data = 2;
+
+  message CPUList {
+    repeated uint32 cpus = 1;
+  }
+  optional CPUList cpu_list = 3;
+}
