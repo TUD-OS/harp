@@ -57,7 +57,7 @@ namespace tetris {
         Socket _listening_socket;
 
         /// \brief Listener thread id.
-        pthread_t _listener_thread{};
+        pthread_t _listener_thread;
 
         /// \brief Subscribers.
         std::map<FeatureID, Feature *> _subscribers;

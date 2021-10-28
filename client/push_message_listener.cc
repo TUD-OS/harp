@@ -31,7 +31,7 @@ PushResponse PushMessageListener::forward(const PushRequest &request) const
 void *PushMessageListener::listening(void *args)
 {
     auto push_server = reinterpret_cast<PushMessageListener *>(args);
-    int cl;
+
     // Accept connection on the socket.
     while (true) {
         sockaddr_un in_sock{};

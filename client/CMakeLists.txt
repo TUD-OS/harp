@@ -19,7 +19,6 @@ install(TARGETS tetrisclient
         EXPORT tetrisclient-config
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
         INCLUDES DESTINATION include
         )
 install(FILES ${CMAKE_SOURCE_DIR}/client/client.h ${CMAKE_SOURCE_DIR}/client/feature.h DESTINATION include/tetris)
