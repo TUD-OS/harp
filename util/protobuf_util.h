@@ -46,7 +46,7 @@ public:
      */
     template<class T>
     static Connection::OutState Send(LockedConnection connection, const T &msg) {
-        size_t size_msg = msg.ByteSizeLong();
+        size_t size_msg = msg.ByteSize();
         // Prepare the raw data vector.
         std::vector<uint8_t> raw_data(size_msg);
         msg.SerializeToArray(raw_data.data(), size_msg);
