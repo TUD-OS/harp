@@ -93,14 +93,14 @@ bool ConcreteClient::send_new_client_command()
         } else if (mapping_type->second == "STATIC") {
             _logger->info("Use static TETRiS mapping.\n");
         } else {
-            _logger->warning("Unknown mapping type: %s\n", mapping_type->second);
+            _logger->warning("Unknown mapping type: %s\n", mapping_type->second.c_str());
         }
     }
     new_client_message->set_mapping_type(dynamic_client ? NewClient::DYNAMIC : NewClient::STATIC);
 
     auto compare_criteria = env_variables.find("TETRIS_COMPARE_CRITERIA");
     if (compare_criteria != env_variables.end()) {
-        _logger->info("Use given compare criteria -- %s.\n", compare_criteria->second);
+        _logger->info("Use given compare criteria -- %s.\n", compare_criteria->second.c_str());
         new_client_message->set_compare_criteria(compare_criteria->second);
     } else {
         _logger->info("Use default compare criteria -- executionTime.\n");

@@ -689,7 +689,7 @@ public:
                                 c.new_thread(process_name, process_tid);
                             }
                         } catch (std::out_of_range) {
-                            logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name, process_tid,
+                            logger->error("Unknown thread: '%s' [%i] for client '%s'\n", process_name.c_str(), process_tid,
                                           c.exec.c_str());
                             managed = false;
                         }
