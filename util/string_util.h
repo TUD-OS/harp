@@ -14,9 +14,9 @@ namespace string_util {
 
 /* Prototypes */
 bool ends_with(const std::string&, const std::string&);
-template <template<typename> class Container, typename T>
+template <template<typename ...> class Container, typename T>
 std::string join(const Container<T>&, const char delim=' ');
-template <template<typename> class Container, typename T>
+template <template<typename ...> class Container, typename T>
 std::string join(const Container<T>&, const std::string&);
 std::string lstrip(const std::string&);
 std::string rstrip(const std::string&);
@@ -39,14 +39,7 @@ bool ends_with(const std::string& s, const std::string& end)
     return true;
 }
 
-template <template<typename> class Container, typename T>
-std::string join(const Container<T>& subs, const char delim)
-{
-    return join(subs, std::string{delim});
-}
-
-template <template<typename> class Container>
-std::string join(const Container<std::string>& subs, const std::string& delim)
+std::string join(const std::vector<std::string>& subs, const std::string& delim)
 {
     if (subs.size() == 0) {
         return {};
@@ -63,7 +56,13 @@ std::string join(const Container<std::string>& subs, const std::string& delim)
     }
 }
 
-template <template<typename> class Container, typename T>
+template <template<typename ...> class Container, typename T>
+std::string join(const Container<T>& subs, const char delim)
+{
+    return join(subs, std::string{delim});
+}
+
+template <template<typename ...> class Container, typename T>
 std::string join(const Container<T>& subs, const std::string& delim)
 {
     std::vector<std::string> string_subs;
@@ -77,7 +76,6 @@ std::string join(const Container<T>& subs, const std::string& delim)
 
     return join(string_subs, delim);
 }
-
 std::string lstrip(const std::string& s)
 {
     std::string result;
