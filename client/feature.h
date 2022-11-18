@@ -80,7 +80,7 @@ protected:
      * \brief Gets the TETRiS client instance.
      * \return Pointer to the TETRiS client.
      */
-    Client *get_client() const;
+    Client *get_client();
 
 private:
     /// \brief Bounded TETRiS client instance.

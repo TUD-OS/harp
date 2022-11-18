@@ -120,7 +120,11 @@ public:
     std::vector<Thread> threads;
     std::vector<Mapping> mappings;
     Mapping active_mapping;
+
+    std::string push_listener_path;
+
     bool using_dppm;
+    bool movable_threads;
 
     Filter filter;
     Comp comp;
@@ -130,13 +134,21 @@ public:
 
     Client(const ConnectionPtr &conn) :
             connection{conn}, exec{}, pid{-1}, dynamic_client{false}, threads{}, mappings{}, active_mapping{},
-            using_dppm{false}, filter{}, comp{}
+            using_dppm{false}, movable_threads{false}, filter{}, comp{}
     {}
 
     ~Client()
     {
         if (pid != -1)
             logger->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
+    }
+
+    std::string push_path() const
+    {
+        std::stringstream path{};
+        path << "/tmp/tetris_push_listener_" << pid;
+
+        return path.str();
     }
 
     CPUList cpus() const
@@ -188,9 +200,7 @@ public:
     tetris::PushResponse set_parallel_regions_number_num_replicas() const
     {
         // Connect to the push listener.
-        std::stringstream path{};
-        path << "/tmp/tetris_push_listener_" << pid;
-        Connection conn(path.str());
+        Connection conn(push_path());
         tetris::PushRequest request{};
         tetris::PushResponse response{};
         request.set_type(tetris::PushRequest::DPM_UPDATE_CONFIGURATION);
@@ -708,6 +718,20 @@ public:
 
                         break;
                     }
+                    case tetris::PullRequest::MOVABLE_THREADS_SUBSCRIBE: {
+                        logger->always("Client '%s' [%d] has movable threads\n", c.exec.c_str(), c.pid);
+                        c.movable_threads = true;
+
+                        /* We need to acknowledge this message. */
+                        tetris::PullResponse ack{};
+                        ack.set_type(tetris::PullResponse::ACKNOWLEDGE);
+                        ack.set_feature_id(1);
+                        if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
+                            logger->error("Failed to acknowledge the MovableThreads registration message\n");
+                            c.movable_threads = false;
+                        }
+                        break;
+                    }
                     default:
                         logger->warning("Other message received\n");
                 }
@@ -784,7 +808,7 @@ public:
                 logger->info("Update blocked cpus\n");
                 _blocked_cpus.zero();
 
-                tetris::ControllerAction::CPUList cl = ca.cpu_list();
+                tetris::CPUList cl = ca.cpu_list();
                 for (int i = 0; i < cl.cpus_size(); ++i)
                     _blocked_cpus.set(cl.cpus(i));
 

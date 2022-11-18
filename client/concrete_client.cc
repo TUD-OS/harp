@@ -70,7 +70,6 @@ std::map<std::string, std::string> retrieve_env_variables()
 
 bool ConcreteClient::send_new_client_command()
 {
-
     auto env_variables = retrieve_env_variables();
 
     PullRequest request{};

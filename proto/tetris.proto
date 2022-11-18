@@ -25,6 +25,17 @@ message RegionInfo {
 
 message RegionThroughput {/* not yet defined */}
 
+// List of cpus used for thread assignment
+message CPUList {
+  repeated uint32 cpus = 1;
+}
+
+// The thread assignments to cpus handled by the MovableThreads Feature
+message ThreadAssigment {
+  required uint32 tid = 1;
+  required uint32 cpu = 2;
+}
+
 // A NewClient message introduces a TETRiS client to the TETRiS server.
 message NewClient {
   required uint32 pid = 1;
@@ -70,6 +81,7 @@ message PullRequest {
     TETRIS_NEW_THREAD = 1;                  // Register a new thread to the TETRiS server.
     DPM_SUBSCRIBE = 2;                      // Register DPM as a TETRiS feature.
     DPM_SEND_APPLICATION_THREAD_ID = 3;     // Send application threads ID to the TETRiS server.
+    MOVABLE_THREADS_SUBSCRIBE = 4;          // Register MovableThreads TETRiS feature.
   }
   required Type type = 1;
   // TETRiS fields.
@@ -101,6 +113,7 @@ message PushRequest {
     DPM_UPDATE_CONFIGURATION = 0;           // Send configuration to apply on DPM.
     DPM_GET_REGIONS_INFO = 1;               // Get parallel regions information from DPM.
     DPM_GET_REGIONS_THROUGHPUT = 2;         // Get parallel regions throughput from DPM.
+    MOVE_THREADS = 3;                       // Request to move threads around.
   }
   required Type type = 1;
   // TETRiS fields.
@@ -108,6 +121,9 @@ message PushRequest {
                                        to the corresponding TETRiS feature. */
   // DPM fields.
   repeated RegionConfiguration region_configurations = 3;
+
+  // Thread assignments for the MovableThreads feature
+  repeated ThreadAssigment thread_assignments = 4;
 }
 
 // A push response is sent from a TETRiS feature to the TETRiS server after processing a request.
@@ -147,8 +163,5 @@ message ControllerAction {
   }
   optional ClientData client_data = 2;
 
-  message CPUList {
-    repeated uint32 cpus = 1;
-  }
   optional CPUList cpu_list = 3;
 }

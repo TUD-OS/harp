@@ -37,10 +37,16 @@ public:
      */
     static std::string get_push_listener_socket_path();
 
+    /**
+     * \brief Get the information whether this client is managed by the server or not.
+     * \return is the client managed by the TETRiS server or not.
+     */
+    bool is_managed() { return _managed; }
+
 private:
     /**
      * \brief Sends a NewClient command to the TETRiS server.
-     * \return true if the TETRiS manager handles this client, false otherwise.
+     * \return true if the TETRiS server handles this client, false otherwise.
      */
     bool send_new_client_command();
 
