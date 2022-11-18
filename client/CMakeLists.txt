@@ -9,6 +9,7 @@ add_library(tetrisclient STATIC
         concrete_client.cc
         push_message_listener.cc
         features/movable_threads.cc
+        features/scalable_application.cc
         ${PROTO_OUTPUT_SOURCES}
         ${CMAKE_SOURCE_DIR}/util/path_util.cc
         ${CMAKE_SOURCE_DIR}/util/util.cc

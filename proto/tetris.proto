@@ -82,6 +82,7 @@ message PullRequest {
     DPM_SUBSCRIBE = 2;                      // Register DPM as a TETRiS feature.
     DPM_SEND_APPLICATION_THREAD_ID = 3;     // Send application threads ID to the TETRiS server.
     MOVABLE_THREADS_SUBSCRIBE = 4;          // Register MovableThreads TETRiS feature.
+    SCALABLE_APPLICATION_SUBSCRIBE = 5;     // Register ScalableApplications TETRiS feature.
   }
   required Type type = 1;
   // TETRiS fields.
@@ -114,6 +115,7 @@ message PushRequest {
     DPM_GET_REGIONS_INFO = 1;               // Get parallel regions information from DPM.
     DPM_GET_REGIONS_THROUGHPUT = 2;         // Get parallel regions throughput from DPM.
     MOVE_THREADS = 3;                       // Request to move threads around.
+    SCALE_APPLICATION = 4;                  // Request an application scaling.
   }
   required Type type = 1;
   // TETRiS fields.
@@ -124,6 +126,9 @@ message PushRequest {
 
   // Thread assignments for the MovableThreads feature
   repeated ThreadAssigment thread_assignments = 4;
+
+  // Application scaling for the ScalableApplication feature
+  optional uint32 application_scale = 5;
 }
 
 // A push response is sent from a TETRiS feature to the TETRiS server after processing a request.

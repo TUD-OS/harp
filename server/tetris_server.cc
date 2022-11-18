@@ -125,6 +125,7 @@ public:
 
     bool using_dppm;
     bool movable_threads;
+    bool scalable_app;
 
     Filter filter;
     Comp comp;
@@ -134,7 +135,7 @@ public:
 
     Client(const ConnectionPtr &conn) :
             connection{conn}, exec{}, pid{-1}, dynamic_client{false}, threads{}, mappings{}, active_mapping{},
-            using_dppm{false}, movable_threads{false}, filter{}, comp{}
+            using_dppm{false}, movable_threads{false}, scalable_app{false}, filter{}, comp{}
     {}
 
     ~Client()
@@ -729,6 +730,20 @@ public:
                         if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
                             logger->error("Failed to acknowledge the MovableThreads registration message\n");
                             c.movable_threads = false;
+                        }
+                        break;
+                    }
+                    case tetris::PullRequest::SCALABLE_APPLICATION_SUBSCRIBE: {
+                        logger->always("Client '%s' [%d] is a scalable application\n", c.exec.c_str(), c.pid);
+                        c.scalable_app = true;
+
+                        /* We need to acknowledge this message. */
+                        tetris::PullResponse ack{};
+                        ack.set_type(tetris::PullResponse::ACKNOWLEDGE);
+                        ack.set_feature_id(2);
+                        if (protobuf_util::Send(conn->locked(), ack) != Connection::OutState::DONE) {
+                            logger->error("Failed to acknowledge the ScalableApplication registration message\n");
+                            c.scalable_app = false;
                         }
                         break;
                     }
