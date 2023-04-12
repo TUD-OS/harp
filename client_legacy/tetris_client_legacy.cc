@@ -173,7 +173,7 @@ void __attribute__((constructor)) setup(void)
 
     logger->info("Loading TETRIS support\n");
 
-    tetris_client = std::make_unique<tetris::ConcreteClient>(tetris::SERVER_SOCKET);
+    tetris_client = std::make_unique<tetris::ConcreteClient>(SERVER_SOCKET);
     if (tetris_client->is_managed()) {
         logger->info("->> Managed by TETRIS <<-\n");
 
@@ -251,7 +251,7 @@ int pthread_create(pthread_t *thread_id, const pthread_attr_t *attr,
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_create"));
 
     if (real_func != nullptr) {
-        if (tetris_client->is_managed()) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* This program is managed by TETRIS. Accordingly create the
              * thread and wait until a name is assigned to it so that
              * the TETRIS server can move this thread to the appropriate
@@ -296,7 +296,7 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_setname_np"));
 
     if (real_func != nullptr) {
-        if (tetris_client->is_managed()) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* Search for the ThreadInfo struct of this thread. */
             auto iti = std::find_if(threads->begin(), threads->end(), [&](ThreadInfo *ti) -> bool {
                 return pthread_equal(*(ti->pthread_id), thread_id) != 0;
@@ -350,7 +350,7 @@ int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_setaffinity_np"));
 
     if (real_func != nullptr) {
-        if (tetris_client->is_managed()) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* This program is managed by TETRIS. The TETRIS server
              * decides where to place this thread. So just ignore this
              * request. */
