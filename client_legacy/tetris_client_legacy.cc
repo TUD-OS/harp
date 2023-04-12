@@ -92,6 +92,16 @@ struct ThreadInfo
     void *arg;
 };
 
+struct CheckerState
+{
+    enum Type {
+        GOMP = 1,
+        OMP = 2,
+    };
+
+    bool is_scalable = false;
+    Type scale_type;
+};
 
 /***
  * Global variables
@@ -117,23 +127,33 @@ std::atomic_ulong time_ns;
 
 /***
  ***/
-bool OMP_APP = false;
+static int scalable_app_checker(struct dl_phdr_info *i, size_t size, void *data) {
+    CheckerState *cstate = static_cast<CheckerState*>(data);
 
-static int omp_checker(struct dl_phdr_info *i, size_t size, void *data) {
-    if ((strstr(i->dlpi_name, "libomp") != NULL) || (strstr(i->dlpi_name, "libgomp") != NULL)) {
-        OMP_APP = true;
+    if ((strstr(i->dlpi_name, "libomp") != NULL)) {
+        logger->info(" -> Found scalable OpenMP application (libomp)\n");
+        cstate->is_scalable = true;
+        cstate->scale_type= CheckerState::OMP;
+        return 1;
+    } else if ((strstr(i->dlpi_name, "libgomp") != NULL)) {
+        logger->info(" -> Found scalable OpenMP application (libgomp)\n");
+        cstate->is_scalable = true;
+        cstate->scale_type= CheckerState::GOMP;
         return 1;
     }
     return 0;
 }
 
 static bool is_scalable_app() {
-    dl_iterate_phdr(omp_checker, NULL);
+    CheckerState cstate;
+    logger->info(" -> Searching for scalable app\n");
 
-    return OMP_APP;
+    dl_iterate_phdr(scalable_app_checker, &cstate);
+
+    return cstate.is_scalable;
 }
 
-bool scale_application(int nr_threads)
+bool scale_application_cb(int nr_threads)
 {
     return true;
 }
@@ -164,7 +184,7 @@ void __attribute__((constructor)) setup(void)
 
         if (is_scalable_app()) {
             logger->info("->> Register as scalable application\n");
-            scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application);
+            scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb);
             tetris_client->bind(scalable_app.get());
         }
     } else {
