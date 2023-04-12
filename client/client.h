@@ -2,14 +2,12 @@
 #define __CLIENT_H__
 
 #include "feature.h"
+#include "util/tetris.h"
 
 #include <string>
 #include <memory>
 
 namespace tetris {
-
-/// \brief Path of the TETRiS server socket.
-static const std::string SERVER_SOCKET{"/tmp/tetris_socket"};
 
 /**
  * \brief TETRiS client interface.
