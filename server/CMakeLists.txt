@@ -6,6 +6,7 @@ add_library(tetrisserverlib STATIC
     algorithm.cc
     equivalence.cc
     knob_description.cc
+    mapping_reader.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
     ${CMAKE_SOURCE_DIR}/util/util.cc
