@@ -1,0 +1,29 @@
+ {
+    "name": "1_replica",
+    "executionTime": "400",
+    "mapping": [
+      {
+        "type": "process",
+        "name": "Init",
+        "core": "ARM00"
+      },
+      {
+        "type": "process",
+        "name": "Display",
+        "core": "ARM01"
+      },
+      {
+        "type": "DLP",
+        "name": "CalcLines",
+        "replicas": [
+          [
+            {
+              "type": "process",
+              "name": "CalcLines",
+              "core": "ARM02"
+            }
+          ]
+        ]
+      }
+    ]
+  }

@@ -1,0 +1,34 @@
+{
+  "processes": [
+    {
+      "type": "process",
+      "name": "process1",
+      "cores": ["core1", "core2"]
+    },
+    {
+      "type": "process",
+      "name": "process2",
+      "cores": ["core1", "core2"]
+    },
+    {
+      "type": "DLP",
+      "name": "region1",
+      "body": [
+        {
+          "name": "process3",
+          "cores": ["core3", "core4", "core5", "core6"]
+        },
+        {
+          "name": "process4",
+          "cores": ["core3", "core4", "core5", "core6"]
+        }
+      ],
+      "max_replicas": 2
+    }
+  ],
+  "characteristics": {
+    "execution_time": "less_is_better",
+    "energy": "less_is_better"
+  }
+}
+
