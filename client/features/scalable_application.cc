@@ -13,28 +13,30 @@ ScalableApplication::~ScalableApplication()
 
 FeatureID ScalableApplication::handshake()
 {
-    tetris::PullRequest request{};
+    tetris::ClientMessage msg;
 
-    request.set_type(tetris::PullRequest::SCALABLE_APPLICATION_SUBSCRIBE);
+    msg.set_type(tetris::ClientMessage::FEATURE_SUBSCRIBE);
+    auto feature_info = msg.mutable_feature_info();
+    feature_info->set_type(tetris::ClientMessage::FeatureInfo::SCALE_APPLICATION);
 
-    auto response = this->get_client()->send(request);
-    if ((response.type() == tetris::PullResponse::ACKNOWLEDGE) && response.has_feature_id()) {
-        return response.feature_id();
+    auto response = this->get_client()->send(msg);
+    if ((response.type() == tetris::ServerResponse::FEATURE_ACKNOWLEDGE) && response.has_feature_ack_info()) {
+        return response.feature_ack_info().id();
     }
 
     return -1;
 }
 
-PushResponse ScalableApplication::forward(const PushRequest &request)
+ClientResponse ScalableApplication::forward(const ServerMessage &msg)
 {
-    tetris::PushResponse response{};
-    response.set_type(tetris::PushResponse::ERROR);
+    tetris::ClientResponse response{};
+    response.set_type(tetris::ClientResponse::ERROR);
 
-    if (request.has_application_scale()) {
-        auto target_scale = request.application_scale();
+    if (msg.has_scale_application_info()) {
+        auto max_threads = msg.scale_application_info().max_threads();
 
-        if (_scale_cb(target_scale))
-            response.set_type(tetris::PushResponse::ACKNOWLEDGE);
+        if (_scale_cb(max_threads))
+            response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
     }
 
     return response;

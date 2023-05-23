@@ -40,11 +40,11 @@ namespace tetris {
         void add_subscriber(const FeatureID &feature_id, Feature *feature);
 
         /**
-         * \brief Forwards the push request to the specified feature.
-         * \param request Request to forward.
+         * \brief Forwards the TETRiS server message to the specified feature.
+         * \param msg Message to forward.
          * \return Forwarded response.
          */
-        PushResponse forward(const PushRequest &request) const;
+        ClientResponse forward(const ServerMessage &msg) const;
 
     private:
         /**

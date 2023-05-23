@@ -37,15 +37,16 @@ class MovableThreads : public Feature
 
    public:
     /* Feature interface */
-    bool need_handshake() const { return true; }
+    bool need_handshake() const override { return true; }
 
-    FeatureID handshake();
+    FeatureID handshake() override;
 
-    PushResponse forward(const PushRequest &request);
+    ClientResponse forward(const ServerMessage &request) override;
 
    public:
     /* Own external interface */
     bool register_thread(const std::string &name, pid_t tid);
+    bool register_thread(pid_t tid);
 
    private:
     /* Internal interface */

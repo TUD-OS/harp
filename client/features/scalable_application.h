@@ -27,11 +27,11 @@ class ScalableApplication : public Feature
 
    public:
     /* Feature interface */
-    bool need_handshake() const { return true; }
+    bool need_handshake() const override { return true; }
 
-    FeatureID handshake();
+    FeatureID handshake() override;
 
-    PushResponse forward(const PushRequest &request);
+    ClientResponse forward(const ServerMessage &msg) override;
 };
 
 } /* namespace tetris */

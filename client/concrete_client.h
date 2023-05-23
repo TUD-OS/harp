@@ -29,7 +29,7 @@ public:
     /**
      * \copydoc send(const ClientRequest &msg)
      */
-    PullResponse send(const PullRequest &msg) override;
+    ServerResponse send(const ClientMessage &msg) override;
 
     /**
      * \brief Builds the socket path for the push listener based on the application PID.
@@ -45,10 +45,10 @@ public:
 
 private:
     /**
-     * \brief Sends a NewClient command to the TETRiS server.
+     * \brief Sends a RegistrationRequest to the TETRiS server.
      * \return true if the TETRiS server handles this client, false otherwise.
      */
-    bool send_new_client_command();
+    bool register_client();
 
     /// \brief Push message listener, listening for requests from the TETRiS server.
     PushMessageListener _push_message_listener;

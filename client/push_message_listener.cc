@@ -21,11 +21,11 @@ void PushMessageListener::add_subscriber(const FeatureID &feature_id, Feature *f
     _subscribers.emplace(feature_id, feature);
 }
 
-PushResponse PushMessageListener::forward(const PushRequest &request) const
+ClientResponse PushMessageListener::forward(const ServerMessage &msg) const
 {
-    auto feature_id = request.feature_id();
+    auto feature_id = msg.feature_id();
     auto feature = _subscribers.at(feature_id);
-    return feature->forward(request);
+    return feature->forward(msg);
 }
 
 void *PushMessageListener::listening(void *args)
@@ -42,9 +42,9 @@ void *PushMessageListener::listening(void *args)
         }
 
         Connection in_conn(infd, in_sock);
-        PushRequest request{};
-        protobuf_util::Receive(in_conn.locked(), request);
-        auto response = push_server->forward(request);
+        ServerMessage msg{};
+        protobuf_util::Receive(in_conn.locked(), msg);
+        auto response = push_server->forward(msg);
         protobuf_util::Send(in_conn.locked(), response);
     }
 

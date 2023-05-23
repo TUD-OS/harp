@@ -32,7 +32,7 @@ public:
      * \param msg Client request to send.
      * \return Response from the TETRiS server.
      */
-    virtual PullResponse send(const PullRequest &msg) = 0;
+    virtual ServerResponse send(const ClientMessage &msg) = 0;
 };
 
 /**

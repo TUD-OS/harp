@@ -2,6 +2,8 @@
 
 #include "client/client.h"
 
+#include <sstream>
+
 #include <sched.h>
 
 namespace tetris {
@@ -16,32 +18,35 @@ MovableThreads::~MovableThreads()
 
 FeatureID MovableThreads::handshake()
 {
-    tetris::PullRequest request{};
+    tetris::ClientMessage msg;
 
-    request.set_type(tetris::PullRequest::MOVABLE_THREADS_SUBSCRIBE);
+    msg.set_type(tetris::ClientMessage::FEATURE_SUBSCRIBE);
+    auto feature_info = msg.mutable_feature_info();
+    feature_info->set_type(tetris::ClientMessage::FeatureInfo::MOVABLE_THREADS);
 
-    auto response = this->get_client()->send(request);
-    if ((response.type() == tetris::PullResponse::ACKNOWLEDGE) && response.has_feature_id()) {
-        return response.feature_id();
+    auto response = this->get_client()->send(msg);
+    if ((response.type() == tetris::ServerResponse::FEATURE_ACKNOWLEDGE) 
+            && response.has_feature_ack_info()) {
+        return response.feature_ack_info().id();
     }
 
     return -1;
 }
 
-PushResponse MovableThreads::forward(const PushRequest &request)
+ClientResponse MovableThreads::forward(const ServerMessage &msg)
 {
     bool success = true;
 
-    for (auto thread_assigment : request.thread_assignments()) {
+    for (auto thread_assigment : msg.move_threads_info().thread_assignments()) {
         success &= move_thread(thread_assigment.tid(), thread_assigment.cpu());
     }
 
-    tetris::PushResponse response{};
+    tetris::ClientResponse response{};
 
     if (success) {
-        response.set_type(tetris::PushResponse::ACKNOWLEDGE);
+        response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
     } else {
-        response.set_type(tetris::PushResponse::ERROR);
+        response.set_type(tetris::ClientResponse::ERROR);
     }
 
     return response;
@@ -49,26 +54,46 @@ PushResponse MovableThreads::forward(const PushRequest &request)
 
 bool MovableThreads::register_thread(const std::string &name, pid_t tid)
 {
-    tetris::PullRequest request{};
+    tetris::ClientMessage msg{};
 
     /* Send the new-thread message to the server. */
-    request.set_type(tetris::PullRequest::TETRIS_NEW_THREAD);
-    auto new_thread_message = request.mutable_new_thread();
-    new_thread_message->set_tid(tid);
-    new_thread_message->set_name(name);
+    msg.set_type(tetris::ClientMessage::REGISTER_THREAD);
+    auto thread_info = msg.mutable_thread_info();
+    thread_info->set_tid(tid);
+    thread_info->set_name(name);
 
-    auto thread_info = _threads.emplace_back(name, tid, false);
+    auto ti = _threads.emplace_back(name, tid, false);
 
-    auto response = this->get_client()->send(request);
-    if ((response.type() == PullResponse::TETRIS_NEW_THREAD_ACK) && response.has_new_thread_ack()) {
-        if (response.new_thread_ack().managed()) {
-            _logger->info("Thread %s (%d) managed by TETRiS\n", name.c_str(), tid);
-            thread_info.managed = true;
-        } else {
-            _logger->info("Thread %s (%d) NOT managed by TETRiS\n", name.c_str(), tid);
-        }
+    auto response = this->get_client()->send(msg);
+    if (response.type() == ServerResponse::ACKNOWLEDGE){
+        _logger->info("Thread %s (%d) managed by TETRiS\n", ti.name.c_str(), ti.tid);
+        ti.managed = true;
 
-        return response.new_thread_ack().managed();
+        return true;
+    }
+
+    return false;
+}
+
+bool MovableThreads::register_thread(pid_t tid)
+{
+    tetris::ClientMessage msg{};
+
+    /* Send the new-thread message to the server. */
+    msg.set_type(tetris::ClientMessage::REGISTER_THREAD);
+    auto thread_info = msg.mutable_thread_info();
+    thread_info->set_tid(tid);
+
+    std::stringstream ss;
+    ss << "thread_" << tid;
+    auto ti = _threads.emplace_back(ss.str(), tid, false);
+
+    auto response = this->get_client()->send(msg);
+    if (response.type() == ServerResponse::ACKNOWLEDGE){
+        _logger->info("Thread %s (%d) managed by TETRiS\n", ti.name.c_str(), ti.tid);
+        ti.managed = true;
+
+        return true;
     }
 
     return false;
