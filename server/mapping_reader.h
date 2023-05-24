@@ -2,32 +2,56 @@
 #define MAPPING_READER_H
 
 #include <map>
-#include <vector>
 #include <string>
+#include <vector>
+
 #include "mapping.h"
 
-class JsonMappingReader
-{
-public:
-    Mapping read_mapping(const std::string& file_path);
+/**
+ * @brief Abstract class for mapping reader
+ */
+class BaseMappingReader {
+ public:
+  virtual ~BaseMappingReader() = default;
+
+  /**
+   * @brief Read mappings from given path
+   *
+   * @param path The path to the mappings
+   * @return vector of mappings
+   */
+  virtual std::vector<Mapping> read_mappings(const std::string &path) = 0;
 };
 
-class CsvMappingReader
-{
-public:
-    std::vector<Mapping> read_mappings(const std::string& file_path);
+/**
+ * @brief Reader for JSON format mappings
+ */
+class JsonMappingReader : public BaseMappingReader {
+ public:
+  static constexpr char kKnobDescFilename[] = "__confdefs__.json";
+  std::vector<Mapping> read_mappings(const std::string &dir_path) override;
+
+ private:
+  KnobDescription parse_knob_description(const std::string &dir) const;
+  Mapping parse_mapping(const nlohmann::json &json_mapping);
+  void log_mapping_details(const std::vector<Mapping> &);
 };
 
-class YamlMappingReader
-{
-public:
-    std::vector<Mapping> read_mappings(const std::string& file_path);
+// CsvMappingReader and YamlMappingReader classes are to be defined later
+class CsvMappingReader : public BaseMappingReader {
+ public:
+  std::vector<Mapping> read_mappings(const std::string &file_path);
 };
 
-class MappingReader
-{
-public:
-    static std::map<std::string, std::vector<Mapping>> read_mapping_directory(const std::string& base_dir);
+class YamlMappingReader : public BaseMappingReader {
+ public:
+  std::vector<Mapping> read_mappings(const std::string &file_path);
 };
 
-#endif // MAPPING_READER_H
+class MappingReader {
+ public:
+  static std::map<std::string, std::vector<Mapping>> read_mapping_directory(
+      const std::string &base_dir);
+};
+
+#endif  // MAPPING_READER_H

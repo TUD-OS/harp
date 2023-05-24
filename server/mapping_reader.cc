@@ -1,55 +1,316 @@
 #include "mapping_reader.h"
+
 #include <filesystem>
+#include <fstream>
 
-Mapping JsonMappingReader::read_mapping(const std::string& file_path)
-{
-    // implement JSON reading here
+#include "util/debug_util.h"
+#include "util/string_util.h"
+
+debug::LoggerPtr logger = debug::Logger::get();
+
+/**
+ * \brief Parses knob description from given directory.
+ *
+ * This function opens and reads a JSON file containing the knob description
+ * from the specified directory. This description is then used to create a
+ * KnobDescription object.
+ *
+ * \param dir Directory containing the knob description.
+ * \return KnobDescription object.
+ */
+KnobDescription JsonMappingReader::parse_knob_description(
+    const std::string &dir) const {
+  // Define the full path to the knob description file.
+  std::filesystem::path confdefs_filepath =
+      std::filesystem::path(dir) / JsonMappingReader::kKnobDescFilename;
+
+  // Open the knob description file.
+  std::ifstream json_knob_file{confdefs_filepath};
+  if (!json_knob_file) {
+    throw std::runtime_error("Could not open knob description file: " +
+                             confdefs_filepath.string());
+  }
+
+  // Parse the JSON file to a JSON object.
+  nlohmann::json json_knob;
+  json_knob_file >> json_knob;
+
+  // Create and return a KnobDescription object from the JSON object.
+  return KnobDescription(json_knob);
 }
 
-std::vector<Mapping> CsvMappingReader::read_mappings(const std::string& file_path)
-{
-    // implement CSV reading here
-}
+/**
+ * \brief Parse mapping from given JSON object
+ *
+ * The function reads the JSON object which is expected to contain a mapping of
+ * threads and regions, and their corresponding CPU affinities. Each of these
+ * mappings are then stored in the respective containers for later use.
+ *
+ * \param json_mapping JSON object containing the mapping
+ * \return Mapping object
+ */
+Mapping JsonMappingReader::parse_mapping(const nlohmann::json &json_mapping) {
+  // Container for thread mappings.
+  std::vector<std::pair<std::string, std::string>> threads;
 
-std::vector<Mapping> YamlMappingReader::read_mappings(const std::string& file_path)
-{
-    // implement YAML reading here
-}
+  // Container for region mappings.
+  RegionAffinities<std::string> regions{};
 
-std::map<std::string, std::vector<Mapping>> MappingReader::read_mapping_directory(const std::string& base_dir)
-{
-    std::map<std::string, std::vector<Mapping>> app_mappings;
-    for (const auto& entry : std::filesystem::directory_iterator(base_dir))
-    {
-        if (entry.is_regular_file())
-        {
-            auto file_extension = entry.path().extension().string();
-            auto application_name = entry.path().stem().string();
-            if (file_extension == ".csv")
-            {
-                CsvMappingReader reader;
-                app_mappings[application_name] = reader.read_mappings(entry.path().string());
-            }
-            else if (file_extension == ".yaml")
-            {
-                YamlMappingReader reader;
-                app_mappings[application_name] = reader.read_mappings(entry.path().string());
-            }
+  // Container for mapping characteristics.
+  std::vector<std::pair<std::string, std::string>> characteristics;
+
+  // Iterate over all process mapping information.
+  for (const auto &mapping : json_mapping["mapping"]) {
+    if (mapping["type"] == "process") {
+      // A regular process. Retrieve its name and assigned core.
+      std::string thread_name = mapping["name"];
+      std::string cpu_name = mapping["core"];
+      threads.emplace_back(thread_name, cpu_name);
+    } else if (mapping["type"] == "DLP") {
+      // A parallel region. Process each replica within the region.
+      ReplicaAffinities<std::string> replica_affinities{};
+      for (const auto &replica : mapping["replicas"]) {
+        ProcessAffinities<std::string> process_affinities{};
+        // Retrieve each process's name and assigned core within the replica.
+        for (const auto &process : replica) {
+          std::string process_name = process["name"];
+          std::string cpu_name = process["core"];
+          process_affinities.emplace(process_name, cpu_name);
         }
-        else if (entry.is_directory())
-        {
-            auto application_name = entry.path().filename().string();
-            for (const auto& json_file : std::filesystem::directory_iterator(entry))
-            {
-                if (json_file.path().extension().string() == ".json")
-                {
-                    JsonMappingReader reader;
-                    auto mapping = reader.read_mapping(json_file.path().string());
-                    app_mappings[application_name].push_back(mapping);
-                }
-            }
-        }
+        replica_affinities.push_back(process_affinities);
+      }
+      // Store the region's name and its corresponding replicas' affinities.
+      regions.emplace(mapping["name"], replica_affinities);
     }
-    return app_mappings;
+  }
+
+  // Retrieve the mapping's name.
+  auto name = json_mapping["name"];
+
+  // Retrieve all other attributes as characteristics of the mapping.
+  for (const auto &item : json_mapping.items()) {
+    const auto attribute = item.key();
+    if (attribute != "name" && attribute != "mapping") {
+      characteristics.emplace_back(attribute, json_mapping[attribute]);
+    }
+  }
+
+  // Create and return the mapping object.
+  return Mapping{name, threads, regions, characteristics};
 }
 
+/**
+ * \brief Log details of the mappings.
+ *
+ * This function is responsible for extracting details from the list of
+ * mappings, and logging this information for debugging and informational
+ * purposes. The function logs details such as the number of mappings, the names
+ * of threads and characteristics, and details of each mapping.
+ *
+ * \param mappings The list of mappings to log.
+ */
+void JsonMappingReader::log_mapping_details(
+    const std::vector<Mapping> &mappings) {
+  // If mappings exist, extract thread names and characteristics for logging
+  if (!mappings.empty()) {
+    std::vector<std::string> thread_names;
+    std::vector<std::string> characteristic_names;
+    Mapping mapping = mappings.back();
+
+    // Extract thread names from the last mapping
+    for (const auto &key_val : mapping.thread_map)
+      thread_names.push_back(key_val.first);
+
+    // Extract thread names from regions in the last mapping
+    for (const auto &[region_name, replicas] : mapping.region_map) {
+      for (const auto &key_val : replicas.back()) {
+        auto process_name = key_val.first;
+        thread_names.push_back(region_name + "::" + key_val.first);
+      }
+    }
+
+    // Extract characteristic names from the last mapping
+    for (const auto &key_val : mapping.characteristics_map)
+      characteristic_names.push_back(key_val.first);
+
+    // Log the count and names of threads and characteristics found
+    logger->debug("  * Found %i mapping(s)\n", mappings.size());
+    logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
+                  string_util::join(thread_names, ", ").c_str());
+    logger->debug("  |-> %i characteristic(s): %s\n",
+                  characteristic_names.size(),
+                  string_util::join(characteristic_names, ", ").c_str());
+
+    // Log detailed information about each mapping
+    for (const auto &m : mappings) {
+      std::vector<std::string> mapping_characteristics;
+
+      for (const auto &c : characteristic_names) {
+        std::stringstream ss;
+        ss << std::setprecision(0) << std::fixed << c << ":"
+           << m.characteristic(c);
+        mapping_characteristics.push_back(ss.str());
+      }
+
+      logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
+                    m.equivalence_class().name().c_str(),
+                    string_util::join(mapping_characteristics, ", ").c_str());
+    }
+  }
+}
+
+/**
+ * \brief Read mappings from the given directory.
+ *
+ * This function reads and processes mapping files from a specified directory.
+ * It parses each file and checks its validity against a knob description.
+ * Valid mappings are added to a list and returned.
+ *
+ * \param dir The directory from which to read the mapping files.
+ * \return A vector of valid Mapping objects.
+ */
+std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
+  // Prepare a container to store valid mappings
+  std::vector<Mapping> mappings;
+
+  // Parse knob description from the given directory
+  auto knob_description = parse_knob_description(dir);
+
+  // If the knob description is invalid, log a warning and return an empty
+  // vector
+  if (!knob_description.is_valid()) {
+    logger->warning(
+        "Knob description file '%s' is using an incorrect format.\n",
+        dir.c_str());
+    return mappings;
+  }
+
+  try {
+    // Define a path object representing the directory
+    std::filesystem::path dir_path(dir);
+
+    // Iterate over all entries in the directory
+    for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
+      // Ignore if the entry is not a regular file
+      if (!entry.is_regular_file()) continue;
+
+      std::filesystem::path file = entry.path();
+
+      // If the file has a '.json' extension and is not the knob description
+      // file
+      if (file.extension() == ".json" &&
+          file.filename() != JsonMappingReader::kKnobDescFilename) {
+        // Open the JSON mapping file
+        std::ifstream json_mapping_file{file};
+
+        // Parse the JSON file into a JSON object
+        nlohmann::json json_mapping;
+        json_mapping_file >> json_mapping;
+
+        // Parse the JSON mapping into a Mapping object
+        auto parsed_mapping = parse_mapping(json_mapping);
+
+        // If the parsed mapping is valid, add it to the vector
+        // If not, log a warning message
+        if (parsed_mapping.is_valid(knob_description)) {
+          mappings.emplace_back(parsed_mapping);
+        } else {
+          logger->warning(
+              "Mapping file '%s' does not comply with the knob description of "
+              "%s.\n",
+              file.filename().c_str(), dir_path.filename().c_str());
+        }
+      }
+    }
+  } catch (std::exception &e) {
+    // Log any exceptions that occur during file reading or mapping parsing
+    logger->error("Reading mappings failed with: %s\n", e.what());
+  }
+
+  // Log the details of the mappings that have been read
+  log_mapping_details(mappings);
+
+  // Return the vector of valid mappings
+  return mappings;
+}
+
+std::vector<Mapping> CsvMappingReader::read_mappings(
+    const std::string &file_path) {
+  // implement CSV reading here
+  std::vector<Mapping> mappings;
+  return mappings;
+}
+
+std::vector<Mapping> YamlMappingReader::read_mappings(
+    const std::string &file_path) {
+  // implement YAML reading here
+  std::vector<Mapping> mappings;
+  return mappings;
+}
+
+/**
+ * \brief Reads mapping data from a specified directory and returns a map that
+ * associates each application with its vector of Mapping objects.
+ *
+ * The function traverses the provided base directory, reading mapping data from
+ * files and directories within it. It supports mappings stored in CSV, YAML,
+ * and JSON formats. For CSV and YAML, the mapping data must be in individual
+ * files with the appropriate extension (.csv or .yaml). For JSON, the mapping
+ * data must be in a directory with a descriptor file named as per
+ * JsonMappingReader::kKnobDescFilename.
+ *
+ * \param base_dir The base directory containing the mapping data.
+ * \return A map that associates each application's name with its vector of
+ * Mapping objects.
+ *
+ * \throws This function might throw exceptions related to file system
+ * operations (e.g., when the base_dir does not exist).
+ */
+
+std::map<std::string, std::vector<Mapping>>
+MappingReader::read_mapping_directory(const std::string &base_dir) {
+  std::map<std::string, std::vector<Mapping>> app_mappings;
+  for (const auto &entry : std::filesystem::directory_iterator(base_dir)) {
+    auto entryname = entry.path().filename().string();
+    if (entry.is_regular_file()) {
+      auto file_extension = entry.path().extension().string();
+      auto application_name = entry.path().stem().string();
+      if (app_mappings.count(application_name) > 0) {
+        logger->warning(
+            "Mappings for the application '%s' have already been parsed; these "
+            "will be replaced.\n",
+            application_name);
+      }
+      if (file_extension == ".csv") {
+        CsvMappingReader reader;
+        app_mappings[application_name] =
+            reader.read_mappings(entry.path().string());
+      } else if (file_extension == ".yaml") {
+        YamlMappingReader reader;
+        app_mappings[application_name] =
+            reader.read_mappings(entry.path().string());
+      } else {
+        logger->warning("Unrecognized mapping format for '%s'.\n",
+                        entryname.c_str());
+      }
+    } else if (entry.is_directory()) {
+      auto application_name = entry.path().filename().string();
+      auto knob_desc_path = entry.path() / JsonMappingReader::kKnobDescFilename;
+      if (app_mappings.count(application_name) > 0) {
+        logger->warning(
+            "Mappings for the application '%s' have already been parsed; these "
+            "will be replaced.\n",
+            application_name);
+      }
+      if (std::filesystem::exists(knob_desc_path)) {
+        JsonMappingReader reader;
+        app_mappings[application_name] =
+            reader.read_mappings(entry.path().string());
+      } else {
+        logger->warning("Unrecognized mapping format for the directory '%s'.\n",
+                        entryname.c_str());
+      }
+    }
+  }
+  return app_mappings;
+}
