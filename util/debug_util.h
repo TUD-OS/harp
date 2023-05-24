@@ -35,10 +35,10 @@ class Logger
         if (log_level) {
             if (strcmp(log_level, "DEBUG") == 0)
                 _level = DEBUG;
-            else if (strcmp(log_level, "WARNING") == 0)
-                _level = INFO;
             else if (strcmp(log_level, "INFO") == 0)
                 _level = INFO;
+            else if (strcmp(log_level, "WARNING") == 0)
+                _level = WARNING;
             else if (strcmp(log_level, "ERROR") == 0)
                 _level = ERROR;
         }
