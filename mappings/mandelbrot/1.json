@@ -1,6 +1,7 @@
  {
     "name": "8_replicas",
-    "executionTime": "50",
+    "execution_time": "50",
+    "energy": "420",
     "mapping": [
       {
         "type": "process",

@@ -1,6 +1,7 @@
  {
     "name": "16_replicas",
-    "executionTime": "75",
+    "execution_time": "75",
+    "energy": "180",
     "mapping": [
       {
         "type": "process",
@@ -22,49 +23,49 @@
               "name": "CalcLines",
               "core": "ARM00"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM00"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM01"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM01"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM02"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM02"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM03"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
@@ -78,49 +79,49 @@
               "name": "CalcLines",
               "core": "ARM04"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM04"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM05"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM05"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM06"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM06"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM07"
             }
-          ],          
+          ],
           [
             {
               "type": "process",

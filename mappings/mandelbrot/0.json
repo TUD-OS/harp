@@ -1,6 +1,7 @@
  {
     "name": "4_replicas",
-    "executionTime": "100",
+    "execution_time": "100",
+    "energy": "350",
     "mapping": [
       {
         "type": "process",
@@ -22,21 +23,21 @@
               "name": "CalcLines",
               "core": "ARM04"
             }
-          ],          
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM05"
             }
-          ],         
+          ],
           [
             {
               "type": "process",
               "name": "CalcLines",
               "core": "ARM06"
             }
-          ],         
+          ],
           [
             {
               "type": "process",

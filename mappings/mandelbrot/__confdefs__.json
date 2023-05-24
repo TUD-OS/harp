@@ -2,28 +2,24 @@
   "processes": [
     {
       "type": "process",
-      "name": "process1",
-      "cores": ["core1", "core2"]
+      "name": "Init",
+      "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
     },
     {
       "type": "process",
-      "name": "process2",
-      "cores": ["core1", "core2"]
+      "name": "Display",
+      "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
     },
     {
       "type": "DLP",
-      "name": "region1",
+      "name": "CalcLines",
       "body": [
         {
-          "name": "process3",
-          "cores": ["core3", "core4", "core5", "core6"]
-        },
-        {
-          "name": "process4",
-          "cores": ["core3", "core4", "core5", "core6"]
+          "name": "CalcLines",
+          "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
         }
       ],
-      "max_replicas": 2
+      "max_replicas": 8
     }
   ],
   "characteristics": {

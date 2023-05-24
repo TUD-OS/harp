@@ -1,6 +1,7 @@
  {
     "name": "1_replica",
-    "executionTime": "400",
+    "execution_time": "400",
+    "energy": "130",
     "mapping": [
       {
         "type": "process",
