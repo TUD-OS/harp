@@ -345,6 +345,8 @@ public:
                     c.pid = request.pid();
                     c.exec = request.exec();
 
+                    logger->info(" -> The client registered! '%s' [%d]\n", c.exec.c_str(), c.pid);
+
                     /* Construct and send the server's registration response */
                     tetris::RegistrationResponse response{};
                     response.set_id(fd);
@@ -415,7 +417,7 @@ int main(int argc, char *argv[])
     if (argc > 2) {
         usage();
         return 1;
-    } else if(argc == 1) {
+    } else if(argc == 2) {
         std::string arg{argv[1]};
         if (arg == "-h" || arg == "--help") {
             usage();

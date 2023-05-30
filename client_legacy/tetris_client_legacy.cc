@@ -178,7 +178,7 @@ void __attribute__((constructor)) setup(void)
         logger->info("->> Managed by TETRIS <<-\n");
 
         /* Register with TETRiS that this client supports movable threads */
-        logger->info("->> Register as application with movable threads");
+        logger->info("->> Register as application with movable threads\n");
         movable_threads = std::make_unique<tetris::MovableThreads>();
         tetris_client->bind(movable_threads.get());
 

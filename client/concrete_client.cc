@@ -70,8 +70,6 @@ std::map<std::string, std::string> retrieve_env_variables()
 
 bool ConcreteClient::register_client()
 {
-    auto env_variables = retrieve_env_variables();
-
     RegistrationRequest request{};
 
     /* Send the new-client message to the server. */
