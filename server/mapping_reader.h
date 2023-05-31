@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "knob_description.h"
 #include "mapping.h"
 
 /**

@@ -153,7 +153,7 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
 
         // If the parsed mapping is valid, add it to the vector
         // If not, log a warning message
-        if (parsed_mapping.is_valid(knob_description)) {
+        if (knob_description.is_mapping_valid(parsed_mapping)) {
           mappings.emplace_back(parsed_mapping);
         } else {
           logger->warning(

@@ -7,7 +7,6 @@
 #include "cpulist.h"
 #include "config.h"
 #include "equivalence.h"
-#include "knob_description.h"
 
 
 #include <map>
