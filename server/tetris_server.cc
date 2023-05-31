@@ -9,10 +9,7 @@
 #include "util/tetris.h"
 #include "proto/tetris.pb.h"
 #include "util/protobuf_util.h"
-<<<<<<< HEAD
-=======
 #include "mapping_reader.h"
->>>>>>> 1a6cfc4 (server: tetris_server: adjusted the code that reads the mapping to new)
 
 #include <algorithm>
 #include <deque>
