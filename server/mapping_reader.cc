@@ -101,66 +101,6 @@ Mapping JsonMappingReader::parse_mapping(const nlohmann::json &json_mapping) {
 }
 
 /**
- * \brief Log details of the mappings.
- *
- * This function is responsible for extracting details from the list of
- * mappings, and logging this information for debugging and informational
- * purposes. The function logs details such as the number of mappings, the names
- * of threads and characteristics, and details of each mapping.
- *
- * \param mappings The list of mappings to log.
- */
-void JsonMappingReader::log_mapping_details(
-    const std::vector<Mapping> &mappings) {
-  // If mappings exist, extract thread names and characteristics for logging
-  if (!mappings.empty()) {
-    std::vector<std::string> thread_names;
-    std::vector<std::string> characteristic_names;
-    Mapping mapping = mappings.back();
-
-    // Extract thread names from the last mapping
-    for (const auto &key_val : mapping.thread_map)
-      thread_names.push_back(key_val.first);
-
-    // Extract thread names from regions in the last mapping
-    for (const auto &[region_name, replicas] : mapping.region_map) {
-      for (const auto &key_val : replicas.back()) {
-        auto process_name = key_val.first;
-        thread_names.push_back(region_name + "::" + key_val.first);
-      }
-    }
-
-    // Extract characteristic names from the last mapping
-    for (const auto &key_val : mapping.characteristics_map)
-      characteristic_names.push_back(key_val.first);
-
-    // Log the count and names of threads and characteristics found
-    logger->debug("  * Found %i mapping(s)\n", mappings.size());
-    logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
-                  string_util::join(thread_names, ", ").c_str());
-    logger->debug("  |-> %i characteristic(s): %s\n",
-                  characteristic_names.size(),
-                  string_util::join(characteristic_names, ", ").c_str());
-
-    // Log detailed information about each mapping
-    for (const auto &m : mappings) {
-      std::vector<std::string> mapping_characteristics;
-
-      for (const auto &c : characteristic_names) {
-        std::stringstream ss;
-        ss << std::setprecision(0) << std::fixed << c << ":"
-           << m.characteristic(c);
-        mapping_characteristics.push_back(ss.str());
-      }
-
-      logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
-                    m.equivalence_class().name().c_str(),
-                    string_util::join(mapping_characteristics, ", ").c_str());
-    }
-  }
-}
-
-/**
  * \brief Read mappings from the given directory.
  *
  * This function reads and processes mapping files from a specified directory.
@@ -227,9 +167,6 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
     // Log any exceptions that occur during file reading or mapping parsing
     logger->error("Reading mappings failed with: %s\n", e.what());
   }
-
-  // Log the details of the mappings that have been read
-  log_mapping_details(mappings);
 
   // Return the vector of valid mappings
   return mappings;
@@ -313,5 +250,73 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
       }
     }
   }
+
+  // Log details of the mappings read
+  log_mappings_details(app_mappings);
+
   return app_mappings;
+}
+
+/**
+ * \brief Logs the details of the mappings for all applications.
+ *
+ * This method prints information about the number of mappings, threads, and
+ * characteristics found for each application.
+ *
+ * \param app_mappings Map of application names to a vector of valid Mapping
+ * objects.
+ */
+void MappingReader::log_mappings_details(
+    const std::map<std::string, std::vector<Mapping>> &app_mappings) {
+  for (const auto &app_mapping : app_mappings) {
+    const auto &mappings = app_mapping.second;
+
+    // If mappings exist, extract thread names and characteristics for logging
+    if (!mappings.empty()) {
+      std::vector<std::string> thread_names;
+      std::vector<std::string> characteristic_names;
+      Mapping mapping = mappings.back();
+
+      // Extract thread names from the last mapping
+      for (const auto &key_val : mapping.thread_map)
+        thread_names.push_back(key_val.first);
+
+      // Extract thread names from regions in the last mapping
+      for (const auto &[region_name, replicas] : mapping.region_map) {
+        for (const auto &key_val : replicas.back()) {
+          auto process_name = key_val.first;
+          thread_names.push_back(region_name + "::" + key_val.first);
+        }
+      }
+
+      // Extract characteristic names from the last mapping
+      for (const auto &key_val : mapping.characteristics_map)
+        characteristic_names.push_back(key_val.first);
+
+      // Log the count and names of threads and characteristics found
+      logger->debug("  * Application: %s, found %i mapping(s)\n",
+                    app_mapping.first.c_str(), mappings.size());
+      logger->debug("  |-> %i thread(s): %s\n", thread_names.size(),
+                    string_util::join(thread_names, ", ").c_str());
+      logger->debug("  |-> %i characteristic(s): %s\n",
+                    characteristic_names.size(),
+                    string_util::join(characteristic_names, ", ").c_str());
+
+      // Log detailed information about each mapping
+      for (const auto &m : mappings) {
+        std::vector<std::string> mapping_characteristics;
+
+        for (const auto &c : characteristic_names) {
+          std::stringstream ss;
+          ss << std::setprecision(0) << std::fixed << c << ":"
+             << m.characteristic(c);
+          mapping_characteristics.push_back(ss.str());
+        }
+
+        logger->debug("  |=> %s [%s] %s\n", m.name.c_str(),
+                      m.equivalence_class().name().c_str(),
+                      string_util::join(mapping_characteristics, ", ").c_str());
+      }
+    }
+  }
 }

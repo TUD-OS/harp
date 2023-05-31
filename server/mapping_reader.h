@@ -34,7 +34,6 @@ class JsonMappingReader : public BaseMappingReader {
  private:
   KnobDescription parse_knob_description(const std::string &dir) const;
   Mapping parse_mapping(const nlohmann::json &json_mapping);
-  void log_mapping_details(const std::vector<Mapping> &);
 };
 
 // CsvMappingReader and YamlMappingReader classes are to be defined later
@@ -52,6 +51,10 @@ class MappingReader {
  public:
   static std::map<std::string, std::vector<Mapping>> read_mapping_directory(
       const std::string &base_dir);
+
+ private:
+  static void log_mappings_details(
+      const std::map<std::string, std::vector<Mapping>> &);
 };
 
 #endif  // MAPPING_READER_H
