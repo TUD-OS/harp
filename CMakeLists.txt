@@ -9,6 +9,8 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
 
 # use c++17
 set(CMAKE_CXX_STANDARD "17")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # dependent libraries
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -38,6 +40,9 @@ add_custom_command(OUTPUT ${PROTO_OUTPUT_SOURCES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         COMMENT "Generating Protobuf message sources")
 add_custom_target(generated_proto DEPENDS ${PROTO_OUTPUT_SOURCES})
+
+# Find the YAML-CPP library
+find_package(yaml-cpp REQUIRED)
 
 # Add every component of the TETRiS system.
 add_subdirectory(client)

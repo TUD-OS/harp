@@ -12,7 +12,7 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/util.cc
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
 )
-target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES})
+target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrisserverlib generated_proto)
 
 # Add the executable target
