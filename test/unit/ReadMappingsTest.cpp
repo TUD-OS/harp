@@ -17,7 +17,9 @@ TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   EXPECT_EQ(app_mappings.count("mandelbrot"), 1);
   EXPECT_EQ(app_mappings["mandelbrot"].size(), 3);
 
-  // Check that mappings have been read for the 'htop' and 'jpeg' applications
+  // Check that number of mappings read for the 'htop' and 'jpeg' applications
   EXPECT_EQ(app_mappings.count("htop"), 1);
+  EXPECT_EQ(app_mappings["htop"].size(), 1);
   EXPECT_EQ(app_mappings.count("jpeg"), 1);
+  EXPECT_EQ(app_mappings["jpeg"].size(), 18);
 }

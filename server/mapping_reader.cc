@@ -175,7 +175,34 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
 std::vector<Mapping> CsvMappingReader::read_mappings(
     const std::string &file_path) {
   // implement CSV reading here
+  CSVData data{file_path};
   std::vector<Mapping> mappings;
+
+  for (const auto &row : data.row_iter()) {
+    std::vector<std::pair<std::string, std::string>> threads;
+    RegionAffinities<std::string> regions{};
+    std::vector<std::pair<std::string, std::string>> characteristics;
+
+    for (const auto &col : row.names()) {
+      if (string_util::starts_with(col, "t_")) {
+        /* Columns starting with 't_' are interpreted as threads */
+        std::string thread_name = col.substr(2);
+        std::string cpu_name = row(col);
+
+        threads.emplace_back(thread_name, cpu_name);
+      } else {
+        /* All the other columns are characteristics of the mapping */
+        std::string value = row(col);
+
+        characteristics.emplace_back(col, value);
+      }
+    }
+
+    auto name = row.fixed();
+
+    mappings.emplace_back(name, threads, regions, characteristics);
+  }
+
   return mappings;
 }
 
