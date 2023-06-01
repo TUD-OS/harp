@@ -400,6 +400,18 @@ public:
         }
         std::cout << "======= END OF LIST =======" << std::endl;
     }
+
+    void update_mappings()
+    {
+        logger->info("Update mapping database (%s).\n", _mappings_path.c_str());
+        _mappings.clear();
+
+        try {
+            _mappings = MappingReader::read_mapping_directory(_mappings_path);
+        } catch (std::exception &e) {
+            logger->error("Reading mappings failed with: %s\n", e.what());
+        }
+    }
 };
 
 
