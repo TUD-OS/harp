@@ -1,5 +1,7 @@
 #include "mapping_reader.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <filesystem>
 #include <fstream>
 
@@ -206,10 +208,109 @@ std::vector<Mapping> CsvMappingReader::read_mappings(
   return mappings;
 }
 
+/**
+ * \brief Read mappings from given YAML file
+ *
+ * This function reads the YAML file which is expected to contain a mapping
+ * template and list of mappings. The mapping template consists of processes,
+ * regions, and metadata. Each mapping contains a name, list of processes,
+ * regions and metadata.
+ *
+ * \param file_path File path to the YAML mapping file
+ * \return Vector of Mapping objects
+ */
 std::vector<Mapping> YamlMappingReader::read_mappings(
     const std::string &file_path) {
-  // implement YAML reading here
+  // Load the root node from YAML file
+  YAML::Node root = YAML::LoadFile(file_path);
+
+  // Extract mapping template from root
+  auto mapping_template_node = root["mapping_template"];
+
+  // Extract template data
+  auto template_processes =
+      mapping_template_node["processes"].as<std::vector<std::string>>();
+  auto template_regions =
+      mapping_template_node["regions"]
+          .as<std::map<std::string, std::vector<std::string>>>();
+  auto template_metadata =
+      mapping_template_node["metadata"].as<std::vector<std::string>>();
+
+  // Initialize vector to hold all Mapping objects
   std::vector<Mapping> mappings;
+
+  // Process each mapping node
+  for (const auto &mapping_node : root["mappings"]) {
+    auto mapping_name = mapping_node["name"].as<std::string>();
+
+    // Map process threads
+    std::vector<std::pair<std::string, std::string>> threads;
+
+    auto process_cores =
+        mapping_node["processes"].as<std::vector<std::string>>();
+    if (template_processes.size() != process_cores.size()) {
+      logger->error(
+          "Mismatch between number of template processes and process cores "
+          "(%s)",
+          file_path);
+      return std::vector<Mapping>{};
+    }
+
+    for (size_t i = 0; i < template_processes.size(); ++i) {
+      threads.emplace_back(template_processes[i], process_cores[i]);
+    }
+
+    // Map regions
+    RegionAffinities<std::string> region_affinities;
+    auto region_node = mapping_node["regions"];
+    for (const auto &region : region_node) {
+      ReplicaAffinities<std::string> replica_affinities;
+      auto region_name = region.first.as<std::string>();
+      auto processes_in_region = template_regions[region_name];
+      for (const auto &replica : region.second) {
+        ProcessAffinities<std::string> process_affinities;
+
+        auto cores_for_replica = replica.as<std::vector<std::string>>();
+
+        if (processes_in_region.size() != cores_for_replica.size()) {
+          logger->error(
+              "Mismatch between number of processes and cores in replica (%s)",
+              file_path);
+          return std::vector<Mapping>{};
+        }
+
+        for (size_t i = 0; i < processes_in_region.size(); ++i) {
+          process_affinities.emplace(processes_in_region[i],
+                                     cores_for_replica[i]);
+        }
+
+        replica_affinities.push_back(process_affinities);
+      }
+
+      region_affinities.emplace(region_name, replica_affinities);
+    }
+
+    // Metadata
+    std::vector<std::pair<std::string, std::string>> characteristics;
+    auto mapping_metadata =
+        mapping_node["metadata"].as<std::vector<std::string>>();
+
+    if (template_metadata.size() != mapping_metadata.size()) {
+      logger->error(
+          "Mismatch between number of template metadata and mapping metadata "
+          "(%s)",
+          file_path);
+    }
+
+    for (size_t i = 0; i < template_metadata.size(); ++i) {
+      characteristics.emplace_back(template_metadata[i], mapping_metadata[i]);
+    }
+
+    // Create the mapping object and add it to the vector
+    mappings.emplace_back(mapping_name, threads, region_affinities,
+                          characteristics);
+  }
+
   return mappings;
 }
 
