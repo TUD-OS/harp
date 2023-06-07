@@ -424,95 +424,88 @@ void usage()
               << std::endl;
 }
 
-int main(int argc, char *argv[])
-{
-    /* Parsing command line arguments. */
-    if (argc > 2) {
-        usage();
-        return 1;
-    } else if(argc == 2) {
-        std::string arg{argv[1]};
-        if (arg == "-h" || arg == "--help") {
-            usage();
-            return 0;
-        } else {
-            usage();
-            return 1;
-        }
-    }
-
-    std::cout << "Welcome to TETRiS" << std::endl;
-
-    /* Setup logging */
-    logger = debug::Logger::get();
-
-    /* Setting up the manager */
-    Manager manager{};
-
-    /* Setting up the server socket */
-    Socket server_sock;
-    int sock_fd = -1;
+/**
+ * \brief Setup a socket with a given path and return its file descriptor.
+ *
+ * If any internal operation fails, the function writes an error message to the standard
+ * error output and terminates the program.
+ *
+ * \param socket_path The path where to open the socket.
+ * \param fd Reference to an integer where to store the file descriptor of the
+ *           opened socket.
+ * \return The created and setup Socket object.
+ */
+Socket setup_socket(const std::string& socket_path, int& fd) {
+    Socket sock;
     try {
-        server_sock.open(SERVER_SOCKET);
-        server_sock.non_blocking();
-        server_sock.listening();
-        sock_fd = server_sock.fd();
-    } catch (std::runtime_error &e) {
-        std::cerr << "Failed to open socket" << std::endl
-                  << e.what() << std::endl;
-        return 1;
+        sock.open(socket_path);
+        sock.non_blocking();
+        sock.listening();
+        fd = sock.fd();
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Failed to open socket " << socket_path << "\n" << e.what() << "\n";
+        exit(1);
+    }
+    return sock;
+}
+
+/**
+ * \brief Setup signal handling for the program.
+ *
+ * If creating the signal file descriptor fails, the function returns -1.
+ *
+ * \return The file descriptor of the created signal file descriptor, or -1 on failure.
+ */
+int setup_signal_handling(){
+    sigset_t sigmask;
+    sigemptyset(&sigmask);
+    sigaddset(&sigmask, SIGABRT);
+    sigaddset(&sigmask, SIGHUP);
+    sigaddset(&sigmask, SIGINT);
+    sigaddset(&sigmask, SIGQUIT);
+    sigaddset(&sigmask, SIGTERM);
+    sigaddset(&sigmask, SIGUSR1);
+    sigaddset(&sigmask, SIGUSR2);
+
+    /* First block the signals. */
+    sigprocmask(SIG_BLOCK, &sigmask, nullptr);
+
+    /* And create a signal fd where these signals are managed. */
+    int sig_fd = signalfd(-1, &sigmask, SFD_NONBLOCK);
+    return sig_fd;
+}
+
+/**
+ * \brief Sets up the epoll event loop.
+ *
+ * \param fds A vector containing file descriptors to be added to the epoll loop.
+ *
+ * \return On success, it returns the file descriptor for the new epoll instance.
+ * On failure, it returns -1 and prints an error message.
+ */
+int setup_epoll(const std::vector<int>& fds) {
+    int epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1) {
+        std::cerr << "Failed to initialize epoll." << std::endl
+                  << strerror(errno) << std::endl;
+        return -1;
     }
 
-    logger->info(" * Server socket: %s (%i)\n", server_sock.path(), sock_fd);
-
-    /* Setup signal handling */
-    int sig_fd = -1;
-    {
-        sigset_t sigmask;
-        sigemptyset(&sigmask);
-        sigaddset(&sigmask, SIGABRT);
-        sigaddset(&sigmask, SIGHUP);
-        sigaddset(&sigmask, SIGINT);
-        sigaddset(&sigmask, SIGQUIT);
-        sigaddset(&sigmask, SIGTERM);
-        sigaddset(&sigmask, SIGUSR1);
-        sigaddset(&sigmask, SIGUSR2);
-
-        /* First block the signals. */
-        sigprocmask(SIG_BLOCK, &sigmask, nullptr);
-
-        /* And create a signal fd where these signals are managed. */
-        sig_fd = signalfd(-1, &sigmask, SFD_NONBLOCK);
-        if (sig_fd == -1) {
-            std::cerr << "Failed to create signal fd." << std::endl
+    epoll_event e;
+    for (auto& fd : fds) {
+        e.data.fd = fd;
+        e.events = EPOLLIN;
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &e) == -1) {
+            std::cerr << "Failed to add socket " << fd << " to epoll." << std::endl
                       << strerror(errno) << std::endl;
-            return 1;
+            return -1;
         }
     }
+    return epoll_fd;
+}
 
-    /* Setup the epoll event loop. */
-    int epoll_fd = -1;
-    {
-        epoll_fd = epoll_create1(0);
-        if (epoll_fd == -1) {
-            std::cerr << "Failed to initialize epoll." << std::endl
-                      << strerror(errno) << std::endl;
-            return 1;
-        }
-
-        epoll_event e;
-        for (auto fd : {sock_fd, sig_fd}) {
-            e.data.fd = fd;
-            e.events = EPOLLIN;
-            if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &e) == -1) {
-                std::cerr << "Failed to add socket " << fd << " to epoll." << std::endl
-                          << strerror(errno) << std::endl;
-                return 1;
-            }
-        }
-    }
-
-    /* The event loop */
+void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd, Manager &manager) {
+    // Code for managing event loop
     epoll_event events[MAXEVENTS];
     bool done = false;
 
@@ -524,7 +517,7 @@ int main(int argc, char *argv[])
         for (int i = 0; i < n; ++i) {
             epoll_event *cur = &events[i];
 
-            if (cur->data.fd == sock_fd) {
+            if (cur->data.fd == server_fd) {
                 /* There are a new connections at the server socket.
                  * Connect with all of them. */
                 while (1) {
@@ -601,6 +594,59 @@ int main(int argc, char *argv[])
             }
         }
     }
+}
+
+int main(int argc, char *argv[])
+{
+    /* Parsing command line arguments. */
+    if (argc > 2) {
+        usage();
+        return 1;
+    } else if(argc == 2) {
+        std::string arg{argv[1]};
+        if (arg == "-h" || arg == "--help") {
+            usage();
+            return 0;
+        } else {
+            usage();
+            return 1;
+        }
+    }
+
+    std::cout << "Welcome to TETRiS" << std::endl;
+
+    /* Setup logging */
+    logger = debug::Logger::get();
+
+    /* Setting up the manager */
+    Manager manager{};
+
+    // Setting up the server and control sockets
+    int server_fd = -1;
+    Socket server_sock = setup_socket(SERVER_SOCKET, server_fd);
+
+    int control_fd = -1;
+    Socket control_sock = setup_socket(CONTROL_SOCKET, control_fd);
+
+    logger->info(" * Server socket: %s (%i)\n", server_sock.path(), server_fd);
+    logger->info(" * Control socket: %s (%i)\n", control_sock.path(), control_fd);
+
+    /* Setup signal handling */
+    int sig_fd = setup_signal_handling();
+    if (sig_fd == -1) {
+        std::cerr << "Failed to create signal fd." << std::endl
+                  << strerror(errno) << std::endl;
+        return 1;
+    }
+
+    /* Setup the epoll event loop. */
+    int epoll_fd = setup_epoll({server_fd, control_fd, sig_fd});
+    if (epoll_fd == -1) {
+      return 1;
+    }
+
+    /* The event loop */
+    manage_event_loop(epoll_fd, server_fd, control_fd, sig_fd, manager);
 
     std::cout << "Exiting" << std::endl;
     ::close(sig_fd);
