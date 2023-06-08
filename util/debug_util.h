@@ -113,6 +113,7 @@ class Logger
 
 using LoggerPtr = std::shared_ptr<Logger>;
 
+#define LOGGER debug::Logger::get()
 
 template <typename BaseComp>
 struct CompRepr

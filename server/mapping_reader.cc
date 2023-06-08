@@ -120,7 +120,7 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
   // If the knob description is invalid, log a warning and return an empty
   // vector
   if (!knob_description.is_valid()) {
-    debug::Logger::get()->warning(
+    LOGGER->warning(
         "Knob description file '%s' is using an incorrect format.\n",
         dir.c_str());
     return mappings;
@@ -156,7 +156,7 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
         if (knob_description.is_mapping_valid(parsed_mapping)) {
           mappings.emplace_back(parsed_mapping);
         } else {
-          debug::Logger::get()->warning(
+          LOGGER->warning(
               "Mapping file '%s' does not comply with the knob description of "
               "%s.\n",
               file.filename().c_str(), dir_path.filename().c_str());
@@ -165,7 +165,7 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
     }
   } catch (std::exception &e) {
     // Log any exceptions that occur during file reading or mapping parsing
-    debug::Logger::get()->error("Reading mappings failed with: %s\n", e.what());
+    LOGGER->error("Reading mappings failed with: %s\n", e.what());
   }
 
   // Return the vector of valid mappings
@@ -247,7 +247,7 @@ std::vector<Mapping> YamlMappingReader::read_mappings(
     auto process_cores =
         mapping_node["processes"].as<std::vector<std::string>>();
     if (template_processes.size() != process_cores.size()) {
-      debug::Logger::get()->error(
+      LOGGER->error(
           "Mismatch between number of template processes and process cores "
           "(%s)",
           file_path);
@@ -271,7 +271,7 @@ std::vector<Mapping> YamlMappingReader::read_mappings(
         auto cores_for_replica = replica.as<std::vector<std::string>>();
 
         if (processes_in_region.size() != cores_for_replica.size()) {
-          debug::Logger::get()->error(
+          LOGGER->error(
               "Mismatch between number of processes and cores in replica (%s)",
               file_path);
           return std::vector<Mapping>{};
@@ -294,7 +294,7 @@ std::vector<Mapping> YamlMappingReader::read_mappings(
         mapping_node["metadata"].as<std::vector<std::string>>();
 
     if (template_metadata.size() != mapping_metadata.size()) {
-      debug::Logger::get()->error(
+      LOGGER->error(
           "Mismatch between number of template metadata and mapping metadata "
           "(%s)",
           file_path);
@@ -340,7 +340,7 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
       auto file_extension = entry.path().extension().string();
       auto application_name = entry.path().stem().string();
       if (app_mappings.count(application_name) > 0) {
-        debug::Logger::get()->warning(
+        LOGGER->warning(
             "Mappings for the application '%s' have already been parsed; these "
             "will be replaced.\n",
             application_name);
@@ -354,14 +354,14 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
         app_mappings[application_name] =
             reader.read_mappings(entry.path().string());
       } else {
-        debug::Logger::get()->warning("Unrecognized mapping format for '%s'.\n",
-                                      entryname.c_str());
+        LOGGER->warning("Unrecognized mapping format for '%s'.\n",
+                        entryname.c_str());
       }
     } else if (entry.is_directory()) {
       auto application_name = entry.path().filename().string();
       auto knob_desc_path = entry.path() / JsonMappingReader::kKnobDescFilename;
       if (app_mappings.count(application_name) > 0) {
-        debug::Logger::get()->warning(
+        LOGGER->warning(
             "Mappings for the application '%s' have already been parsed; these "
             "will be replaced.\n",
             application_name);
@@ -371,9 +371,8 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
         app_mappings[application_name] =
             reader.read_mappings(entry.path().string());
       } else {
-        debug::Logger::get()->warning(
-            "Unrecognized mapping format for the directory '%s'.\n",
-            entryname.c_str());
+        LOGGER->warning("Unrecognized mapping format for the directory '%s'.\n",
+                        entryname.c_str());
       }
     }
   }
@@ -421,15 +420,13 @@ void MappingReader::log_mappings_details(
         characteristic_names.push_back(key_val.first);
 
       // Log the count and names of threads and characteristics found
-      debug::Logger::get()->info(" -> found mapping for '%s'\n",
-                                 app_mapping.first.c_str());
-      debug::Logger::get()->debug("  * found %i mapping(s)\n", mappings.size());
-      debug::Logger::get()->debug(
-          "  |-> %i thread(s): %s\n", thread_names.size(),
-          string_util::join(thread_names, ", ").c_str());
-      debug::Logger::get()->debug(
-          "  |-> %i characteristic(s): %s\n", characteristic_names.size(),
-          string_util::join(characteristic_names, ", ").c_str());
+      LOGGER->info(" -> found mapping for '%s'\n", app_mapping.first.c_str());
+      LOGGER->debug("  * found %i mapping(s)\n", mappings.size());
+      LOGGER->debug("  |-> %i thread(s): %s\n", thread_names.size(),
+                    string_util::join(thread_names, ", ").c_str());
+      LOGGER->debug("  |-> %i characteristic(s): %s\n",
+                    characteristic_names.size(),
+                    string_util::join(characteristic_names, ", ").c_str());
 
       // Log detailed information about each mapping
       for (const auto &m : mappings) {
@@ -442,10 +439,9 @@ void MappingReader::log_mappings_details(
           mapping_characteristics.push_back(ss.str());
         }
 
-        debug::Logger::get()->debug(
-            "  |=> %s [%s] %s\n", m.name.c_str(),
-            m.equivalence_class().name().c_str(),
-            string_util::join(mapping_characteristics, ", ").c_str());
+        LOGGER->debug("  |=> %s [%s] %s\n", m.name.c_str(),
+                      m.equivalence_class().name().c_str(),
+                      string_util::join(mapping_characteristics, ", ").c_str());
       }
     }
   }
