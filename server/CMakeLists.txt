@@ -4,8 +4,10 @@ set_source_files_properties(
 # Add the library target
 add_library(tetrisserverlib STATIC
     algorithm.cc
+    client.cc
     equivalence.cc
     knob_description.cc
+    manager.cc
     mapping_reader.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
