@@ -114,6 +114,26 @@ Mapping Manager::select_best_mapping(Client &c) {
 }
 
 /**
+ * \brief Uses the client's preferred mapping if available, otherwise selects
+ * the best one.
+ */
+Mapping Manager::use_preferred_mapping(
+    Client &c, const std::string &preferred_mapping_name) {
+  LOGGER->info("Use preferred mapping '%s' for '%s' [%d]\n",
+               preferred_mapping_name.c_str(), c.exec.c_str(), c.pid);
+
+  auto it = std::find_if(
+      c.mappings.begin(), c.mappings.end(),
+      [&](const auto &m) { return m.name == preferred_mapping_name; });
+  if (it != c.mappings.end())
+    return *it;
+  else {
+    LOGGER->info("Couldn't find preferred mapping\n");
+    return select_best_mapping(c);
+  }
+}
+
+/**
  * \brief Handles the incoming message from a client.
  *
  * This function processes incoming messages from a client. Based on the type of

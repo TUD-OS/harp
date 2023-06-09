@@ -36,7 +36,6 @@ class Manager {
  private:
   std::map<int, Client> _clients;
   std::map<std::string, std::vector<Mapping>> _mappings;
-
   CPUList _blocked_cpus;
 
   /**
@@ -48,21 +47,12 @@ class Manager {
    * \brief Uses the client's preferred mapping if available, otherwise selects
    * the best one.
    */
-  Mapping use_preferred_mapping(Client &c,
-                                const std::string &preferred_mapping_name) {
-    LOGGER->info("Use preferred mapping '%s' for '%s' [%d]\n",
-                 preferred_mapping_name.c_str(), c.exec.c_str(), c.pid);
+  Mapping use_preferred_mapping(Client &, const std::string &);
 
-    auto it = std::find_if(
-        c.mappings.begin(), c.mappings.end(),
-        [&](const auto &m) { return m.name == preferred_mapping_name; });
-    if (it != c.mappings.end())
-      return *it;
-    else {
-      LOGGER->info("Couldn't find preferred mapping\n");
-      return select_best_mapping(c);
-    }
-  }
+  bool handle_new_client_request(Client &, tetris::PullRequest &);
+  void handle_new_thread_request(Client &, tetris::PullRequest &);
+  void handle_dpm_subscribe_request(Client &, tetris::PullRequest &);
+  void handle_dpm_send_application_tid_request(Client &, tetris::PullRequest &);
 
  public:
   explicit Manager()
