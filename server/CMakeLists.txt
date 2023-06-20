@@ -6,6 +6,7 @@ add_library(tetrisserverlib STATIC
     algorithm.cc
     client.cc
     manager.cc
+    sched/bruteforce.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
     ${CMAKE_SOURCE_DIR}/util/util.cc
