@@ -9,7 +9,7 @@ void Client::update_mapping(const Mapping &new_mapping) {
 
   for (auto &t : threads) {
     CPUList cpus;
-    if (type & Type:PASSIV)
+    if (type & Type::PASSIV)
       cpus = active_mapping.cpus;
     else
       cpus = active_mapping.cpu(t.name);

@@ -29,6 +29,17 @@ int cpu_nr_for_name(const std::string& name)
 
 } /* Anonymous namespace */
 
+/// \brief ProcessAffinities stores process names and corresponding CPU affinity.
+template <typename T>
+using ProcessAffinities = std::map<std::string, T>;
+
+/// \brief ReplicasAffinities stores processes inside a region replica with CPU affinities.
+template <typename T>
+using ReplicaAffinities = std::vector<ProcessAffinities<T>>;
+
+/// \brief RegionAffinities stores replicas inside a region with CPU affinities.
+template <typename T>
+using RegionAffinities = std::map<std::string, ReplicaAffinities<T>>;
 
 class Mapping
 {
