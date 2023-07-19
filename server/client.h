@@ -116,6 +116,9 @@ class Client {
 
   int type;
 
+  Filter filter;
+  Comp comp;
+
 private:
     /* Internal interface */
     void new_thread(int tid);
@@ -128,7 +131,8 @@ public:
 
     Client(const ConnectionPtr &conn) :
             connection{conn}, exec{}, pid{-1}, threads{},
-            mappings{}, active_mapping{}, type{Type::PASSIV}
+            mappings{}, active_mapping{}, type{Type::PASSIV},
+            filter{}, comp{}
     {
         std::stringstream path{};
         path << "/tmp/tetris_push_listener_" << pid;
