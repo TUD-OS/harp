@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "knob_description.h"
+#include "util/json.h"
+
 #include "mapping.h"
 
 /**
@@ -33,7 +34,6 @@ class JsonMappingReader : public BaseMappingReader {
   std::vector<Mapping> read_mappings(const std::string &dir_path) override;
 
  private:
-  KnobDescription parse_knob_description(const std::string &dir) const;
   Mapping parse_mapping(const nlohmann::json &json_mapping);
 };
 

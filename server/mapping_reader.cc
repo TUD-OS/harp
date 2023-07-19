@@ -10,37 +10,6 @@
 #include "util/string_util.h"
 
 /**
- * \brief Parses knob description from given directory.
- *
- * This function opens and reads a JSON file containing the knob description
- * from the specified directory. This description is then used to create a
- * KnobDescription object.
- *
- * \param dir Directory containing the knob description.
- * \return KnobDescription object.
- */
-KnobDescription JsonMappingReader::parse_knob_description(
-    const std::string &dir) const {
-  // Define the full path to the knob description file.
-  std::filesystem::path confdefs_filepath =
-      std::filesystem::path(dir) / JsonMappingReader::kKnobDescFilename;
-
-  // Open the knob description file.
-  std::ifstream json_knob_file{confdefs_filepath};
-  if (!json_knob_file) {
-    throw std::runtime_error("Could not open knob description file: " +
-                             confdefs_filepath.string());
-  }
-
-  // Parse the JSON file to a JSON object.
-  nlohmann::json json_knob;
-  json_knob_file >> json_knob;
-
-  // Create and return a KnobDescription object from the JSON object.
-  return KnobDescription(json_knob);
-}
-
-/**
  * \brief Parse mapping from given JSON object
  *
  * The function reads the JSON object which is expected to contain a mapping of
@@ -114,18 +83,6 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
   // Prepare a container to store valid mappings
   std::vector<Mapping> mappings;
 
-  // Parse knob description from the given directory
-  auto knob_description = parse_knob_description(dir);
-
-  // If the knob description is invalid, log a warning and return an empty
-  // vector
-  if (!knob_description.is_valid()) {
-    LOGGER->warning(
-        "Knob description file '%s' is using an incorrect format.\n",
-        dir.c_str());
-    return mappings;
-  }
-
   try {
     // Define a path object representing the directory
     std::filesystem::path dir_path(dir);
@@ -151,16 +108,8 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
         // Parse the JSON mapping into a Mapping object
         auto parsed_mapping = parse_mapping(json_mapping);
 
-        // If the parsed mapping is valid, add it to the vector
-        // If not, log a warning message
-        if (knob_description.is_mapping_valid(parsed_mapping)) {
-          mappings.emplace_back(parsed_mapping);
-        } else {
-          LOGGER->warning(
-              "Mapping file '%s' does not comply with the knob description of "
-              "%s.\n",
-              file.filename().c_str(), dir_path.filename().c_str());
-        }
+        // Add mapping to the vector
+        mappings.emplace_back(parsed_mapping);
       }
     }
   } catch (std::exception &e) {

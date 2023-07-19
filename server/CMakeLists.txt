@@ -6,7 +6,6 @@ add_library(tetrisserverlib STATIC
     algorithm.cc
     client.cc
     equivalence.cc
-    knob_description.cc
     manager.cc
     mapping_reader.cc
     ${PROTO_OUTPUT_SOURCES}
