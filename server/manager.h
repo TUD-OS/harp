@@ -49,11 +49,6 @@ class Manager {
    */
   Mapping use_preferred_mapping(Client &, const std::string &);
 
-  bool handle_new_client_request(Client &, tetris::PullRequest &);
-  void handle_new_thread_request(Client &, tetris::PullRequest &);
-  void handle_dpm_subscribe_request(Client &, tetris::PullRequest &);
-  void handle_dpm_send_application_tid_request(Client &, tetris::PullRequest &);
-
  public:
   explicit Manager()
       : _clients{}, _mappings{} {}
