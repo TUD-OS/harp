@@ -7,7 +7,7 @@
 
 #include "util/json.h"
 
-#include "mapping.h"
+#include "util/mapping.h"
 
 /**
  * @brief Abstract class for mapping reader

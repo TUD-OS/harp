@@ -5,13 +5,13 @@ set_source_files_properties(
 add_library(tetrisserverlib STATIC
     algorithm.cc
     client.cc
-    equivalence.cc
     manager.cc
-    mapping_reader.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
     ${CMAKE_SOURCE_DIR}/util/util.cc
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
+    ${CMAKE_SOURCE_DIR}/util/equivalence.cc
+    ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
 )
 target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrisserverlib generated_proto)

@@ -1,7 +1,7 @@
 #include "manager.h"
 
 #include "algorithm.h"
-#include "mapping_reader.h"
+#include "util/mapping_reader.h"
 
 /**
  * \brief Selects the best mapping for a given client.

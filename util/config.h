@@ -4,8 +4,8 @@
 #pragma once
 
 
-#include "config_architecture.h"
-#include "config_equivalences.h"
+#include "util/config_architecture.h"
+#include "util/config_equivalences.h"
 
 
 #endif /* __CONFIG_H__ */

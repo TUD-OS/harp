@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "cpulist.h"
+#include "util/cpulist.h"
 
 /**
  * \class EqualCPUS

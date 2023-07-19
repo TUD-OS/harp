@@ -4,11 +4,11 @@
 #pragma once
 
 #include "filter.h"
-#include "mapping.h"
 #include "proto/tetris.pb.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
 #include "util/protobuf_util.h"
+#include "util/mapping.h"
 
 using ConnectionPtr = std::shared_ptr<Connection>;
 

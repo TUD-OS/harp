@@ -4,9 +4,9 @@
 #pragma once
 
 
-#include "cpulist.h"
-#include "config.h"
-#include "equivalence.h"
+#include "util/cpulist.h"
+#include "util/config.h"
+#include "util/equivalence.h"
 
 
 #include <map>

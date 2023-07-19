@@ -6,7 +6,7 @@
 
 #include "util/debug_util.h"
 #include "util/string_util.h"
-#include "mapping.h"
+#include "util/mapping.h"
 
 #include <functional>
 #include <sstream>
