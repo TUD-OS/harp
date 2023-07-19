@@ -23,6 +23,24 @@ message ClientMessage {
     }
     required Type type = 1;
 
+    message MappingsInfo {          // Additional data for MAPPINGS message
+        message MappingData {
+            message Characteristic {
+                required string name = 1;   // The name that describes the characteristic
+                required float value = 2;   // The value of the characteristic
+            }
+            repeated Characteristic characteristics = 1;
+
+            message ThreadInfo {
+                required string name = 1;   // The thread for which information should be provided
+                required string cpu = 2;    // The CPU to which the thread should be assigned
+            }
+            repeated ThreadInfo threads = 2;
+        }
+        repeated MappingData mappings = 1;
+    }
+    optional MappingsInfo mappings_info = 2;
+
     message FeatureInfo {           // Additional data for the FEATURE_SUBSCRIBE message
         enum FeatureType {          // The type of the feature that we want to register
             MOVABLE_THREADS = 1;    // The application supports moving individual threads around
@@ -30,14 +48,14 @@ message ClientMessage {
         }
         required FeatureType type =1;
     }
-    optional FeatureInfo feature_info = 2;
+    optional FeatureInfo feature_info = 3;
 
     message ThreadInfo {            // Additional data for the REGISTER_THREAD message
         required uint32 tid = 1;    // The ID of the thread
 
         optional string name = 2;   // The name of the thread if it is named
     }
-    optional ThreadInfo thread_info = 3;
+    optional ThreadInfo thread_info = 4;
 }
 
 // Responses from the server to the client upon client messages
