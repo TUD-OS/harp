@@ -1,5 +1,6 @@
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
+#include <signal.h>
 
 #include "manager.h"
 #include "util/socket.h"
