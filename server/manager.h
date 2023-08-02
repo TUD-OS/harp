@@ -107,12 +107,6 @@ class Manager {
       std::cout << "-> mapping: " << client.active_mapping.name << " ["
                 << client.active_mapping.equivalence_class().name() << "]"
                 << std::endl;
-
-      std::cout << "-> threads:" << std::endl;
-      for (const auto &t : client.threads)
-        std::cout << "--> " << t.name << "(" << t.tid
-                  << "): " << string_util::join(t.cpus.cpulist(num_cpus), ",")
-                  << std::endl;
     }
     std::cout << "======= END OF LIST =======" << std::endl;
   }

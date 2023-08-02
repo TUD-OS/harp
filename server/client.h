@@ -107,7 +107,6 @@ class Client {
   ConnectionPtr connection;
   std::string exec;
   int pid;
-  std::vector<Thread> threads;
   
   std::vector<Mapping> mappings;
   Mapping active_mapping;
@@ -120,17 +119,12 @@ class Client {
   Comp comp;
 
 private:
-    /* Internal interface */
-    void new_thread(int tid);
-    void new_thread(int tid, const std::string &name);
-
-    void delete_thread(int tid);
 
 public:
     Client(const Client &) = delete;
 
     Client(const ConnectionPtr &conn) :
-            connection{conn}, exec{}, pid{-1}, threads{},
+            connection{conn}, exec{}, pid{-1},
             mappings{}, active_mapping{}, type{Type::PASSIV},
             filter{}, comp{}
     {

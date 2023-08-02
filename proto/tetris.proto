@@ -18,8 +18,6 @@ message ClientMessage {
         MAPPINGS = 1;               // Register mappings for the client
         OPTIMIZATION_TARGET = 2;    // Change optimization target for the client
         FEATURE_SUBSCRIBE = 3;      // Register as an application feature with the server
-        REGISTER_THREAD = 4;        // Register a new thread that should be handled by TETRiS
-        DELETE_THREAD = 5;          // Remove a thread again from the handling of TETRiS
     }
     required Type type = 1;
 
@@ -49,13 +47,6 @@ message ClientMessage {
         required FeatureType type =1;
     }
     optional FeatureInfo feature_info = 3;
-
-    message ThreadInfo {            // Additional data for the REGISTER_THREAD message
-        required uint32 tid = 1;    // The ID of the thread
-
-        optional string name = 2;   // The name of the thread if it is named
-    }
-    optional ThreadInfo thread_info = 4;
 }
 
 // Responses from the server to the client upon client messages
@@ -78,10 +69,20 @@ message ServerMessage {
     required uint32 feature_id = 1; // The ID of the feature which should handle this message
 
     enum Type {                     // The message types
-        MOVE_THREADS = 1;           // Request to move application threads to different CPUs
-        SCALE_APPLICATION = 2;      // Request to scale the application to a different number of threads
+        UPDATE_MAPPING = 1;         // Use the proposed mapping for the client
+        MOVE_THREADS = 2;           // Request to move application threads to different CPUs
+        SCALE_APPLICATION = 3;      // Request to scale the application to a different number of threads
     }
     required Type type = 2;
+
+    message MappingInfo {           // Additional data for the ACTIVATE_MAPPING message
+            message ThreadInfo {
+                required string name = 1;   // The thread
+                required uint32 cpu_nr = 2;    // The CPU number to which the thread should be assigned
+            }
+            repeated ThreadInfo threads = 1;
+    }
+    optional MappingInfo update_mapping = 3;
 
     message MoveThreadsInfo {       // Additional data for the MOVE_THREADS message
         message ThreadAssigment {
@@ -90,12 +91,12 @@ message ServerMessage {
         }
         repeated ThreadAssigment thread_assignments = 1;
     }
-    optional MoveThreadsInfo move_threads_info = 3;
+    optional MoveThreadsInfo move_threads_info = 4;
 
     message ScaleApplicationInfo {  // Additional data for the SCALE_APPLICATION message
         required uint32 max_threads = 1;    // The number of threads the application should maximally scale to
     }
-    optional ScaleApplicationInfo scale_application_info = 4;
+    optional ScaleApplicationInfo scale_application_info = 5;
 }
 
 // Responses from the client to the server upon server messages

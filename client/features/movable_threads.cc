@@ -54,49 +54,20 @@ ClientResponse MovableThreads::forward(const ServerMessage &msg)
 
 bool MovableThreads::register_thread(const std::string &name, pid_t tid)
 {
-    tetris::ClientMessage msg{};
-
-    /* Send the new-thread message to the server. */
-    msg.set_type(tetris::ClientMessage::REGISTER_THREAD);
-    auto thread_info = msg.mutable_thread_info();
-    thread_info->set_tid(tid);
-    thread_info->set_name(name);
-
     auto ti = _threads.emplace_back(name, tid, false);
+    ti.managed = true;
 
-    auto response = this->get_client()->send(msg);
-    if (response.type() == ServerResponse::ACKNOWLEDGE){
-        _logger->info("Thread %s (%d) managed by TETRiS\n", ti.name.c_str(), ti.tid);
-        ti.managed = true;
-
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 bool MovableThreads::register_thread(pid_t tid)
 {
-    tetris::ClientMessage msg{};
-
-    /* Send the new-thread message to the server. */
-    msg.set_type(tetris::ClientMessage::REGISTER_THREAD);
-    auto thread_info = msg.mutable_thread_info();
-    thread_info->set_tid(tid);
-
     std::stringstream ss;
     ss << "thread_" << tid;
     auto ti = _threads.emplace_back(ss.str(), tid, false);
+    ti.managed = true;
 
-    auto response = this->get_client()->send(msg);
-    if (response.type() == ServerResponse::ACKNOWLEDGE){
-        _logger->info("Thread %s (%d) managed by TETRiS\n", ti.name.c_str(), ti.tid);
-        ti.managed = true;
-
-        return true;
-    }
-
-    return false;
+    return true;
 }
 
 bool MovableThreads::move_thread(pid_t tid, int cpu)
