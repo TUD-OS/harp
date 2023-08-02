@@ -119,6 +119,7 @@ class Client {
   Comp comp;
 
 private:
+    bool receive_mappings(const tetris::ClientMessage::MappingsInfo& mapping_info);
 
 public:
     Client(const Client &) = delete;

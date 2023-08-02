@@ -1,4 +1,28 @@
 #include "client.h"
+#include "proto/tetris.pb.h"
+
+bool Client::receive_mappings(const tetris::ClientMessage::MappingsInfo &mapping_info) {
+  mappings.clear();
+
+  /* Convert the protobuf mapping representation into our internal format */
+  for (int i = 0; i < mapping_info.mappings_size(); i++) {
+    Mapping new_mapping{};
+    auto cur = mapping_info.mappings(i);
+    for (int j = 0; j < cur.characteristics_size(); j++) {
+        auto cur_c = cur.characteristics(j);
+        new_mapping.characteristics_map[cur_c.name()] = cur_c.value();
+    }
+
+    for (int j = 0; j < cur.threads_size(); j++) {
+        auto cur_t = cur.threads(j);
+        new_mapping.thread_map[cur_t.name()] = cpu_nr_for_name(cur_t.cpu());
+    }
+
+    mappings.push_back(new_mapping);
+  }
+
+  return true;
+}
 
 void Client::update_mapping(const Mapping &new_mapping) {
   if (new_mapping.name == active_mapping.name) return;
@@ -33,7 +57,11 @@ tetris::ServerResponse Client::handle_message(const tetris::ClientMessage &msg)
   response.set_type(tetris::ServerResponse::ERROR);
 
   switch(msg.type()) {
-    case tetris::ClientMessage::MAPPINGS: 
+    case tetris::ClientMessage::MAPPINGS:
+      /* Parse the mapping information from the client */
+      if (msg.has_mappings_info() && receive_mappings(msg.mappings_info())) {
+        response.set_type(tetris::ServerResponse::ACKNOWLEDGE);
+      }
       break;
     case tetris::ClientMessage::OPTIMIZATION_TARGET:
       break;
