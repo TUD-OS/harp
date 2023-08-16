@@ -9,6 +9,8 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/bin")
 
 # use c++17
 set(CMAKE_CXX_STANDARD "17")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # dependent libraries
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -39,13 +41,24 @@ add_custom_command(OUTPUT ${PROTO_OUTPUT_SOURCES}
         COMMENT "Generating Protobuf message sources")
 add_custom_target(generated_proto DEPENDS ${PROTO_OUTPUT_SOURCES})
 
+# Find the YAML-CPP library
+find_package(yaml-cpp REQUIRED)
+
 # Add every component of the TETRiS system.
 add_subdirectory(client)
 add_subdirectory(client_legacy)
 add_subdirectory(server)
-add_subdirectory(controller)
+#add_subdirectory(controller)
 
 enable_testing()
 set(TEST_SOURCE_DIRECTORY test)
 set(TEST_TARGET_NAME runTests)
 add_subdirectory(${TEST_SOURCE_DIRECTORY})
+
+# Copy mappigns directory
+add_custom_target(copy_mappings ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/mappings ${CMAKE_BINARY_DIR}/mappings
+    COMMENT "Copying mappings to build directory"
+)
+add_dependencies(${TEST_TARGET_NAME} copy_mappings)

@@ -40,11 +40,11 @@ namespace tetris {
         void add_subscriber(const FeatureID &feature_id, Feature *feature);
 
         /**
-         * \brief Forwards the push request to the specified feature.
-         * \param request Request to forward.
+         * \brief Forwards the TETRiS server message to the specified feature.
+         * \param msg Message to forward.
          * \return Forwarded response.
          */
-        PushResponse forward(const PushRequest &request) const;
+        ClientResponse forward(const ServerMessage &msg) const;
 
     private:
         /**
@@ -57,7 +57,7 @@ namespace tetris {
         Socket _listening_socket;
 
         /// \brief Listener thread id.
-        pthread_t _listener_thread{};
+        pthread_t _listener_thread;
 
         /// \brief Subscribers.
         std::map<FeatureID, Feature *> _subscribers;

@@ -1,0 +1,30 @@
+{
+  "processes": [
+    {
+      "type": "process",
+      "name": "Init",
+      "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
+    },
+    {
+      "type": "process",
+      "name": "Display",
+      "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
+    },
+    {
+      "type": "DLP",
+      "name": "CalcLines",
+      "body": [
+        {
+          "name": "CalcLines",
+          "cores": ["ARM00", "ARM01", "ARM02", "ARM03", "ARM04", "ARM05", "ARM06", "ARM07"]
+        }
+      ],
+      "max_replicas": 8
+    }
+  ],
+  "characteristics": {
+    "execution_time": "less_is_better",
+    "energy": "less_is_better"
+  }
+}
+

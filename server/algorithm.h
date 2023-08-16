@@ -4,8 +4,8 @@
 #pragma once
 
 
-#include "cpulist.h"
-#include "mapping.h"
+#include "util/cpulist.h"
+#include "util/mapping.h"
 
 #include <vector>
 

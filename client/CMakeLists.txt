@@ -2,11 +2,14 @@
 # supposed to be generated yet.
 set_source_files_properties(
         ${PROTO_OUTPUT_SOURCES} PROPERTIES GENERATED TRUE)
+
 add_library(tetrisclient STATIC
         client.cc
         feature.cc
         concrete_client.cc
         push_message_listener.cc
+        features/movable_threads.cc
+        features/scalable_application.cc
         ${PROTO_OUTPUT_SOURCES}
         ${CMAKE_SOURCE_DIR}/util/path_util.cc
         ${CMAKE_SOURCE_DIR}/util/util.cc
@@ -19,10 +22,10 @@ install(TARGETS tetrisclient
         EXPORT tetrisclient-config
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
         INCLUDES DESTINATION include
         )
 install(FILES ${CMAKE_SOURCE_DIR}/client/client.h ${CMAKE_SOURCE_DIR}/client/feature.h DESTINATION include/tetris)
 install(FILES ${CMAKE_BINARY_DIR}/proto/tetris.pb.h DESTINATION include/tetris/proto)
+install(FILES ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h DESTINATION include/tetris/features)
 export(TARGETS tetrisclient FILE "${CMAKE_CURRENT_BINARY_DIR}/tetrisclient-config.cmake")
 install(EXPORT tetrisclient-config DESTINATION lib/cmake/tetrisclient)

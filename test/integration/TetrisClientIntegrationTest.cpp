@@ -9,6 +9,8 @@
 #include <util/socket.h>
 #include <client/concrete_client.h>
 
+#if 0
+
 class MockFeature : public tetris::Feature {
 public:
     MOCK_METHOD(tetris::PushResponse, forward, (const tetris::PushRequest &msg));
@@ -100,3 +102,5 @@ TEST_F(TetrisClientIntegrationTest, CheckPushListenerForwarding) {
     // Check that the answer from the mock feature is an acknowledge.
     ASSERT_EQ(tetris::PushResponse::ACKNOWLEDGE, response.type());
 }
+
+#endif

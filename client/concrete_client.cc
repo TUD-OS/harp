@@ -18,7 +18,7 @@ ConcreteClient::ConcreteClient(const std::string &server_socket_path)
     _logger = debug::Logger::get();
     try {
         _tetris_server_connection.connect(server_socket_path);
-        _managed = send_new_client_command();
+        _managed = register_client();
     } catch (std::exception &e) {
         _logger->info("No TETRiS server, TETRiS is unused.\n");
         _managed = false;
@@ -40,11 +40,11 @@ void ConcreteClient::bind(Feature *feature)
     }
 }
 
-PullResponse ConcreteClient::send(const PullRequest &request)
+ServerResponse ConcreteClient::send(const ClientMessage &message)
 {
-    PullResponse response{};
+    ServerResponse response{};
     _communication_mutex.lock();
-    protobuf_util::Send(_tetris_server_connection.locked(), request);
+    protobuf_util::Send(_tetris_server_connection.locked(), message);
     protobuf_util::Receive(_tetris_server_connection.locked(), response);
     _communication_mutex.unlock();
     return response;
@@ -68,75 +68,31 @@ std::map<std::string, std::string> retrieve_env_variables()
     return env_variables;
 }
 
-bool ConcreteClient::send_new_client_command()
+bool ConcreteClient::register_client()
 {
-
-    auto env_variables = retrieve_env_variables();
-
-    PullRequest request{};
-    request.set_type(PullRequest::TETRIS_NEW_CLIENT);
-    auto new_client_message = request.mutable_new_client();
+    RegistrationRequest request{};
 
     /* Send the new-client message to the server. */
-    new_client_message->set_pid(getpid());
+    request.set_pid(getpid());
     char exec[512];
     memset(exec, 0, sizeof(exec));
     readlink("/proc/self/exe", exec, sizeof(exec));
-    new_client_message->set_exec(exec);
-
-    bool dynamic_client = false;
-    auto mapping_type = env_variables.find("TETRIS_MAPPING_TYPE");
-    if (mapping_type != env_variables.end()) {
-        if (mapping_type->second == "DYNAMIC") {
-            _logger->info("Use dynamic/CFS mapping.\n");
-            dynamic_client = true;
-        } else if (mapping_type->second == "STATIC") {
-            _logger->info("Use static TETRiS mapping.\n");
-        } else {
-            _logger->warning("Unknown mapping type: %s\n", mapping_type->second.c_str());
-        }
-    }
-    new_client_message->set_mapping_type(dynamic_client ? NewClient::DYNAMIC : NewClient::STATIC);
-
-    auto compare_criteria = env_variables.find("TETRIS_COMPARE_CRITERIA");
-    if (compare_criteria != env_variables.end()) {
-        _logger->info("Use given compare criteria -- %s.\n", compare_criteria->second.c_str());
-        new_client_message->set_compare_criteria(compare_criteria->second);
-    } else {
-        _logger->info("Use default compare criteria -- executionTime.\n");
-        new_client_message->set_compare_criteria("executionTime");
-    }
-
-    auto compare_more_is_better = env_variables.find("TETRIS_COMPARE_MORE_IS_BETTER") != env_variables.end();
-    if (compare_more_is_better)
-        _logger->info("Use greater than comparison for criteria.\n");
-    else
-        _logger->info("Use less then comparison for criteria.\n");
-    new_client_message->set_compare_more_is_better(compare_more_is_better);
-
-    auto preferred_mapping = env_variables.find("TETRIS_PREFERRED_MAPPING");
-    if (preferred_mapping != env_variables.end()) {
-        new_client_message->set_preferred_mapping(preferred_mapping->second);
-    }
-
-    auto filter_criteria = env_variables.find("TETRIS_FILTER_CRITERIA");
-    if (filter_criteria != env_variables.end()) {
-        new_client_message->set_filter_criteria(filter_criteria->second);
-    }
+    request.set_exec(exec);
 
     // Send the command.
-    auto response = send(request);
+    try {
+        RegistrationResponse response{};
+        _communication_mutex.lock();
+        protobuf_util::Send(_tetris_server_connection.locked(), request);
+        protobuf_util::Receive(_tetris_server_connection.locked(), response);
+        _communication_mutex.unlock();
 
-    // Process the TETRiS server response.
-    if ((response.type() == PullResponse::TETRIS_NEW_CLIENT_ACK) && response.has_new_client_ack()) {
-        if (response.new_client_ack().managed())
-            _logger->info("TETRIS-ID: %d\n", response.new_client_ack().id());
-        else
-            _logger->info("TETRIS-ID: not managed\n");
-        return response.new_client_ack().managed();
+        // Process the TETRiS server response.
+        _logger->info("TETRIS-ID: %d\n", response.id());
+        return true;
+    } catch (std::exception &e) {
+        return false;
     }
-
-    return false;
 }
 
 }

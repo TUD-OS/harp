@@ -4,10 +4,9 @@
 #pragma once
 
 
-#include "cpulist.h"
-#include "config.h"
-#include "equivalence.h"
-#include "knob_description.h"
+#include "util/cpulist.h"
+#include "util/config.h"
+#include "util/equivalence.h"
 
 
 #include <map>
@@ -41,7 +40,6 @@ using ReplicaAffinities = std::vector<ProcessAffinities<T>>;
 /// \brief RegionAffinities stores replicas inside a region with CPU affinities.
 template <typename T>
 using RegionAffinities = std::map<std::string, ReplicaAffinities<T>>;
-
 
 class Mapping
 {
@@ -86,34 +84,13 @@ class Mapping
         }
     }
 
-    bool check_validity_process(const KnobDescription::ProcessSpecifications &specifications, const ProcessAffinities<int> &process_affinities)
-    {
-        for (const auto& [process_name, core_affinities] : specifications) {
-            auto thread_map_entry = process_affinities.find(process_name);
-            if (thread_map_entry == process_affinities.end())
-                return false;
-            // Check core validity
-            auto core_affinity = thread_map_entry->second;
-            if (!core_affinities.empty()) {
-                std::set<int> cpu_set{};
-                std::for_each(core_affinities.begin(), core_affinities.end(),
-                              [&cpu_set](const auto& affinity) {
-                                  cpu_set.emplace(cpu_nr_for_name(affinity));
-                              });
-                if (cpu_set.find(core_affinity) == cpu_set.end())
-                    return false;
-            }
-        }
-        return true;
-    }
-
    public:
     Mapping() = default;
 
     Mapping(const std::string& name, const std::vector<std::pair<std::string, std::string>>& threads,
             const RegionAffinities<std::string>& region_threads,
             const std::vector<std::pair<std::string, std::string>>& characteristics) :
-        name{name}, thread_map{}, region_map{}, characteristics_map{}, cpus{}
+        name{name}, thread_map{}, characteristics_map{}, cpus{}
     {
         for (const auto& t : threads) {
             thread_map.emplace(t.first, cpu_nr_for_name(t.second));
@@ -128,6 +105,7 @@ class Mapping
                     process_affinities.emplace(process_name, cpu_nr_for_name(affinity));
                     cpus.set(cpu_nr_for_name(affinity));
                 }
+
                 replica_affinities.push_back(process_affinities);
             }
             region_map.emplace(region_name, replica_affinities);
@@ -183,39 +161,6 @@ class Mapping
 
         throw std::runtime_error("Can't determine the mapping's equivalence class.");
     }
-
-    bool is_valid(const KnobDescription& knob_description) {
-        // Check validity of region mappings.
-        for (const auto& [region_name, region_body] : knob_description.region_specifications) {
-            auto max_nb_replicas = region_body.max_replicas;
-            // Search for the region in the region map.
-            // If the region cannot be found in the region map, then the mapping does not respect the
-            // knob description, returning false.
-            auto region_map_entry = region_map.find(region_name);
-            if (region_map_entry == region_map.end())
-                return false;
-            // Check if the maximum number of replicas has not been reached.
-            auto nb_replicas = region_map_entry->second.size();
-            if (max_nb_replicas != 0 && max_nb_replicas < nb_replicas)
-                return false;
-            // Check for consistency in core mappings
-            auto replicas = region_map_entry->second;
-            for (const auto& replica : replicas) {
-                if (!check_validity_process(region_body.process_specifications, replica))
-                    return false;
-            }
-        }
-        // Check validity of characteristics.
-        for (const auto& characteristic_item : knob_description.characteristic_specifications) {
-            auto characteristic_name = characteristic_item.first;
-            auto characteristic_map_entry = characteristics_map.find(characteristic_name);
-            if (characteristic_map_entry == characteristics_map.end())
-                return false;
-        }
-        // Check validity of regular process mappings.
-        return check_validity_process(knob_description.regular_process_specifications, thread_map);
-    }
-
 };
 
 #endif /* __MAPPING_H__ */

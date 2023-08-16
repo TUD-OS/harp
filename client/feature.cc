@@ -15,7 +15,7 @@ void Feature::accept(Client *client)
 bool Feature::is_bounded() const
 { return _client != nullptr; }
 
-Client *Feature::get_client() const
+Client *Feature::get_client()
 { return _client; }
 
 }

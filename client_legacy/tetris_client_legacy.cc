@@ -1,6 +1,11 @@
-#include "util/connection.h"
 #include "util/debug_util.h"
-#include "util/protobuf_util.h"
+
+#include "client/client.h"
+#include "client/concrete_client.h"
+#include "client/feature.h"
+
+#include "client/features/movable_threads.h"
+#include "client/features/scalable_application.h"
 
 #include <algorithm>
 #include <atomic>
@@ -13,12 +18,13 @@
 
 #include <dlfcn.h>
 #include <errno.h>
+#include <link.h>
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <proto/tetris.pb.h>
 
 
 /***
@@ -86,126 +92,70 @@ struct ThreadInfo
     void *arg;
 };
 
+struct CheckerState
+{
+    enum Type {
+        GOMP = 1,
+        OMP = 2,
+    };
+
+    bool is_scalable = false;
+    Type scale_type;
+};
 
 /***
  * Global variables
  ***/
 
 using Timer = TimeKeeper<std::atomic_ulong, std::chrono::system_clock, std::chrono::nanoseconds>;
-using ConnectionPtr = std::unique_ptr<Connection>;
+
+using ClientPtr = std::unique_ptr<tetris::ConcreteClient>;
+using MovableThreadsPtr = std::unique_ptr<tetris::MovableThreads>;
+using ScalableApplicationPtr = std::unique_ptr<tetris::ScalableApplication>;
+
 using ThreadList = std::vector<ThreadInfo *>;
 using ThreadListPtr = std::unique_ptr<ThreadList>;
 
 debug::LoggerPtr logger;
-ConnectionPtr connection;
 ThreadListPtr threads;
 
-bool managed_by_tetris;
+ClientPtr tetris_client;
+MovableThreadsPtr movable_threads;
+ScalableApplicationPtr scalable_app;
+
 std::atomic_ulong time_ns;
 
-
 /***
- * TETRIS library support
  ***/
+static int scalable_app_checker(struct dl_phdr_info *i, size_t size, void *data) {
+    CheckerState *cstate = static_cast<CheckerState*>(data);
 
-static
-bool tetris_new_client(int pid, const char *exec, char *mapping_type,
-                       const char *compare_criteria, bool compare_more_is_better, const char *preferred_mapping,
-                       const char *filter_criteria)
-{
-
-
-    tetris::PullRequest request{};
-    request.set_type(tetris::PullRequest::TETRIS_NEW_CLIENT);
-    auto new_client_message = request.mutable_new_client();
-
-    /* Send the new-client message to the server. */
-    new_client_message->set_pid(getpid());
-    new_client_message->set_exec(exec);
-
-    bool dynamic_client = false;
-    if (mapping_type) {
-        if (mapping_type == "DYNAMIC") {
-            logger->info("Use dynamic/CFS mapping.\n");
-            dynamic_client = true;
-        } else if (mapping_type == "STATIC") {
-            logger->info("Use static TETRiS mapping.\n");
-        } else {
-            logger->warning("Unknown mapping type: %s\n", mapping_type);
-        }
+    if ((strstr(i->dlpi_name, "libomp") != NULL)) {
+        logger->info(" -> Found scalable OpenMP application (libomp)\n");
+        cstate->is_scalable = true;
+        cstate->scale_type= CheckerState::OMP;
+        return 1;
+    } else if ((strstr(i->dlpi_name, "libgomp") != NULL)) {
+        logger->info(" -> Found scalable OpenMP application (libgomp)\n");
+        cstate->is_scalable = true;
+        cstate->scale_type= CheckerState::GOMP;
+        return 1;
     }
-    new_client_message->set_mapping_type(dynamic_client ? tetris::NewClient::DYNAMIC : tetris::NewClient::STATIC);
-
-    if (compare_criteria) {
-        logger->info("Use given compare criteria -- %s.\n", compare_criteria);
-        new_client_message->set_compare_criteria(compare_criteria);
-    } else {
-        logger->info("Use default compare criteria -- executionTime.\n");
-        new_client_message->set_compare_criteria("executionTime");
-    }
-
-    if (compare_more_is_better)
-        logger->info("Use greater than comparison for criteria.\n");
-    else
-        logger->info("Use less then comparison for criteria.\n");
-    new_client_message->set_compare_more_is_better(compare_more_is_better);
-
-    if (preferred_mapping) {
-        new_client_message->set_preferred_mapping(preferred_mapping);
-    }
-
-    if (filter_criteria) {
-        new_client_message->set_filter_criteria(filter_criteria);
-    }
-
-    // Send the command.
-    if (protobuf_util::Send(connection->locked(), request) != Connection::OutState::DONE) {
-        logger->error("Failed to send new-client message.\n");
-        return false;
-    };
-    logger->info("Send a message!\n");
-    tetris::PullResponse response{};
-    if (protobuf_util::Receive(connection->locked(), response) != Connection::InState::DONE) {
-        logger->error("Failed to get answer from server.\n");
-        return false;
-    }
-
-    // Process the TETRiS server response.
-    if ((response.type() == tetris::PullResponse::TETRIS_NEW_CLIENT_ACK) && response.has_new_client_ack()) {
-        if (response.new_client_ack().managed())
-            logger->info("TETRIS-ID: %d\n", response.new_client_ack().id());
-        else
-            logger->info("TETRIS-ID: not managed\n");
-        return response.new_client_ack().managed();
-    }
-
-    return false;
+    return 0;
 }
 
-static
-bool tetris_new_thread(int tid, const char *name)
+static bool is_scalable_app() {
+    CheckerState cstate;
+    logger->info(" -> Searching for scalable app\n");
+
+    dl_iterate_phdr(scalable_app_checker, &cstate);
+
+    return cstate.is_scalable;
+}
+
+bool scale_application_cb(int nr_threads)
 {
-    tetris::PullRequest request{};
-
-    /* Send the new-thread message to the server. */
-    request.set_type(tetris::PullRequest::TETRIS_NEW_THREAD);
-    auto new_thread_message = request.mutable_new_thread();
-    new_thread_message->set_tid(tid);
-    new_thread_message->set_name(name);
-
-    if (protobuf_util::Send(connection->locked(), request) != Connection::OutState::DONE) {
-        logger->error("Failed to send new-thread message.\n");
-        return false;
-    }
-
-    /* Get the answer. */
-    tetris::PullResponse response{};
-    if (protobuf_util::Receive(connection->locked(), response) != Connection::InState::DONE) {
-        logger->error("Failed to get answer from server.\n");
-        return false;
-    }
-
-    return response.new_thread_ack().managed();
+    return true;
 }
 
 /***
@@ -223,39 +173,22 @@ void __attribute__((constructor)) setup(void)
 
     logger->info("Loading TETRIS support\n");
 
-    try {
-        connection = std::make_unique<Connection>(SERVER_SOCKET);
+    tetris_client = std::make_unique<tetris::ConcreteClient>(SERVER_SOCKET);
+    if (tetris_client->is_managed()) {
+        logger->info("->> Managed by TETRIS <<-\n");
 
-        char exec[512];
-        memset(exec, 0, sizeof(exec));
+        /* Register with TETRiS that this client supports movable threads */
+        logger->info("->> Register as application with movable threads\n");
+        movable_threads = std::make_unique<tetris::MovableThreads>();
+        tetris_client->bind(movable_threads.get());
 
-        readlink("/proc/self/exe", exec, sizeof(exec));
-        int pid = getpid();
-
-        char *mapping_type = getenv("TETRIS_MAPPING_TYPE");
-
-        char *compare_criteria = getenv("TETRIS_COMPARE_CRITERIA");
-        bool compare_more_is_better = false;
-        if (getenv("TETRIS_COMPARE_MORE_IS_BETTER"))
-            compare_more_is_better = true;
-
-        char *preferred_mapping = getenv("TETRIS_PREFERRED_MAPPING");
-
-        char *filter_criteria = getenv("TETRIS_FILTER_CRITERIA");
-
-        if (tetris_new_client(pid, exec, mapping_type, compare_criteria,
-                              compare_more_is_better, preferred_mapping, filter_criteria)) {
-            logger->info("->> Managed by TETRIS <<-\n");
-            managed_by_tetris = true;
-        } else {
-            logger->info("->> NOT managed by TETRIS <<-\n");
-            managed_by_tetris = false;
-            connection.release();
+        if (is_scalable_app()) {
+            logger->info("->> Register as scalable application\n");
+            scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb);
+            tetris_client->bind(scalable_app.get());
         }
-    } catch (std::runtime_error &e) {
-        logger->error("Failed to connect to TETRIS server.\n--> %s <--\n", e.what());
-        managed_by_tetris = false;
-        connection.release();
+    } else {
+        logger->info("->> NOT managed by TETRIS <<-\n");
     }
 }
 
@@ -263,9 +196,7 @@ extern "C"
 void __attribute__((destructor)) tierdown(void)
 {
     Timer t{time_ns};
-
-    if (managed_by_tetris)
-        connection.release();
+    tetris_client.reset();
 
     t.stop();
 
@@ -295,13 +226,16 @@ void *thread_wrapper(void *arg)
     ti->ready = true;
 
     if (ti->named && ti->ready)
-        ti->managed = tetris_new_thread(ti->tid, ti->name);
+        ti->managed = movable_threads->register_thread(ti->name, ti->tid);
 
     pthread_mutex_unlock(&ti->mtx);
 
     /* Call the actual function. */
     t.stop();
-    return ti->func(ti->arg);
+    void *ret = ti->func(ti->arg);
+
+    /* If necessary we can do some tear down before returning */
+    return ret;
 }
 
 extern "C"
@@ -317,7 +251,7 @@ int pthread_create(pthread_t *thread_id, const pthread_attr_t *attr,
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_create"));
 
     if (real_func != nullptr) {
-        if (managed_by_tetris) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* This program is managed by TETRIS. Accordingly create the
              * thread and wait until a name is assigned to it so that
              * the TETRIS server can move this thread to the appropriate
@@ -362,7 +296,7 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_setname_np"));
 
     if (real_func != nullptr) {
-        if (managed_by_tetris) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* Search for the ThreadInfo struct of this thread. */
             auto iti = std::find_if(threads->begin(), threads->end(), [&](ThreadInfo *ti) -> bool {
                 return pthread_equal(*(ti->pthread_id), thread_id) != 0;
@@ -380,7 +314,7 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
                 ti->named = true;
 
                 if (ti->named && ti->ready)
-                    ti->managed = tetris_new_thread(ti->tid, ti->name);
+                    ti->managed = movable_threads->register_thread(ti->name, ti->tid);
 
                 pthread_mutex_unlock(&ti->mtx);
 
@@ -416,7 +350,7 @@ int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_setaffinity_np"));
 
     if (real_func != nullptr) {
-        if (managed_by_tetris) {
+        if (tetris_client && tetris_client->is_managed()) {
             /* This program is managed by TETRIS. The TETRIS server
              * decides where to place this thread. So just ignore this
              * request. */

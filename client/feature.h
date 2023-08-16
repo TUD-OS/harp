@@ -51,14 +51,14 @@ public:
     bool is_bounded() const;
 
     /**
-     * \brief Forwards a message to the feature.
+     * \brief Forwards a message from the TETRiS server to the feature.
      *
      * Called from the push listener thread when a command is received.
      *
      * \param request PushRequest received.
      * \return PushResponse associated to the request.
      */
-    virtual PushResponse forward(const PushRequest &request) = 0;
+    virtual ClientResponse forward(const ServerMessage &msg) = 0;
 
     /**
      * \brief Checks if the feature needs a handshake.
@@ -80,7 +80,7 @@ protected:
      * \brief Gets the TETRiS client instance.
      * \return Pointer to the TETRiS client.
      */
-    Client *get_client() const;
+    Client *get_client();
 
 private:
     /// \brief Bounded TETRiS client instance.

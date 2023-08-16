@@ -2,124 +2,108 @@ syntax = "proto2";
 
 package tetris;
 
-// A RegionConfiguration message specifies the number of replicas in a parallel region.
-message RegionConfiguration {
-  required string name = 1;
-  required uint32 num_replicas = 2;
+// Registration message from the TETRiS client to the server
+message RegistrationRequest {
+    required uint32 pid = 1;        // PID of the client
+    required string exec = 2;       // The executable to identify the client
 }
 
-// A ProcessInfo message holds the name of the process and its thread ID.
-message ProcessInfo {
-  required string process_name = 1;
-  required uint32 thread_id = 2;
+message RegistrationResponse {
+    required uint32 id = 1;         // The internal client ID
 }
 
-// A RegionInfo message holds all threads ID of parallel regions handled by DPM.
-message RegionInfo {
-  required string name = 1;
-  message ReplicaInfo {
-    repeated ProcessInfo process_thread = 1;
-  }
-  repeated ReplicaInfo replicas = 2;
+// All the messages send from the client to the server
+message ClientMessage {
+    enum Type {                     // The message types
+        MAPPINGS = 1;               // Register mappings for the client
+        OPTIMIZATION_TARGET = 2;    // Change optimization target for the client
+        FEATURE_SUBSCRIBE = 3;      // Register as an application feature with the server
+    }
+    required Type type = 1;
+
+    message MappingsInfo {          // Additional data for MAPPINGS message
+        message MappingData {
+            message Characteristic {
+                required string name = 1;   // The name that describes the characteristic
+                required float value = 2;   // The value of the characteristic
+            }
+            repeated Characteristic characteristics = 1;
+
+            message ThreadInfo {
+                required string name = 1;   // The thread for which information should be provided
+                required string cpu = 2;    // The CPU to which the thread should be assigned
+            }
+            repeated ThreadInfo threads = 2;
+        }
+        repeated MappingData mappings = 1;
+    }
+    optional MappingsInfo mappings_info = 2;
+
+    message FeatureInfo {           // Additional data for the FEATURE_SUBSCRIBE message
+        enum FeatureType {          // The type of the feature that we want to register
+            MOVABLE_THREADS = 1;    // The application supports moving individual threads around
+            SCALE_APPLICATION = 2;  // The application can dynamically scale its number of threads at runtime
+        }
+        required FeatureType type =1;
+    }
+    optional FeatureInfo feature_info = 3;
 }
 
-message RegionThroughput {/* not yet defined */}
+// Responses from the server to the client upon client messages
+message ServerResponse {
+    enum Type {                     // The message types
+        ERROR = 1;                  // Generic error when processing the message
+        ACKNOWLEDGE = 2;            // Generic acknowledge of messages
+        FEATURE_ACKNOWLEDGE = 3;    // Acknowledge of a FEATURE_SUBSCRIBE message
+    }
+    required Type type = 1;
 
-// A NewClient message introduces a TETRiS client to the TETRiS server.
-message NewClient {
-  required uint32 pid = 1;
-  required string exec = 2;
-  enum MappingType {
-    DYNAMIC = 0;
-    STATIC = 1;
-  }
-  required MappingType mapping_type = 3;
-  optional string compare_criteria = 4;
-  optional bool compare_more_is_better = 5;
-  optional string preferred_mapping = 6;
-  optional string filter_criteria = 7;
+    message FeatureAckInfo {
+        required uint32 id = 1;     // The ID of the registered feature so that later messages can be properly routed
+    }
+    optional FeatureAckInfo feature_ack_info = 2;
 }
 
-// A NewClientAck message informs the TETRiS client if it is managed by the TETRiS manager.
-message NewClientAck {
-  required uint32 id = 1;
-  required bool managed = 2;
+// All the messages send from the server to the client
+message ServerMessage {
+    required uint32 feature_id = 1; // The ID of the feature which should handle this message
+
+    enum Type {                     // The message types
+        UPDATE_MAPPING = 1;         // Use the proposed mapping for the client
+        MOVE_THREADS = 2;           // Request to move application threads to different CPUs
+        SCALE_APPLICATION = 3;      // Request to scale the application to a different number of threads
+    }
+    required Type type = 2;
+
+    message MappingInfo {           // Additional data for the ACTIVATE_MAPPING message
+            message ThreadInfo {
+                required string name = 1;   // The thread
+                required uint32 cpu_nr = 2;    // The CPU number to which the thread should be assigned
+            }
+            repeated ThreadInfo threads = 1;
+    }
+    optional MappingInfo update_mapping = 3;
+
+    message MoveThreadsInfo {       // Additional data for the MOVE_THREADS message
+        message ThreadAssigment {
+            required uint32 tid = 1;    // The ID of the thread that should be moved
+            required uint32 cpu = 2;    // The CPU number, where the thread should be moved to
+        }
+        repeated ThreadAssigment thread_assignments = 1;
+    }
+    optional MoveThreadsInfo move_threads_info = 4;
+
+    message ScaleApplicationInfo {  // Additional data for the SCALE_APPLICATION message
+        required uint32 max_threads = 1;    // The number of threads the application should maximally scale to
+    }
+    optional ScaleApplicationInfo scale_application_info = 5;
 }
 
-// A NewThread message introduces a new process thread to the TETRiS server.
-message NewThread {
-  required uint32 tid = 1;
-  required string name = 2;
-}
-
-// A NewThreadAck message informs the TETRiS client if it the new thread is managed by the TETRiS manager.
-message NewThreadAck {
-  required bool managed = 1;
-}
-
-// A ApplicationThreadsID message holds all threads ID for all process and parallel region replica of a DPM application.
-message ApplicationThreadsID {
-  repeated ProcessInfo process_info = 3;
-  repeated RegionInfo parallel_region_info = 4;
-}
-
-// A pull request is sent from a TETRiS feature to the TETRiS server.
-message PullRequest {
-  enum Type {
-    TETRIS_NEW_CLIENT = 0;                  // Register the client to the TETRiS server.
-    TETRIS_NEW_THREAD = 1;                  // Register a new thread to the TETRiS server.
-    DPM_SUBSCRIBE = 2;                      // Register DPM as a TETRiS feature.
-    DPM_SEND_APPLICATION_THREAD_ID = 3;     // Send application threads ID to the TETRiS server.
-  }
-  required Type type = 1;
-  // TETRiS fields.
-  optional NewClient new_client = 2;
-  optional NewThread new_thread = 3;
-  // DPM fields.
-  optional ApplicationThreadsID application_threads_id = 4;
-}
-
-// A pull response is sent from the TETRiS server to a TETRiS feature after processing a request.
-message PullResponse {
-  enum Type {
-    ERROR = 0;                              // Signal an error in the request previously received.
-    ACKNOWLEDGE = 1;                        // Generic acknowledge.
-    TETRIS_NEW_CLIENT_ACK = 2;              // Acknowledge the new TETRiS client instance.
-    TETRIS_NEW_THREAD_ACK = 3;              // Acknowledge a new thread.
-  }
-  required Type type = 1;
-  // TETRiS fields.
-  optional uint32 feature_id = 2;  /* After a subscription, the server returns the feature id allocated
-                                      for the TETRiS feature. */
-  optional NewClientAck new_client_ack = 3;
-  optional NewThreadAck new_thread_ack = 4;
-}
-
-// A push request is sent from the TETRiS server to a TETRiS feature.
-message PushRequest {
-  enum Type {
-    DPM_UPDATE_CONFIGURATION = 0;           // Send configuration to apply on DPM.
-    DPM_GET_REGIONS_INFO = 1;               // Get parallel regions information from DPM.
-    DPM_GET_REGIONS_THROUGHPUT = 2;         // Get parallel regions throughput from DPM.
-  }
-  required Type type = 1;
-  // TETRiS fields.
-  required uint32 feature_id = 2;   /* Field used by the push listener to forward the message
-                                       to the corresponding TETRiS feature. */
-  // DPM fields.
-  repeated RegionConfiguration region_configurations = 3;
-}
-
-// A push response is sent from a TETRiS feature to the TETRiS server after processing a request.
-message PushResponse {
-  enum Type {
-    ERROR = 0;                              // Signal an error in the request previously received.
-    ACKNOWLEDGE = 1;                        // Generic acknowledge.
-    DPM_REGION_INFO = 2;                    // Response contains parallel regions information.
-    DPM_REGION_THROUGHPUT = 3;              // Response contains parallel regions throughput.
-  }
-  required Type type = 1;
-  // DPM fields.
-  repeated RegionInfo region_infos = 3;
-  repeated RegionThroughput region_throughputs = 4;
+// Responses from the client to the server upon server messages
+message ClientResponse {
+    enum Type {
+        ERROR = 1;                  // Generic error when processing the message
+        ACKNOWLEDGE = 2;            // Generic acknowledge of messages
+    }
+    required Type type = 1;
 }

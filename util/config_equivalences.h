@@ -4,7 +4,7 @@
 #pragma once
 
 
-#include "equivalence.h"
+#include "util/equivalence.h"
 
 
 static

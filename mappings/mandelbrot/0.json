@@ -1,0 +1,51 @@
+ {
+    "name": "4_replicas",
+    "execution_time": "100",
+    "energy": "350",
+    "mapping": [
+      {
+        "type": "process",
+        "name": "Init",
+        "core": "ARM00"
+      },
+      {
+        "type": "process",
+        "name": "Display",
+        "core": "ARM01"
+      },
+      {
+        "type": "DLP",
+        "name": "CalcLines",
+        "replicas": [
+          [
+            {
+              "type": "process",
+              "name": "CalcLines",
+              "core": "ARM04"
+            }
+          ],
+          [
+            {
+              "type": "process",
+              "name": "CalcLines",
+              "core": "ARM05"
+            }
+          ],
+          [
+            {
+              "type": "process",
+              "name": "CalcLines",
+              "core": "ARM06"
+            }
+          ],
+          [
+            {
+              "type": "process",
+              "name": "CalcLines",
+              "core": "ARM07"
+            }
+          ]
+        ]
+      }
+    ]
+  }
