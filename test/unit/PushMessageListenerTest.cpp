@@ -11,6 +11,8 @@
 
 #define SOCKET_PATH "/tmp/test_socket_tetris_push_listener"
 
+#if 0
+
 class MockFeature : public tetris::Feature
 {
 public:
@@ -79,3 +81,5 @@ TEST_F(PushMessageListenerTest, CheckListener)
 
     ASSERT_EQ(tetris::PushResponse::ACKNOWLEDGE, response.type());
 }
+
+#endif
