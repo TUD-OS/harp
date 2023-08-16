@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "server/mapping_reader.h"
+#include "util/mapping_reader.h"
 
 // This test checks the functionality of the read_mapping_directory function
 TEST(MappingReaderTest, ReadMappingDirectoryTest) {
@@ -15,13 +15,13 @@ TEST(MappingReaderTest, ReadMappingDirectoryTest) {
 
   // Check the number of mappings read for the 'mandelbrot' application
   EXPECT_EQ(app_mappings.count("mandelbrot"), 1);
-  EXPECT_EQ(app_mappings["mandelbrot"].size(), 3);
+  EXPECT_EQ(app_mappings["mandelbrot"].size(), 4);
 
   EXPECT_EQ(app_mappings.count("mandelbrot_2"), 1);
   EXPECT_EQ(app_mappings["mandelbrot_2"].size(), 3);
 
   EXPECT_EQ(app_mappings.count("htop"), 1);
-  EXPECT_EQ(app_mappings["htop"].size(), 1);
+  EXPECT_EQ(app_mappings["htop"].size(), 2);
 
   EXPECT_EQ(app_mappings.count("jpeg"), 1);
   EXPECT_EQ(app_mappings["jpeg"].size(), 18);
