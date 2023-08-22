@@ -173,7 +173,7 @@ void __attribute__((constructor)) setup(void)
 
     logger->info("Loading TETRIS support\n");
 
-    tetris_client = std::make_unique<tetris::ConcreteClient>(SERVER_SOCKET);
+    tetris_client = std::make_unique<tetris::ConcreteClient>(tetris::SERVER_SOCKET);
     if (tetris_client->is_managed()) {
         logger->info("->> Managed by TETRIS <<-\n");
 
