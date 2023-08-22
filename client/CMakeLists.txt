@@ -25,6 +25,7 @@ install(TARGETS tetrisclient
         INCLUDES DESTINATION include
         )
 install(FILES ${CMAKE_SOURCE_DIR}/client/client.h ${CMAKE_SOURCE_DIR}/client/feature.h DESTINATION include/tetris)
+install(FILES ${CMAKE_SOURCE_DIR}/util/tetris.h DESTINATION include/tetris/util)
 install(FILES ${CMAKE_BINARY_DIR}/proto/tetris.pb.h DESTINATION include/tetris/proto)
 install(FILES ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h DESTINATION include/tetris/features)
 export(TARGETS tetrisclient FILE "${CMAKE_CURRENT_BINARY_DIR}/tetrisclient-config.cmake")
