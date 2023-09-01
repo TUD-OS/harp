@@ -1,0 +1,120 @@
+core_types:
+  - type: P-core
+    threads: 2
+  - type: E-core
+    threads: 1
+
+cores:
+  - type: P-core
+    threads:
+      - name: P0_0
+        affinity: 0
+      - name: P0_1
+        affinity: 1
+  - type: P-core
+    threads:
+      - name: P1_0
+        affinity: 2
+      - name: P1_1
+        affinity: 3
+  - type: P-core
+    threads:
+      - name: P2_0
+        affinity: 4
+      - name: P2_1
+        affinity: 5
+  - type: P-core
+    threads:
+      - name: P3_0
+        affinity: 6
+      - name: P3_1
+        affinity: 7
+  - type: P-core
+    threads:
+      - name: P4_0
+        affinity: 8
+      - name: P4_1
+        affinity: 9
+  - type: P-core
+    threads:
+      - name: P5_0
+        affinity: 10
+      - name: P5_1
+        affinity: 11
+  - type: P-core
+    threads:
+      - name: P6_0
+        affinity: 12
+      - name: P6_1
+        affinity: 13
+  - type: P-core
+    threads:
+      - name: P7_0
+        affinity: 14
+      - name: P7_1
+        affinity: 15
+  - type: E-core
+    threads:
+      - name: E00
+        affinity: 16
+  - type: E-core
+    threads:
+      - name: E01
+        affinity: 17
+  - type: E-core
+    threads:
+      - name: E02
+        affinity: 18
+  - type: E-core
+    threads:
+      - name: E03
+        affinity: 19
+  - type: E-core
+    threads:
+      - name: E04
+        affinity: 20
+  - type: E-core
+    threads:
+      - name: E05
+        affinity: 21
+  - type: E-core
+    threads:
+      - name: E06
+        affinity: 22
+  - type: E-core
+    threads:
+      - name: E07
+        affinity: 23
+  - type: E-core
+    threads:
+      - name: E08
+        affinity: 24
+  - type: E-core
+    threads:
+      - name: E09
+        affinity: 25
+  - type: E-core
+    threads:
+      - name: E10
+        affinity: 26
+  - type: E-core
+    threads:
+      - name: E11
+        affinity: 27
+  - type: E-core
+    threads:
+      - name: E12
+        affinity: 28
+  - type: E-core
+    threads:
+      - name: E13
+        affinity: 29
+  - type: E-core
+    threads:
+      - name: E14
+        affinity: 30
+  - type: E-core
+    threads:
+      - name: E15
+        affinity: 31
+

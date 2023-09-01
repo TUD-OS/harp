@@ -1,0 +1,40 @@
+core_types:
+  - type: A7
+    threads: 1
+  - type: A15
+    threads: 1
+
+cores:
+  - type: A7
+    threads:
+      - name: ARM00
+        affinity: 0
+  - type: A7
+    threads:
+      - name: ARM01
+        affinity: 1
+  - type: A7
+    threads:
+      - name: ARM02
+        affinity: 2
+  - type: A7
+    threads:
+      - name: ARM03
+        affinity: 3
+  - type: A15
+    threads:
+      - name: ARM04
+        affinity: 4
+  - type: A15
+    threads:
+      - name: ARM05
+        affinity: 5
+  - type: A15
+    threads:
+      - name: ARM06
+        affinity: 6
+  - type: A15
+    threads:
+      - name: ARM07
+        affinity: 7
+
