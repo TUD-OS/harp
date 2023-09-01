@@ -5,7 +5,7 @@
 // This test checks the functionality of the read_mapping_directory function
 TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   // Define the directory containing the test mapping data
-  std::string test_directory = "../mappings";
+  std::string test_directory = "../examples/mappings";
 
   // Call the function to read mappings from the test directory
   auto app_mappings = MappingReader::read_mapping_directory(test_directory);

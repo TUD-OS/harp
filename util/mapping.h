@@ -5,8 +5,8 @@
 
 
 #include "util/cpulist.h"
-#include "util/config.h"
-#include "util/equivalence.h"
+#include "util/platform/config.h"
+#include "util/platform/equivalence.h"
 
 
 #include <map>
