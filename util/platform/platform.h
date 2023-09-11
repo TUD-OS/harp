@@ -17,17 +17,17 @@ private:
 
 class CPUThread {
 public:
-  CPUThread(const std::string &name, int affinity)
-      : _name(name), _affinity(affinity) {}
+  CPUThread(const std::string &name, int thread_id)
+      : _name(name), _id(thread_id) {}
 
 private:
   std::string _name;
-  int _affinity;
+  int _id;
 };
 
 class CPUCore {
 public:
-  explicit CPUCore(CPUType &type) : _type(type) {}
+  CPUCore(CPUType &type, int core_id) : _type(type), _id(core_id) {}
 
 private:
   void AddThread(const std::string &name, int affinity) {
@@ -38,12 +38,19 @@ private:
 
 private:
   CPUType &_type;
+  int _id;
   std::vector<CPUThread> _threads;
 };
 
 class Platform {
 public:
-  std::vector<CPUCore> GetCPUCores() { return _cpu_cores; }
+  std::vector<std::reference_wrapper<CPUCore>> GetCPUCores() {
+    std::vector<std::reference_wrapper<CPUCore>> cpu_list;
+    for (auto &core : _cpu_cores) {
+      cpu_list.push_back(std::ref(core));
+    }
+    return cpu_list;
+  }
 
 private:
   void AddCPUType(const std::string &name, int num_threads) {
@@ -54,7 +61,8 @@ private:
 
   CPUCore &AddCore(const std::string &core_type) {
     CPUType &cpu_type_ = GetCPUType(core_type);
-    _cpu_cores.emplace_back(cpu_type_);
+    int num = _cpu_cores.size();
+    _cpu_cores.emplace_back(cpu_type_, num);
     return _cpu_cores.back();
   }
 
