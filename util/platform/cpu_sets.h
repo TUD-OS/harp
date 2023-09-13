@@ -127,12 +127,10 @@ public:
   CPUCoreSet() = default;
 
   CPUCoreSet(std::initializer_list<int> ilist)
-      : CPUSetBase<CPUCoreSet>(ilist) {
-  }
+      : CPUSetBase<CPUCoreSet>(ilist) {}
 
   template <template <typename> class Container>
-  CPUCoreSet(const Container<int> &vec)
-      : CPUSetBase<CPUCoreSet>(vec) {}
+  CPUCoreSet(const Container<int> &vec) : CPUSetBase<CPUCoreSet>(vec) {}
 
   // specific functionality or data members for CPUCoreSet
 };
@@ -145,6 +143,15 @@ public:
  * All CPU threads are encoded by the integer number, a cpu affinity.
  */
 class CPUThreadSet : public CPUSetBase<CPUThreadSet> {
+public:
+  CPUThreadSet() = default;
+
+  CPUThreadSet(std::initializer_list<int> ilist)
+      : CPUSetBase<CPUThreadSet>(ilist) {}
+
+  template <template <typename> class Container>
+  CPUThreadSet(const Container<int> &vec) : CPUSetBase<CPUThreadSet>(vec) {}
+
   // specific functionality or data members for CPUThreadSet
 };
 

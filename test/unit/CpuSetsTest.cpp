@@ -6,27 +6,18 @@
 
 #include "util/platform/cpu_sets.h"
 
-TEST(CPUCoreSetTest, DefaultConstructor) {
-  CPUCoreSet set;
-  EXPECT_EQ(set.Size(), 0);
-}
+TEST(CPUCoreSetTest, Constructors) {
+  CPUCoreSet set1;
+  EXPECT_EQ(set1.Size(), 0);
 
-TEST(CPUCoreSetTest, InitializerListConstructor) {
-  CPUCoreSet set = {1, 2, 3};
-  EXPECT_EQ(set.Size(), 3);
-  EXPECT_TRUE(set == CPUCoreSet({1, 2, 3}));
-}
-
-TEST(CPUCoreSetTest, TemplateConstructor) {
-  std::vector<int> vec = {1, 2, 3, 4};
-  CPUCoreSet set(vec);
-  EXPECT_EQ(set.Size(), 4);
-  EXPECT_TRUE(set == CPUCoreSet({1, 2, 3, 4}));
-
-  std::list<int> lst = {5, 6, 7};
-  CPUCoreSet set2(lst);
+  CPUCoreSet set2 = {1, 2, 3};
   EXPECT_EQ(set2.Size(), 3);
-  EXPECT_TRUE(set2 == CPUCoreSet({5, 6, 7}));
+  EXPECT_TRUE(set2 == CPUCoreSet({1, 2, 3}));
+
+  std::vector<int> vec = {1, 2, 3, 4};
+  CPUCoreSet set3(vec);
+  EXPECT_EQ(set3.Size(), 4);
+  EXPECT_TRUE(set3 == CPUCoreSet({1, 2, 3, 4}));
 }
 
 TEST(CPUCoreSetTest, SetAndErase) {
@@ -51,8 +42,50 @@ TEST(CPUCoreSetTest, BinaryOperators) {
   EXPECT_FALSE(set1.OverlapsWith(set3));
 }
 
-TEST(CPUCoreSetTest, GetCoreList) {
+TEST(CPUCoreSetTest, GetList) {
   CPUCoreSet set = {1, 2, 3};
+  std::vector<int> core_list = set.GetList();
+  EXPECT_EQ(core_list, std::vector<int>({1, 2, 3}));
+}
+
+TEST(CPUThreadSetTest, Constructors) {
+  CPUThreadSet set1;
+  EXPECT_EQ(set1.Size(), 0);
+
+  CPUThreadSet set2 = {1, 2, 3};
+  EXPECT_EQ(set2.Size(), 3);
+  EXPECT_TRUE(set2 == CPUThreadSet({1, 2, 3}));
+
+  std::vector<int> vec = {1, 2, 3, 4};
+  CPUThreadSet set3(vec);
+  EXPECT_EQ(set3.Size(), 4);
+  EXPECT_TRUE(set3 == CPUThreadSet({1, 2, 3, 4}));
+}
+
+TEST(CPUThreadSetTest, SetAndErase) {
+  CPUThreadSet set;
+  set.Set(1);
+  set.Set(2);
+  EXPECT_EQ(set.Size(), 2);
+  set.Erase(2);
+  EXPECT_EQ(set.Size(), 1);
+  EXPECT_TRUE(set == CPUThreadSet({1}));
+}
+
+TEST(CPUThreadSetTest, BinaryOperators) {
+  CPUThreadSet set1 = {1, 2, 3, 4};
+  CPUThreadSet set2 = {3, 4, 5, 6};
+  CPUThreadSet set3 = {7, 8};
+  CPUThreadSet res_union = set1 | set2;
+  EXPECT_TRUE(res_union == CPUThreadSet({1, 2, 3, 4, 5, 6}));
+  CPUThreadSet res_intersection = set1 & set2;
+  EXPECT_TRUE(res_intersection == CPUThreadSet({3, 4}));
+  EXPECT_TRUE(set1.OverlapsWith(set2));
+  EXPECT_FALSE(set1.OverlapsWith(set3));
+}
+
+TEST(CPUThreadSetTest, GetList) {
+  CPUThreadSet set = {1, 2, 3};
   std::vector<int> core_list = set.GetList();
   EXPECT_EQ(core_list, std::vector<int>({1, 2, 3}));
 }
