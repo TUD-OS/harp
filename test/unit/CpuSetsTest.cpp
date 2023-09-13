@@ -89,3 +89,15 @@ TEST(CPUThreadSetTest, GetList) {
   std::vector<int> core_list = set.GetList();
   EXPECT_EQ(core_list, std::vector<int>({1, 2, 3}));
 }
+
+TEST(CPUThreadSetTest, ToCpuSetT) {
+  CPUThreadSet set = {1, 2, 3};
+  cpu_set_t res = set.ToCpuSetT();
+
+  cpu_set_t ref;
+  CPU_ZERO(&ref);
+  CPU_SET(1, &ref);
+  CPU_SET(2, &ref);
+  CPU_SET(3, &ref);
+  EXPECT_NE(CPU_EQUAL(&res, &ref), 0);
+}

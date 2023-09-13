@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <sched.h>
+
 #include <initializer_list>
 #include <set>
 #include <vector>
@@ -110,7 +112,7 @@ public:
 
   std::set<int>::const_iterator end() const { return _set.end(); }
 
-private:
+protected:
   std::set<int> _set;
 };
 
@@ -153,6 +155,16 @@ public:
   CPUThreadSet(const Container<int> &vec) : CPUSetBase<CPUThreadSet>(vec) {}
 
   // specific functionality or data members for CPUThreadSet
+
+  // Returns a cpu_set_t value
+  cpu_set_t ToCpuSetT() const {
+    cpu_set_t tmp;
+    CPU_ZERO(&tmp);
+    for (auto c : _set) {
+      CPU_SET(c, &tmp);
+    }
+    return tmp;
+  }
 };
 
 #endif /* __CPU_SETS_H__ */
