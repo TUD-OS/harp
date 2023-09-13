@@ -3,12 +3,16 @@
 
 #pragma once
 
+#include "util/platform/cpu_sets.h"
+
 class CPUType {
 public:
   CPUType(const std::string &name, int num_threads)
       : _name(name), _num_threads(num_threads) {}
 
   std::string GetName() const { return _name; }
+
+  int GetNumThreads() const { return _num_threads; }
 
 private:
   std::string _name;
@@ -29,12 +33,17 @@ class CPUCore {
 public:
   CPUCore(CPUType &type, int core_id) : _type(type), _id(core_id) {}
 
+public:
+  int GetID() { return _id; }
+  const CPUType &GetType() { return _type; }
+
 private:
   void AddThread(const std::string &name, int affinity) {
     _threads.emplace_back(name, affinity);
   }
 
   friend class YamlPlatformReader;
+  friend class Platform;
 
 private:
   CPUType &_type;
@@ -49,6 +58,20 @@ public:
     for (auto &core : _cpu_cores) {
       cpu_list.push_back(std::ref(core));
     }
+    return cpu_list;
+  }
+
+  std::vector<std::reference_wrapper<CPUCore>>
+  GetCPUCores(const CPUCoreSet &core_set) {
+    std::vector<std::reference_wrapper<CPUCore>> cpu_list;
+
+    for (auto index : core_set) {
+      if (index < 0 || index >= _cpu_cores.size()) {
+        throw std::out_of_range("Invalid CPU core index encountered.");
+      }
+      cpu_list.push_back(std::ref(_cpu_cores[index]));
+    }
+
     return cpu_list;
   }
 
