@@ -3,41 +3,47 @@
 
 #pragma once
 
-/**
- * \class CPUCoreSet
- * \brief Represents a set of CPU cores and provides operations for manipulating
- * CPU sets.
- *
- * All CPU cores are encoded by the integer number, an index of the core in the
- * platform description.
- */
-class CPUCoreSet {
+#include <initializer_list>
+#include <set>
+#include <vector>
+
+template <class Derived> class CPUSetBase {
 public:
-  CPUCoreSet() {}
+  CPUSetBase() {}
 
   template <template <typename> class Container>
-  CPUCoreSet(const Container<int> &cpus) : CPUCoreSet{} {
+  CPUSetBase(const Container<int> &cpus) : CPUSetBase{} {
     for (const auto c : cpus)
       _set.insert(c);
   }
 
-  CPUCoreSet(const std::initializer_list<int> &cpus) : CPUCoreSet{} {
+  CPUSetBase(const std::initializer_list<int> &cpus) : CPUSetBase{} {
     for (const auto c : cpus)
       _set.insert(c);
   }
 
-  CPUCoreSet(const CPUCoreSet &o) = default;
-  CPUCoreSet(CPUCoreSet &&o) = default;
+#if 0
+  CPUSetBase(const Derived &o) = default;
+  CPUSetBase(Derived &&o) = default;
 
-  CPUCoreSet &operator=(const CPUCoreSet &o) = default;
-  CPUCoreSet &operator=(CPUCoreSet &&o) = default;
+  Derived &operator=(const Derived &o) = default;
+  Derived &operator=(Derived &&o) = default;
+#endif
 
-  bool operator==(const CPUCoreSet &o) const { return _set == o._set; }
+private:
+  Derived &GetDerived() { return static_cast<Derived &>(*this); }
 
-  bool operator!=(const CPUCoreSet &o) const { return !(*this == o); }
+  const Derived &GetDerived() const {
+    return static_cast<const Derived &>(*this);
+  }
 
-  CPUCoreSet operator&(const CPUCoreSet &o) const {
-    CPUCoreSet tmp{*this};
+public:
+  bool operator==(const Derived &o) const { return _set == o._set; }
+
+  bool operator!=(const Derived &o) const { return !(*this == o); }
+
+  Derived operator&(const Derived &o) const {
+    Derived tmp = GetDerived();
     for (auto c : _set) {
       if (o._set.count(c) == 0) {
         tmp.Erase(c);
@@ -46,27 +52,25 @@ public:
     return tmp;
   }
 
-  CPUCoreSet &operator&=(const CPUCoreSet &o) {
-    CPUCoreSet tmp{*this};
+  Derived &operator&=(const Derived &o) {
     for (auto c : _set) {
       if (o._set.count(c) == 0) {
-        tmp.Erase(c);
+        this->Erase(c);
       }
     }
-    *this = tmp;
 
     return *this;
   }
 
-  CPUCoreSet operator|(const CPUCoreSet &o) const {
-    CPUCoreSet tmp{*this};
+  Derived operator|(const Derived &o) const {
+    Derived tmp = GetDerived();
     for (auto c : o._set) {
       tmp.Set(c);
     }
     return tmp;
   }
 
-  CPUCoreSet operator|=(const CPUCoreSet &o) {
+  Derived operator|=(const Derived &o) {
     for (auto c : o._set) {
       this->Set(c);
     }
@@ -79,15 +83,15 @@ public:
 
   void Zero() { _set.clear(); }
 
-  std::size_t Size() { return _set.size(); }
+  std::size_t Size() const { return _set.size(); }
 
-  bool OverlapsWith(const CPUCoreSet &o) const {
-    CPUCoreSet tmp = *this & o;
+  bool OverlapsWith(const Derived &o) const {
+    Derived tmp = *this & o;
     return tmp.Size() != 0;
   }
 
   // Returns a list of CPU indices in the set.
-  std::vector<int> GetCoreList() const {
+  std::vector<int> GetList() const {
     std::vector<int> result;
 
     for (auto c : _set) {
@@ -97,7 +101,7 @@ public:
     return result;
   }
 
-  // Make CPUCoreSet compatible with range-based loops
+  // Make CPUSetBase compatible with range-based loops
   std::set<int>::iterator begin() { return _set.begin(); }
 
   std::set<int>::iterator end() { return _set.end(); }
@@ -110,6 +114,38 @@ private:
   std::set<int> _set;
 };
 
-class CPUThreadset {};
+/**
+ * \class CPUCoreSet
+ * \brief Represents a set of CPU cores and provides operations for manipulating
+ * CPU sets.
+ *
+ * All CPU cores are encoded by the integer number, an index of the core in the
+ * platform description.
+ */
+class CPUCoreSet : public CPUSetBase<CPUCoreSet> {
+public:
+  CPUCoreSet() = default;
 
-#endif /* __CPULIST_H__ */
+  CPUCoreSet(std::initializer_list<int> ilist)
+      : CPUSetBase<CPUCoreSet>(ilist) {
+  }
+
+  template <template <typename> class Container>
+  CPUCoreSet(const Container<int> &vec)
+      : CPUSetBase<CPUCoreSet>(vec) {}
+
+  // specific functionality or data members for CPUCoreSet
+};
+
+/**
+ * \class CPUThreadSet
+ * \brief Represents a set of CPU threads and provides operations for
+ *  manipulating CPU sets.
+ *
+ * All CPU threads are encoded by the integer number, a cpu affinity.
+ */
+class CPUThreadSet : public CPUSetBase<CPUThreadSet> {
+  // specific functionality or data members for CPUThreadSet
+};
+
+#endif /* __CPU_SETS_H__ */

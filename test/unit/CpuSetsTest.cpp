@@ -53,6 +53,6 @@ TEST(CPUCoreSetTest, BinaryOperators) {
 
 TEST(CPUCoreSetTest, GetCoreList) {
   CPUCoreSet set = {1, 2, 3};
-  std::vector<int> core_list = set.GetCoreList();
+  std::vector<int> core_list = set.GetList();
   EXPECT_EQ(core_list, std::vector<int>({1, 2, 3}));
 }
