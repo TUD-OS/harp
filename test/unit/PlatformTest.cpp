@@ -3,13 +3,41 @@
 #include "util/platform/cpu_sets.h"
 #include "util/platform/reader.h"
 
-TEST(PlatformReaderTest, OdroidTest) {
+#include "util/platform/cpu_sets.h"
+#include "util/platform/reader.h"
+#include <gtest/gtest.h>
+
+class BasePlatformTest : public ::testing::Test {
+protected:
   YamlPlatformReader reader;
-  Platform platform =
-      reader.ReadFromFile("../examples/platforms/platform_odroid.yaml");
+  Platform platform;
 
+  virtual std::string GetPlatformFilePath() = 0;
+
+  void SetUp() override {
+    platform = reader.ReadFromFile(GetPlatformFilePath());
+  }
+
+  void TearDown() override {
+  }
+};
+
+class OdroidTest : public BasePlatformTest {
+protected:
+  std::string GetPlatformFilePath() override {
+    return "../examples/platforms/platform_odroid.yaml";
+  }
+};
+
+class RaptorLakeTest : public BasePlatformTest {
+protected:
+  std::string GetPlatformFilePath() override {
+    return "../examples/platforms/platform_raptor-8P16E.yaml";
+  }
+};
+
+TEST_F(OdroidTest, PlatformStructure) {
   EXPECT_EQ(platform.GetCPUCores().size(), 8);
-
   auto cores = platform.GetCPUCores(CPUCoreSet{0, 1, 4, 5});
   EXPECT_EQ(cores[0].get().GetID(), 0);
   EXPECT_EQ(cores[0].get().GetType().GetName(), "A7");
@@ -24,13 +52,8 @@ TEST(PlatformReaderTest, OdroidTest) {
   EXPECT_EQ(cores[3].get().GetType().GetNumThreads(), 1);
 }
 
-TEST(PlatformReaderTest, RaptorLakeTest) {
-  YamlPlatformReader reader;
-  Platform platform =
-      reader.ReadFromFile("../examples/platforms/platform_raptor-8P16E.yaml");
-
+TEST_F(RaptorLakeTest, PlatformStructure) {
   EXPECT_EQ(platform.GetCPUCores().size(), 24);
-
   auto cores = platform.GetCPUCores(CPUCoreSet{0, 1, 8, 9});
   EXPECT_EQ(cores[0].get().GetID(), 0);
   EXPECT_EQ(cores[0].get().GetType().GetName(), "P-core");
@@ -44,3 +67,5 @@ TEST(PlatformReaderTest, RaptorLakeTest) {
   EXPECT_EQ(cores[3].get().GetType().GetName(), "E-core");
   EXPECT_EQ(cores[3].get().GetType().GetNumThreads(), 1);
 }
+
+// Add more tests as needed for each platform...
