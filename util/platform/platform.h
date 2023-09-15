@@ -5,11 +5,19 @@
 
 #include "util/platform/cpu_sets.h"
 
+class CPUCore;
+
 class CPUType {
 public:
   CPUType(const std::string &name, int num_threads)
       : _name(name), _num_threads(num_threads) {}
 
+  CPUType(const CPUType &) = delete;
+
+  CPUType(CPUType &&) = default;
+  CPUType &operator=(CPUType &&) = default;
+
+public:
   std::string GetName() const { return _name; }
 
   int GetNumThreads() const { return _num_threads; }
@@ -21,10 +29,23 @@ private:
 
 class CPUThread {
 public:
-  CPUThread(const std::string &name, int thread_id)
-      : _name(name), _id(thread_id) {}
+  CPUThread(CPUCore &core, const std::string &name, int thread_id)
+      : _core(core), _name(name), _id(thread_id) {}
+
+  CPUThread(const CPUThread &) = delete;
+
+  CPUThread(CPUThread &&) = default;
+  CPUThread &operator=(CPUThread &&) = default;
+
+public:
+  CPUCore &GetCPUCore() const { return _core; }
+
+  std::string GetName() const { return _name; }
+
+  int GetID() { return _id; }
 
 private:
+  CPUCore &_core;
   std::string _name;
   int _id;
 };
@@ -33,13 +54,26 @@ class CPUCore {
 public:
   CPUCore(CPUType &type, int core_id) : _type(type), _id(core_id) {}
 
+  CPUCore(const CPUCore &) = delete;
+
+  CPUCore(CPUCore &&) = default;
+  CPUCore &operator=(CPUCore &&) = default;
+
 public:
   int GetID() { return _id; }
   const CPUType &GetType() { return _type; }
 
+  std::vector<std::reference_wrapper<CPUThread>> GetCPUThreads() {
+    std::vector<std::reference_wrapper<CPUThread>> res;
+    for (auto &t : _threads) {
+      res.push_back(std::ref(t));
+    }
+    return res;
+  }
+
 private:
   void AddThread(const std::string &name, int affinity) {
-    _threads.emplace_back(name, affinity);
+    _threads.emplace_back(*this, name, affinity);
   }
 
   friend class YamlPlatformReader;
@@ -73,6 +107,21 @@ public:
     }
 
     return cpu_list;
+  }
+
+  std::vector<std::reference_wrapper<CPUThread>>
+  GetCPUThreads(const CPUThreadSet &thread_set) {
+    std::vector<std::reference_wrapper<CPUThread>> res;
+
+    for (auto index : thread_set) {
+      CPUThread *thread_ptr = FindCPUThread(index);
+      if (thread_ptr == nullptr) {
+        throw std::out_of_range("Invalid CPU thread affinity encountered.");
+      }
+      res.push_back(std::ref(*thread_ptr));
+    }
+
+    return res;
   }
 
 private:
