@@ -41,6 +41,9 @@ if(ENABLE_GOOGLE_TESTING)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -fprofile-arcs -ftest-coverage")
 endif()
 
+# Make test header files visible
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
 # Now simply link against gtest or gtest_main as needed.
 add_executable(${TEST_TARGET_NAME} ${${TEST_TARGET_NAME}_SRC})
 target_link_libraries(${TEST_TARGET_NAME} tetrisserverlib tetrisclient gtest_main gmock_main ${Protobuf_LIBRARIES})
