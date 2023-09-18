@@ -25,12 +25,12 @@ public:
     // Read Cores
     for (const auto &node : platformNode["cores"]) {
       std::string type = node["type"].as<std::string>();
-      CPUCore &core = platform.AddCore(type);
+      auto core = platform.AddCore(type);
 
       for (const auto &threadNode : node["threads"]) {
         std::string name = threadNode["name"].as<std::string>();
         int affinity = threadNode["affinity"].as<int>();
-        core.AddThread(name, affinity);
+        core->AddThread(name, affinity);
       }
     }
 
