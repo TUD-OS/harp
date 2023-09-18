@@ -7,7 +7,6 @@
 
 #include "util/debug_util.h"
 
-#include <functional>
 #include <map>
 #include <memory>
 #include <stdexcept>

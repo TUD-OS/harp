@@ -144,3 +144,23 @@ TEST_F(RaptorLakeTest, GetCPUThreads) {
   EXPECT_EQ(threads[3]->GetName(), "E04");
   EXPECT_EQ(threads[3]->GetCPUCore().GetID(), 12);
 }
+
+TEST_F(OdroidTest, ConvertCPUSets) {
+  auto threads1 = CPUThreadSet{0, 2, 5, 7};
+  auto cores1 = CPUCoreSet{0, 2, 5, 7};
+  EXPECT_EQ(platform.ToCPUCoreSet(threads1), cores1);
+
+  auto cores2 = CPUCoreSet{0, 1, 3, 7};
+  auto threads2 = CPUThreadSet{0, 1, 3, 7};
+  EXPECT_EQ(platform.ToCPUThreadSet(cores2), threads2);
+}
+
+TEST_F(RaptorLakeTest, ConvertCPUSets) {
+  auto threads1 = CPUThreadSet{0, 2, 3, 7, 10, 16, 18};
+  auto cores1 = CPUCoreSet{0, 1, 3, 5, 8, 10};
+  EXPECT_EQ(platform.ToCPUCoreSet(threads1), cores1);
+
+  auto cores2 = CPUCoreSet{0, 1, 5, 10, 15};
+  auto threads2 = CPUThreadSet{0, 1, 2, 3, 10, 11, 18, 23};
+  EXPECT_EQ(platform.ToCPUThreadSet(cores2), threads2);
+}
