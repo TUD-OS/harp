@@ -18,6 +18,17 @@ TEST(CPUCoreSetTest, Constructors) {
   CPUCoreSet set3(vec);
   EXPECT_EQ(set3.Size(), 4);
   EXPECT_TRUE(set3 == CPUCoreSet({1, 2, 3, 4}));
+
+  /* copy constructors */
+  CPUCoreSet set4 = set2;
+  set4.Set(0);
+  EXPECT_TRUE(set2 == CPUCoreSet({1, 2, 3}));
+  EXPECT_TRUE(set4 == CPUCoreSet({0, 1, 2, 3}));
+
+  CPUCoreSet set5(set2);
+  set5.Set(6);
+  EXPECT_TRUE(set2 == CPUCoreSet({1, 2, 3}));
+  EXPECT_TRUE(set5 == CPUCoreSet({1, 2, 3, 6}));
 }
 
 TEST(CPUCoreSetTest, SetAndErase) {
@@ -60,6 +71,17 @@ TEST(CPUThreadSetTest, Constructors) {
   CPUThreadSet set3(vec);
   EXPECT_EQ(set3.Size(), 4);
   EXPECT_TRUE(set3 == CPUThreadSet({1, 2, 3, 4}));
+
+  /* copy constructors */
+  CPUThreadSet set4 = set2;
+  set4.Set(0);
+  EXPECT_TRUE(set2 == CPUThreadSet({1, 2, 3}));
+  EXPECT_TRUE(set4 == CPUThreadSet({0, 1, 2, 3}));
+
+  CPUThreadSet set5(set2);
+  set5.Set(6);
+  EXPECT_TRUE(set2 == CPUThreadSet({1, 2, 3}));
+  EXPECT_TRUE(set5 == CPUThreadSet({1, 2, 3, 6}));
 }
 
 TEST(CPUThreadSetTest, SetAndErase) {
