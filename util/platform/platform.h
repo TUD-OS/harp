@@ -6,6 +6,7 @@
 #include "util/platform/cpu_sets.h"
 
 #include "util/debug_util.h"
+#include "util/platform/equiv_res_alloc.h"
 
 #include <map>
 #include <memory>
@@ -15,6 +16,7 @@
 template <typename T> class TD;
 
 class CPUCore;
+class EquivResAllocator;
 class Platform;
 
 class CPUType {
@@ -107,20 +109,28 @@ public:
   Platform &operator=(Platform &&) = default;
 
 public:
-  CPUThread *FindCPUThread(int index) {
+  void SetEquivResAllocator(std::unique_ptr<EquivResAllocator> allocator) {
+    _equiv_res_allocator = std::move(allocator);
+  }
+
+  EquivResAllocator *GetEquivResAllocator() const {
+    return _equiv_res_allocator.get();
+  }
+
+  CPUThread *FindCPUThread(int index) const {
     if (_cpu_threads.count(index) == 0)
       return nullptr;
     return _cpu_threads.at(index);
   }
 
-  CPUCore *FindCPUCore(int index) {
+  CPUCore *FindCPUCore(int index) const {
     if (index < 0 || index >= _cpu_cores.size()) {
       return nullptr;
     }
     return _cpu_cores[index].get();
   }
 
-  std::vector<CPUCore *> GetCPUCores() {
+  std::vector<CPUCore *> GetCPUCores() const {
     std::vector<CPUCore *> cpu_list;
     for (auto &core : _cpu_cores) {
       cpu_list.push_back(core.get());
@@ -128,7 +138,7 @@ public:
     return cpu_list;
   }
 
-  std::vector<CPUCore *> GetCPUCores(const CPUCoreSet &core_set) {
+  std::vector<CPUCore *> GetCPUCores(const CPUCoreSet &core_set) const {
     std::vector<CPUCore *> cpu_list;
 
     for (auto index : core_set) {
@@ -141,9 +151,9 @@ public:
     return cpu_list;
   }
 
-  std::map<int, CPUThread *> GetCPUThreads() { return _cpu_threads; }
+  std::map<int, CPUThread *> GetCPUThreads() const { return _cpu_threads; }
 
-  std::vector<CPUThread *> GetCPUThreads(const CPUThreadSet &thread_set) {
+  std::vector<CPUThread *> GetCPUThreads(const CPUThreadSet &thread_set) const {
     std::vector<CPUThread *> res;
 
     for (auto index : thread_set) {
@@ -157,7 +167,7 @@ public:
     return res;
   }
 
-  CPUCoreSet ToCPUCoreSet(const CPUThreadSet &thread_set) {
+  CPUCoreSet ToCPUCoreSet(const CPUThreadSet &thread_set) const {
     CPUCoreSet res;
     for (auto t : GetCPUThreads(thread_set)) {
       res.Set(t->GetCPUCore().GetID());
@@ -165,7 +175,7 @@ public:
     return res;
   }
 
-  CPUThreadSet ToCPUThreadSet(const CPUCoreSet &core_set) {
+  CPUThreadSet ToCPUThreadSet(const CPUCoreSet &core_set) const {
     CPUThreadSet res;
     for (auto c : GetCPUCores(core_set)) {
       for (auto t : c->GetCPUThreads()) {
@@ -181,7 +191,7 @@ private:
     _cpu_types.insert({name, std::move(cpu_type)});
   }
 
-  CPUType *GetCPUType(const std::string &name) {
+  CPUType *GetCPUType(const std::string &name) const {
     return _cpu_types.at(name).get();
   }
 
@@ -204,6 +214,7 @@ private:
   friend class YamlPlatformReader;
 
 private:
+  std::unique_ptr<EquivResAllocator> _equiv_res_allocator;
   std::map<std::string, std::unique_ptr<CPUType>> _cpu_types;
   std::vector<std::unique_ptr<CPUCore>> _cpu_cores;
   std::map<int, CPUThread *> _cpu_threads;

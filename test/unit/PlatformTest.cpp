@@ -1,13 +1,12 @@
 
 #include "util/platform/cpu_sets.h"
-#include "util/platform/reader.h"
 
 #include "unit/PlatformFixtures.h"
 
 TEST_F(OdroidTest, PlatformStructure) {
-  EXPECT_EQ(platform.GetCPUCores().size(), 8);
+  EXPECT_EQ(platform->GetCPUCores().size(), 8);
 
-  auto cores = platform.GetCPUCores(CPUCoreSet{0, 1, 4, 5});
+  auto cores = platform->GetCPUCores(CPUCoreSet{0, 1, 4, 5});
 
   EXPECT_EQ(cores[0]->GetID(), 0);
   EXPECT_EQ(cores[0]->GetType().GetName(), "A7");
@@ -40,9 +39,9 @@ TEST_F(OdroidTest, PlatformStructure) {
 }
 
 TEST_F(RaptorLakeTest, PlatformStructure) {
-  EXPECT_EQ(platform.GetCPUCores().size(), 24);
+  EXPECT_EQ(platform->GetCPUCores().size(), 24);
 
-  auto cores = platform.GetCPUCores(CPUCoreSet{0, 1, 8, 9});
+  auto cores = platform->GetCPUCores(CPUCoreSet{0, 1, 8, 9});
 
   EXPECT_EQ(cores[0]->GetID(), 0);
   EXPECT_EQ(cores[0]->GetType().GetName(), "P-core");
@@ -72,11 +71,11 @@ TEST_F(RaptorLakeTest, PlatformStructure) {
 }
 
 TEST_F(OdroidTest, GetCPUThreads) {
-  auto threads = platform.GetCPUThreads(CPUThreadSet{0, 2, 4, 6});
+  auto threads = platform->GetCPUThreads(CPUThreadSet{0, 2, 4, 6});
 
   EXPECT_EQ(threads.size(), 4);
 
-  auto cores = platform.GetCPUCores();
+  auto cores = platform->GetCPUCores();
   EXPECT_EQ(threads[0]->GetID(), 0);
   EXPECT_EQ(threads[0]->GetName(), "ARM00");
   EXPECT_EQ(threads[0]->GetCPUCore().GetID(), 0);
@@ -95,11 +94,11 @@ TEST_F(OdroidTest, GetCPUThreads) {
 }
 
 TEST_F(RaptorLakeTest, GetCPUThreads) {
-  auto threads = platform.GetCPUThreads(CPUThreadSet{0, 8, 16, 20});
+  auto threads = platform->GetCPUThreads(CPUThreadSet{0, 8, 16, 20});
 
   EXPECT_EQ(threads.size(), 4);
 
-  auto cores = platform.GetCPUCores();
+  auto cores = platform->GetCPUCores();
   EXPECT_EQ(threads[0]->GetID(), 0);
   EXPECT_EQ(threads[0]->GetName(), "P0_0");
   EXPECT_EQ(threads[0]->GetCPUCore().GetID(), 0);
@@ -120,19 +119,19 @@ TEST_F(RaptorLakeTest, GetCPUThreads) {
 TEST_F(OdroidTest, ConvertCPUSets) {
   auto threads1 = CPUThreadSet{0, 2, 5, 7};
   auto cores1 = CPUCoreSet{0, 2, 5, 7};
-  EXPECT_EQ(platform.ToCPUCoreSet(threads1), cores1);
+  EXPECT_EQ(platform->ToCPUCoreSet(threads1), cores1);
 
   auto cores2 = CPUCoreSet{0, 1, 3, 7};
   auto threads2 = CPUThreadSet{0, 1, 3, 7};
-  EXPECT_EQ(platform.ToCPUThreadSet(cores2), threads2);
+  EXPECT_EQ(platform->ToCPUThreadSet(cores2), threads2);
 }
 
 TEST_F(RaptorLakeTest, ConvertCPUSets) {
   auto threads1 = CPUThreadSet{0, 2, 3, 7, 10, 16, 18};
   auto cores1 = CPUCoreSet{0, 1, 3, 5, 8, 10};
-  EXPECT_EQ(platform.ToCPUCoreSet(threads1), cores1);
+  EXPECT_EQ(platform->ToCPUCoreSet(threads1), cores1);
 
   auto cores2 = CPUCoreSet{0, 1, 5, 10, 15};
   auto threads2 = CPUThreadSet{0, 1, 2, 3, 10, 11, 18, 23};
-  EXPECT_EQ(platform.ToCPUThreadSet(cores2), threads2);
+  EXPECT_EQ(platform->ToCPUThreadSet(cores2), threads2);
 }

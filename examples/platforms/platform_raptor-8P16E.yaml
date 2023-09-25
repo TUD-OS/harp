@@ -4,6 +4,8 @@ core_types:
   - type: E-core
     threads: 1
 
+equivalence_scheme: core-type
+
 cores:
   - type: P-core
     threads:

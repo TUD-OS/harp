@@ -4,6 +4,8 @@ core_types:
   - type: A15
     threads: 1
 
+equivalence_scheme: core-type
+
 cores:
   - type: A7
     threads:

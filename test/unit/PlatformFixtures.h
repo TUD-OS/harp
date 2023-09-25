@@ -1,14 +1,18 @@
 #include <gtest/gtest.h>
 
+#include "util/platform/reader.h"
+
 class BasePlatformTest : public ::testing::Test {
 protected:
   YamlPlatformReader reader;
-  Platform platform;
+  std::unique_ptr<Platform> platform;
+  EquivResAllocator *allocator; // shortcut for allocator
 
   virtual std::string GetPlatformFilePath() = 0;
 
   void SetUp() override {
     platform = reader.ReadFromFile(GetPlatformFilePath());
+    allocator = platform->GetEquivResAllocator();
   }
 
   void TearDown() override {}
