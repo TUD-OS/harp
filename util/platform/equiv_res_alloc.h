@@ -18,36 +18,36 @@ class EquivResAllocator {
 public:
   virtual ~EquivResAllocator() = default;
 
-  virtual std::string GetEquivClassName(const CPUCoreSet &cpus) = 0;
+  virtual std::string GetEquivClassName(const CPUCoreSet &cpus) const = 0;
 
-  virtual std::string GetEquivClassName(const CPUThreadSet &cpus) = 0;
+  virtual std::string GetEquivClassName(const CPUThreadSet &cpus) const = 0;
 
-  virtual std::string GetEquivClassName(const Mapping &m) = 0;
+  virtual std::string GetEquivClassName(const Mapping &m) const = 0;
 
   virtual std::optional<Mapping>
-  FindEquivMapping(const Mapping &m, const CPUCoreSet &used_cpus) = 0;
+  FindEquivMapping(const Mapping &m, const CPUCoreSet &used_cpus) const = 0;
 };
 
 class CoreTypeBasedEquivResAllocator : public EquivResAllocator {
 public:
-  CoreTypeBasedEquivResAllocator(Platform* platform)
-      : _platform(platform) {}
+  CoreTypeBasedEquivResAllocator(Platform *platform) : _platform(platform) {}
 
-  std::string GetEquivClassName(const CPUCoreSet &core_set) override;
+  std::string GetEquivClassName(const CPUCoreSet &core_set) const override;
 
-  std::string GetEquivClassName(const CPUThreadSet &threads) override;
+  std::string GetEquivClassName(const CPUThreadSet &threads) const override;
 
-  std::string GetEquivClassName(const Mapping &m) override {
+  std::string GetEquivClassName(const Mapping &m) const override {
     throw std::runtime_error("Not yet implemented");
   }
 
   std::optional<Mapping>
-  FindEquivMapping(const Mapping &m, const CPUCoreSet &used_cpus) override {
+  FindEquivMapping(const Mapping &m,
+                   const CPUCoreSet &used_cpus) const override {
     throw std::runtime_error("Not yet implemented");
   }
 
 private:
-  Platform * _platform;
+  Platform *_platform;
 };
 
 #endif /* __EQUIV_RES_ALLOC_H__ */

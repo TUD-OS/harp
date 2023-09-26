@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-std::string
-CoreTypeBasedEquivResAllocator::GetEquivClassName(const CPUCoreSet &core_set) {
+std::string CoreTypeBasedEquivResAllocator::GetEquivClassName(
+    const CPUCoreSet &core_set) const {
   auto cores = _platform->GetCPUCores(core_set);
   std::map<std::string, int> core_type_cnt;
   for (auto &c : cores) {
@@ -21,7 +21,7 @@ CoreTypeBasedEquivResAllocator::GetEquivClassName(const CPUCoreSet &core_set) {
   return res;
 }
 
-std::string
-CoreTypeBasedEquivResAllocator::GetEquivClassName(const CPUThreadSet &threads) {
+std::string CoreTypeBasedEquivResAllocator::GetEquivClassName(
+    const CPUThreadSet &threads) const {
   return GetEquivClassName(_platform->ToCPUCoreSet(threads));
 }
