@@ -5,13 +5,14 @@
 
 #include "client.h"
 #include "util/debug_util.h"
+#include "util/platform/platform.h"
 
 /***
  * Failure handling for no mapping found
  ***/
 
 class NoMappingError : public std::runtime_error {
- public:
+public:
   using std::runtime_error::runtime_error;
 };
 
@@ -33,7 +34,8 @@ class NoMappingError : public std::runtime_error {
  */
 
 class Manager {
- private:
+private:
+  std::unique_ptr<Platform> _platform;
   std::map<int, Client> _clients;
   std::map<std::string, std::vector<Mapping>> _mappings;
   CPUList _blocked_cpus;
@@ -49,9 +51,11 @@ class Manager {
    */
   Mapping use_preferred_mapping(Client &, const std::string &);
 
- public:
-  explicit Manager()
-      : _clients{}, _mappings{} {}
+public:
+  explicit Manager(std::unique_ptr<Platform> platform)
+      : _platform{std::move(platform)}, _clients{}, _mappings{} {}
+
+  Platform *GetPlatform() const { return _platform.get(); }
 
   /**
    * \brief Adds a new client to the client list upon connection.
@@ -74,9 +78,10 @@ class Manager {
     LOGGER->info("Change mapping for client '%s' [%d] to mapping %s\n",
                  c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
 
-    auto it = std::find_if(
-        c.mappings.begin(), c.mappings.end(),
-        [&](const auto &m) { return m.name == preferred_mapping_name; });
+    auto it =
+        std::find_if(c.mappings.begin(), c.mappings.end(), [&](const auto &m) {
+          return m.name == preferred_mapping_name;
+        });
     if (it == c.mappings.end()) {
       LOGGER->info("Unknown mapping %s for client %i\n",
                    preferred_mapping_name.c_str(), fd);

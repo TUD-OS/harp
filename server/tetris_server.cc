@@ -1,9 +1,14 @@
+
+#include <filesystem>
+
+#include <signal.h>
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
-#include <signal.h>
 
 #include "manager.h"
+#include "util/platform/reader.h"
 #include "util/socket.h"
+#include "util/string_util.h"
 
 /***
  * Global variables
@@ -12,14 +17,13 @@
 const static int MAXEVENTS = 100;
 debug::LoggerPtr logger;
 
-void usage()
-{
-    std::cout 
-      << "usage: tetrisserver [-h]" << std::endl
-      << std::endl
-      << "Options:" << std::endl
-      << "   -h, --help           show this help message." << std::endl
-      << std::endl;
+void usage() {
+  std::cout << "usage: tetrisserver [-h] [-p platform]\n"
+            << "\n"
+            << "Options:\n"
+            << "   -h, --help                show this help message.\n"
+            << "   -p, --platform <name>     specify the platform.\n"
+            << "\n";
 }
 
 /**
@@ -33,14 +37,14 @@ void usage()
  *           opened socket.
  * \return The created and setup Socket object.
  */
-Socket setup_socket(const std::string& socket_path, int& fd) {
+Socket setup_socket(const std::string &socket_path, int &fd) {
   Socket sock;
   try {
     sock.open(socket_path);
     sock.non_blocking();
     sock.listening();
     fd = sock.fd();
-  } catch (const std::runtime_error& e) {
+  } catch (const std::runtime_error &e) {
     std::cerr << "Failed to open socket " << socket_path << "\n"
               << e.what() << "\n";
     exit(1);
@@ -84,7 +88,7 @@ int setup_signal_handling() {
  * \return On success, it returns the file descriptor for the new epoll
  * instance. On failure, it returns -1 and prints an error message.
  */
-int setup_epoll(const std::vector<int>& fds) {
+int setup_epoll(const std::vector<int> &fds) {
   int epoll_fd = epoll_create1(0);
   if (epoll_fd == -1) {
     std::cerr << "Failed to initialize epoll." << std::endl
@@ -93,7 +97,7 @@ int setup_epoll(const std::vector<int>& fds) {
   }
 
   epoll_event e;
-  for (auto& fd : fds) {
+  for (auto &fd : fds) {
     e.data.fd = fd;
     e.events = EPOLLIN;
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &e) == -1) {
@@ -106,7 +110,7 @@ int setup_epoll(const std::vector<int>& fds) {
 }
 
 void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
-                       Manager& manager) {
+                       Manager &manager) {
   // Code for managing event loop
   epoll_event events[MAXEVENTS];
   bool done = false;
@@ -117,7 +121,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
     n = epoll_wait(epoll_fd, events, MAXEVENTS, -1);
 
     for (int i = 0; i < n; ++i) {
-      epoll_event* cur = &events[i];
+      epoll_event *cur = &events[i];
 
       if (cur->data.fd == server_fd) {
         /* There are a new connections at the server socket.
@@ -126,7 +130,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
           sockaddr_un in_sock;
           socklen_t in_sock_size = sizeof(in_sock);
           int infd =
-              ::accept(cur->data.fd, reinterpret_cast<sockaddr*>(&in_sock),
+              ::accept(cur->data.fd, reinterpret_cast<sockaddr *>(&in_sock),
                        &in_sock_size);
           if (infd == -1) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
@@ -166,7 +170,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
           sockaddr_un in_sock;
           socklen_t in_sock_size = sizeof(in_sock);
           int infd =
-              ::accept(cur->data.fd, reinterpret_cast<sockaddr*>(&in_sock),
+              ::accept(cur->data.fd, reinterpret_cast<sockaddr *>(&in_sock),
                        &in_sock_size);
           if (infd == -1) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
@@ -205,14 +209,14 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
           logger->info("Received a signal (%i)\n", siginfo.ssi_signo);
 
           switch (siginfo.ssi_signo) {
-            case SIGUSR1:
-              manager.update_mappings();
-              break;
-            case SIGUSR2:
-              manager.print_mappings();
-              break;
-            default:
-              done = 1;
+          case SIGUSR1:
+            manager.update_mappings();
+            break;
+          case SIGUSR2:
+            manager.print_mappings();
+            break;
+          default:
+            done = 1;
           }
         }
       } else if (cur->events & EPOLLIN) {
@@ -233,24 +237,59 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
   }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   /* Parsing command line arguments. */
   std::string mappings_path;
+  std::string platform_path;
 
-  if (argc > 2) {
-    usage();
-    return 1;
-  } else if (argc == 1) {
-    mappings_path = path_util::getcwd();
-  } else {
-    std::string arg{argv[1]};
+  for (int i = 1; i < argc; ++i) {
+    std::string arg{argv[i]};
+
     if (arg == "-h" || arg == "--help") {
       usage();
       return 0;
+    } else if (arg == "--platform" || arg == "-p") {
+      if (i + 1 >= argc) {
+        std::cerr << "Expected platform name or path after " << arg << ".\n";
+        usage();
+        return 1;
+      }
+
+      i++;
+      std::string platform = argv[i];
+
+      if (string_util::ends_with(platform, ".yaml")) {
+        if (!std::filesystem::exists(platform)) {
+          std::cerr << "Specified .yaml platform file does not exist.\n";
+          return 1;
+        } else {
+          platform_path = platform;
+        }
+      } else {
+        // Check if the platform file exists in the default location
+        std::string default_path =
+            "../examples/platforms/platform_" + platform + ".yaml";
+        if (std::filesystem::exists(default_path)) {
+          platform_path = default_path;
+        } else {
+          std::cerr << "Specified platform is not available and it's not a "
+                       "valid .yaml file path.\n";
+          return 1;
+        }
+      }
     } else {
-      usage();
-      return 1;
+      mappings_path = arg;
     }
+  }
+
+  if (mappings_path.empty()) {
+    mappings_path = std::filesystem::current_path().string();
+  }
+
+  if (platform_path.empty()) {
+    std::cerr << "Platform not specified.\n";
+    usage();
+    return 1;
   }
 
   std::cout << "Welcome to TETRiS" << std::endl;
@@ -258,8 +297,12 @@ int main(int argc, char* argv[]) {
   /* Setup logging */
   logger = debug::Logger::get();
 
+  /* Create a platform */
+  auto reader = YamlPlatformReader();
+  auto platform = reader.ReadFromFile(platform_path);
+
   /* Setting up the manager */
-  Manager manager{};
+  Manager manager{std::move(platform)};
 
   // Setting up the server and control sockets
   int server_fd = -1;
