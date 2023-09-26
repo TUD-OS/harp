@@ -77,7 +77,7 @@ message ServerMessage {
 
         message CPUConversion {                 // The conversion map that should be used when activating the mapping
             required uint32 cpu_id_from = 1;
-            repeated uint32 cpu_id_to = 2;
+            required uint32 cpu_id_to = 2;
         }
         repeated CPUConversion cpu_convs = 2;
     }
