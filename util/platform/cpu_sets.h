@@ -61,7 +61,7 @@ public:
       }
     }
 
-    return *this;
+    return GetDerived();
   }
 
   Derived operator|(const Derived &o) const {
@@ -72,11 +72,11 @@ public:
     return tmp;
   }
 
-  Derived operator|=(const Derived &o) {
+  Derived &operator|=(const Derived &o) {
     for (auto c : o._set) {
       this->Set(c);
     }
-    return *this;
+    return GetDerived();
   }
 
   void Set(int core_id) { _set.insert(core_id); }
