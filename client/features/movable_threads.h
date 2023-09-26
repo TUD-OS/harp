@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "client/feature.h"
+#include "client/mapping_feature.h"
 
 #include "proto/tetris.pb.h"
 #include "util/debug_util.h"
@@ -13,7 +13,7 @@
 
 namespace tetris {
 
-class MovableThreads : public Feature
+class MovableThreads : public MappingFeature
 {
    private:
     struct ThreadInfo {
@@ -33,20 +33,24 @@ class MovableThreads : public Feature
     /* Constructor and Destructor */
     MovableThreads();
 
-    virtual ~MovableThreads();
+    virtual ~MovableThreads() = default;
 
    public:
     /* Feature interface */
-    bool need_handshake() const override { return true; }
+    bool need_handshake() const override;
 
     FeatureID handshake() override;
 
-    ClientResponse forward(const ServerMessage &request) override;
+    ClientResponse handle(const ServerMessage &request) override;
+
+    void mapping_update(const MappingUpdate &mapping) override;
+    bool extend_mapping(MappingsInfo &mappings) override;
 
    public:
     /* Own external interface */
-    bool register_thread(const std::string &name, pid_t tid);
+    bool register_thread(pid_t tid, const std::string &name);
     bool register_thread(pid_t tid);
+    bool unregister_thread(pid_t tid);
 
    private:
     /* Internal interface */

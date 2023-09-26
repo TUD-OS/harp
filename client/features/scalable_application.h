@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "client/feature.h"
+#include "client/mapping_feature.h"
 
 #include "proto/tetris.pb.h"
 #include "util/debug_util.h"
@@ -12,7 +12,7 @@
 
 namespace tetris {
 
-class ScalableApplication : public Feature
+class ScalableApplication : public MappingFeature
 {
    private:
     debug::LoggerPtr _logger;
@@ -23,15 +23,19 @@ class ScalableApplication : public Feature
     /* Constructor and Destructor */
     ScalableApplication(std::function<bool (int)> scale_cb);
 
-    virtual ~ScalableApplication();
+    virtual ~ScalableApplication() = default;
 
    public:
     /* Feature interface */
-    bool need_handshake() const override { return true; }
+    bool need_handshake() const override;
 
     FeatureID handshake() override;
 
-    ClientResponse forward(const ServerMessage &msg) override;
+    ClientResponse handle(const ServerMessage &msg) override;
+
+    void mapping_update(const MappingUpdate &mapping) override;
+
+    bool extend_mapping(MappingsInfo &mappings) override;
 };
 
 } /* namespace tetris */

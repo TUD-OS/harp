@@ -13,8 +13,10 @@ MovableThreads::MovableThreads()
     _logger = debug::Logger::get();
 }
 
-MovableThreads::~MovableThreads()
-{}
+bool MovableThreads::need_handshake() const
+{
+    return true;
+}
 
 FeatureID MovableThreads::handshake()
 {
@@ -33,13 +35,9 @@ FeatureID MovableThreads::handshake()
     return -1;
 }
 
-ClientResponse MovableThreads::forward(const ServerMessage &msg)
+ClientResponse MovableThreads::handle(const ServerMessage &msg)
 {
     bool success = true;
-
-    for (auto thread_assigment : msg.move_threads_info().thread_assignments()) {
-        success &= move_thread(thread_assigment.tid(), thread_assigment.cpu());
-    }
 
     tetris::ClientResponse response{};
 
@@ -52,7 +50,18 @@ ClientResponse MovableThreads::forward(const ServerMessage &msg)
     return response;
 }
 
-bool MovableThreads::register_thread(const std::string &name, pid_t tid)
+void MovableThreads::mapping_update(const MappingUpdate &mapping)
+{
+    /* Move the registered threads to the corresponding CPU */
+}
+
+bool MovableThreads::extend_mapping(MappingsInfo &mappings)
+{
+    /* We don't need any extensions here, the parsed mappings should contain all necessary information */
+    return false;
+}
+
+bool MovableThreads::register_thread(pid_t tid, const std::string& name)
 {
     auto ti = _threads.emplace_back(name, tid, false);
     ti.managed = true;
@@ -68,6 +77,19 @@ bool MovableThreads::register_thread(pid_t tid)
     ti.managed = true;
 
     return true;
+}
+
+bool MovableThreads::unregister_thread(pid_t tid)
+{
+    auto it = std::find_if(std::begin(_threads), std::end(_threads),
+            [tid] (const ThreadInfo& ti) { return ti.tid == tid; });
+
+    if (it != _threads.end()) {
+        _threads.erase(it);
+        return true;
+    }
+
+    return false;
 }
 
 bool MovableThreads::move_thread(pid_t tid, int cpu)

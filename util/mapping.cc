@@ -1,10 +1,11 @@
 #include "util/mapping.h"
 
 #include "util/platform/platform.h"
+#include "util/operating_point.h"
 
 namespace {
 
-int cpu_nr_for_name(const Platform &platform, const std::string &name) {
+int cpu_nr_for_name(const tetris::Platform &platform, const std::string &name) {
   auto t_ptr = platform.FindCPUThread(name);
   if (t_ptr) {
     return t_ptr->GetID();
@@ -15,35 +16,49 @@ int cpu_nr_for_name(const Platform &platform, const std::string &name) {
 } /* Anonymous namespace */
 
 
+namespace tetris {
+
 Mapping::Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
         _platform{base._platform}, name{base.name}, thread_map{}, region_map{},
       characteristics_map{base.characteristics_map}, cpus{}
 {
     // Convert thread CPU affinity.
-    for (const auto& [name, orig_cpu] : base.thread_map) {
-        if (conv_map.find(orig_cpu) != conv_map.end()) {
-          auto new_cpu = conv_map.at(orig_cpu);
-          thread_map.emplace(name, new_cpu);
-          cpus.Set(new_cpu);
-        } else {
-            thread_map.emplace(name, orig_cpu);
-            cpus.Set(orig_cpu);
+    for (const auto& [name, orig_t_cpus] : base.thread_map) {
+        CPUThreadSet new_t_cpus;
+
+        for (const auto& c : orig_t_cpus) {
+            if (conv_map.find(c) != conv_map.end()) {
+                auto new_cpu = conv_map.at(c);
+                new_t_cpus.Set(new_cpu);
+                cpus.Set(new_cpu);
+            } else {
+                new_t_cpus.Set(c);
+                cpus.Set(c);
+            }
         }
+
+        thread_map.emplace(name, new_t_cpus);
     }
+
     // Convert thread CPU affinity in parallel regions.
     for (const auto& [region_name, replicas] : base.region_map) {
-        ReplicaAffinities<int> replica_affinities{};
+        ReplicaAffinities<CPUThreadSet> replica_affinities{};
         for (const auto& replica : replicas) {
-            ProcessAffinities<int> process_affinities{};
-            for (const auto& [process_name, orig_cpu] : replica) {
-                if (conv_map.find(orig_cpu) != conv_map.end()) {
-                    auto new_cpu = conv_map.at(orig_cpu);
-                    process_affinities.emplace(process_name, new_cpu);
-                    cpus.Set(new_cpu);
-                } else {
-                    process_affinities.emplace(process_name, orig_cpu);
-                    cpus.Set(orig_cpu);
+            ProcessAffinities<CPUThreadSet> process_affinities{};
+            for (const auto& [process_name, orig_r_cpus] : replica) {
+                CPUThreadSet new_r_cpus;
+
+                for (const auto& c : orig_r_cpus) {
+                    if (conv_map.find(c) != conv_map.end()) {
+                        auto new_cpu = conv_map.at(c);
+                        new_r_cpus.Set(new_cpu);
+                        cpus.Set(new_cpu);
+                    } else {
+                        new_r_cpus.Set(c);
+                        cpus.Set(c);
+                    }
                 }
+                process_affinities.emplace(process_name, new_r_cpus);
             }
             replica_affinities.push_back(process_affinities);
         }
@@ -51,38 +66,23 @@ Mapping::Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
     }
 }
 
-Mapping::Mapping(
-    const Platform &platform,
-    const tetris::ClientMessage::MappingsInfo::MappingData &mapping_data)
-    : _platform{platform}, name{}, thread_map{}, characteristics_map{}, cpus{} {
-  for (int j = 0; j < mapping_data.characteristics_size(); j++) {
-    auto cur_c = mapping_data.characteristics(j);
-    characteristics_map[cur_c.name()] = cur_c.value();
-  }
-
-  for (int j = 0; j < mapping_data.threads_size(); j++) {
-    auto cur_t = mapping_data.threads(j);
-    thread_map[cur_t.name()] = cpu_nr_for_name(platform, cur_t.cpu());
-  }
-}
-
 Mapping::Mapping(const Platform& platform, const std::string& name,
             const std::vector<std::pair<std::string, std::string>>& threads,
-            const RegionAffinities<std::string>& region_threads,
+            const RegionAffinities<std::string>& regions,
             const std::vector<std::pair<std::string, std::string>>& characteristics) :
         _platform{platform}, name{name}, thread_map{}, characteristics_map{}, cpus{}
 {
     for (const auto& t : threads) {
-        thread_map.emplace(t.first, cpu_nr_for_name(platform, t.second));
+        thread_map.emplace(t.first, CPUThreadSet{cpu_nr_for_name(platform, t.second)});
         cpus.Set(cpu_nr_for_name(platform, t.second));
     }
 
-    for (const auto& [region_name, replicas] : region_threads) {
-        ReplicaAffinities<int> replica_affinities{};
+    for (const auto& [region_name, replicas] : regions) {
+        ReplicaAffinities<CPUThreadSet> replica_affinities{};
         for (const auto& replica : replicas) {
-            ProcessAffinities<int> process_affinities{};
+            ProcessAffinities<CPUThreadSet> process_affinities{};
             for (const auto& [process_name, affinity] : replica) {
-                process_affinities.emplace(process_name, cpu_nr_for_name(platform, affinity));
+                process_affinities.emplace(process_name, CPUThreadSet{cpu_nr_for_name(platform, affinity)});
                 cpus.Set(cpu_nr_for_name(platform, affinity));
             }
 
@@ -95,3 +95,10 @@ Mapping::Mapping(const Platform& platform, const std::string& name,
         characteristics_map.emplace(c.first, std::stod(c.second));
     }
 }
+
+OperatingPoint Mapping::op() const
+{
+    return OperatingPoint{name, characteristics_map, cpus};
+}
+
+} /* namespace tetris */

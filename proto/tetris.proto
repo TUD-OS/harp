@@ -15,34 +15,33 @@ message RegistrationResponse {
 // All the messages send from the client to the server
 message ClientMessage {
     enum Type {                     // The message types
-        MAPPINGS = 1;               // Register mappings for the client
+        OPERATING_POINTS = 1;       // Register all operation points for the client
         OPTIMIZATION_TARGET = 2;    // Change optimization target for the client
         FEATURE_SUBSCRIBE = 3;      // Register as an application feature with the server
     }
     required Type type = 1;
 
-    message MappingsInfo {          // Additional data for MAPPINGS message
-        message MappingData {
+    message OperatingPointsInfo {   // Additional data for OPERATION_POINTS message
+        message OPData {
+            required string identifier = 1;
+
             message Characteristic {
                 required string name = 1;   // The name that describes the characteristic
                 required float value = 2;   // The value of the characteristic
             }
-            repeated Characteristic characteristics = 1;
+            repeated Characteristic characteristics = 2;
 
-            message ThreadInfo {
-                required string name = 1;   // The thread for which information should be provided
-                required string cpu = 2;    // The CPU to which the thread should be assigned
-            }
-            repeated ThreadInfo threads = 2;
+            repeated uint32 cpu_ids = 3;    // The platform specific IDs of the CPUs
         }
-        repeated MappingData mappings = 1;
+        repeated OPData operating_points = 1;
     }
-    optional MappingsInfo mappings_info = 2;
+    optional OperatingPointsInfo ops_info = 2;
 
     message FeatureInfo {           // Additional data for the FEATURE_SUBSCRIBE message
         enum FeatureType {          // The type of the feature that we want to register
             MOVABLE_THREADS = 1;    // The application supports moving individual threads around
             SCALE_APPLICATION = 2;  // The application can dynamically scale its number of threads at runtime
+            APPLICATION_PROGRESS = 3;   // The application will report its own progress to the TETRiS server
         }
         required FeatureType type =1;
     }
@@ -69,34 +68,20 @@ message ServerMessage {
     required uint32 feature_id = 1; // The ID of the feature which should handle this message
 
     enum Type {                     // The message types
-        UPDATE_MAPPING = 1;         // Use the proposed mapping for the client
-        MOVE_THREADS = 2;           // Request to move application threads to different CPUs
-        SCALE_APPLICATION = 3;      // Request to scale the application to a different number of threads
+        ACTIVATE_OP = 1;            // Inform the client about the activated operation point
     }
     required Type type = 2;
 
-    message MappingInfo {           // Additional data for the ACTIVATE_MAPPING message
-            message ThreadInfo {
-                required string name = 1;   // The thread
-                required uint32 cpu_nr = 2;    // The CPU number to which the thread should be assigned
-            }
-            repeated ThreadInfo threads = 1;
-    }
-    optional MappingInfo update_mapping = 3;
+    message OperatingPointAllocation {    // The information of the activated operation point
+        required string identifier = 1;         // The name of the operation point/mapping that should be activated
 
-    message MoveThreadsInfo {       // Additional data for the MOVE_THREADS message
-        message ThreadAssigment {
-            required uint32 tid = 1;    // The ID of the thread that should be moved
-            required uint32 cpu = 2;    // The CPU number, where the thread should be moved to
+        message CPUConversion {                 // The conversion map that should be used when activating the mapping
+            required uint32 cpu_id_from = 1;
+            repeated uint32 cpu_id_to = 2;
         }
-        repeated ThreadAssigment thread_assignments = 1;
+        repeated CPUConversion cpu_convs = 2;
     }
-    optional MoveThreadsInfo move_threads_info = 4;
-
-    message ScaleApplicationInfo {  // Additional data for the SCALE_APPLICATION message
-        required uint32 max_threads = 1;    // The number of threads the application should maximally scale to
-    }
-    optional ScaleApplicationInfo scale_application_info = 5;
+    optional OperatingPointAllocation activated_op_info = 3;
 }
 
 // Responses from the client to the server upon server messages

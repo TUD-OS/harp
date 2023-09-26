@@ -2,6 +2,7 @@
 #define __CONCRETE_CLIENT_H__
 
 #include "client.h"
+#include "client/mapping_feature.h"
 #include "push_message_listener.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
@@ -27,6 +28,11 @@ public:
     void bind(tetris::Feature *feature) override;
 
     /**
+     * \copydoc bind(TETRiS::MappingFeature *feature)
+     */
+    void bind(tetris::MappingFeature *feature) override;
+
+    /**
      * \copydoc send(const ClientRequest &msg)
      */
     ServerResponse send(const ClientMessage &msg) override;
@@ -42,6 +48,8 @@ public:
      * \return is the client managed by the TETRiS server or not.
      */
     bool is_managed() { return _managed; }
+
+    ClientResponse handle(const ServerMessage &msg) override;
 
 private:
     /**
@@ -64,6 +72,9 @@ private:
 
     /// \brief Mutex preventing multiple features to send/receive through the server socket at the same time.
     std::mutex _communication_mutex;
+
+    /// \brief List of bind MappingFeatures
+    std::vector<tetris::MappingFeature*> _mapping_features;
 };
 }
 

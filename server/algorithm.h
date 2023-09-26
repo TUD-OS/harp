@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include "util/mapping.h"
 #include "util/platform/equiv_res_alloc.h"
+#include "util/operating_point.h"
 
 #include <vector>
 
-std::vector<Mapping> tetris_mappings(const EquivResAllocator &allocator,
-                                     const std::vector<Mapping> &all_mappings,
-                                     const CPUCoreSet &occupied_cpus);
+std::vector<tetris::OperatingPointAllocation> tetris_mappings(const tetris::EquivResAllocator &allocator,
+                                     const std::vector<tetris::OperatingPoint> &ops,
+                                     const tetris::CPUCoreSet &occupied_cpus);
 
 #endif /* __ALGORITHM_H__ */

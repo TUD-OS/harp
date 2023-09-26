@@ -2,10 +2,13 @@
 #include "manager.h"
 
 #include "proto/tetris.pb.h"
+#include "util/operating_point.h"
+
+using namespace tetris;
 
 Client::Client(const Manager &manager, const ConnectionPtr &conn)
-    : manager{manager}, connection{conn}, exec{}, pid{-1}, mappings{},
-      active_mapping{manager.GetPlatform()}, type{Type::PASSIV}, filter{},
+    : manager{manager}, connection{conn}, exec{}, pid{-1}, ops{},
+      active_op{}, type{Type::PASSIV}, filter{},
       comp{} {
   std::stringstream path{};
   path << "/tmp/tetris_push_listener_" << pid;
@@ -13,40 +16,32 @@ Client::Client(const Manager &manager, const ConnectionPtr &conn)
   push_listener_path = path.str();
 }
 
-bool Client::receive_mappings(
-    const tetris::ClientMessage::MappingsInfo &mapping_info) {
-  mappings.clear();
+bool Client::receive_ops(
+    const ClientMessage::OperatingPointsInfo &ops_info) {
+  ops.clear();
 
   const auto &platform = manager.GetPlatform();
 
   /* Convert the protobuf mapping representation into our internal format */
-  for (int i = 0; i < mapping_info.mappings_size(); i++) {
-    auto cur = mapping_info.mappings(i);
-    Mapping new_mapping{platform, cur};
-    mappings.push_back(new_mapping);
+  for (int i = 0; i < ops_info.operating_points_size(); i++) {
+    auto cur = ops_info.operating_points(i);
+    ops.emplace_back(cur);
   }
 
   return true;
 }
 
-void Client::update_mapping(const Mapping &new_mapping) {
-  if (new_mapping.name == active_mapping.name) return;
-
+void Client::activate_op(const OperatingPointAllocation &new_op) {
   LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
-               new_mapping.name.c_str());
-  active_mapping = new_mapping;
+               new_op.base.name.c_str());
+  active_op = new_op;
 
   /* Send the new mapping information to the client so that client library knows
    * about the change and can react accordingly. */
-  tetris::ServerMessage msg{};
-  msg.set_type(tetris::ServerMessage::UPDATE_MAPPING);
-  auto map_info = msg.mutable_update_mapping();
-
-  for (auto &[name, cpu_nr] : active_mapping.thread_map) {
-    auto thread = map_info->add_threads();
-    thread->set_name(name);
-    thread->set_cpu_nr(cpu_nr);
-  }
+  ServerMessage msg{};
+  msg.set_type(ServerMessage::ACTIVATE_OP);
+  auto op_info = msg.mutable_activated_op_info();
+  op_info->set_identifier(new_op.base.name);
 
   LOGGER->info(" -> sending mapping info to client\n");
 
@@ -56,21 +51,21 @@ void Client::update_mapping(const Mapping &new_mapping) {
   LOGGER->info(" * done\n");
 }
 
-tetris::ServerResponse Client::handle_message(const tetris::ClientMessage &msg)
+ServerResponse Client::handle_message(const ClientMessage &msg)
 {
-  tetris::ServerResponse response{};
-  response.set_type(tetris::ServerResponse::ERROR);
+  ServerResponse response{};
+  response.set_type(ServerResponse::ERROR);
 
   switch(msg.type()) {
-    case tetris::ClientMessage::MAPPINGS:
+    case ClientMessage::OPERATING_POINTS:
       /* Parse the mapping information from the client */
-      if (msg.has_mappings_info() && receive_mappings(msg.mappings_info())) {
-        response.set_type(tetris::ServerResponse::ACKNOWLEDGE);
+      if (msg.has_ops_info() && receive_ops(msg.ops_info())) {
+        response.set_type(ServerResponse::ACKNOWLEDGE);
       }
       break;
-    case tetris::ClientMessage::OPTIMIZATION_TARGET:
+    case ClientMessage::OPTIMIZATION_TARGET:
       break;
-    case tetris::ClientMessage::FEATURE_SUBSCRIBE:
+    case ClientMessage::FEATURE_SUBSCRIBE:
       break;
   }
 

@@ -10,6 +10,9 @@
 #include "util/socket.h"
 #include "util/string_util.h"
 
+
+using namespace tetris;
+
 /***
  * Global variables
  ***/
@@ -306,10 +309,10 @@ int main(int argc, char *argv[]) {
 
   // Setting up the server and control sockets
   int server_fd = -1;
-  Socket server_sock = setup_socket(tetris::SERVER_SOCKET, server_fd);
+  Socket server_sock = setup_socket(SERVER_SOCKET, server_fd);
 
   int control_fd = -1;
-  Socket control_sock = setup_socket(tetris::CONTROL_SOCKET, control_fd);
+  Socket control_sock = setup_socket(CONTROL_SOCKET, control_fd);
 
   logger->info(" * Server socket: %s (%i)\n", server_sock.path(), server_fd);
   logger->info(" * Control socket: %s (%i)\n", control_sock.path(), control_fd);

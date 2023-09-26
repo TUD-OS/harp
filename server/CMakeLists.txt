@@ -14,6 +14,7 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
+    ${CMAKE_SOURCE_DIR}/util/operating_point.cc
 )
 target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrisserverlib generated_proto)

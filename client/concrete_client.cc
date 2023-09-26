@@ -12,7 +12,7 @@
 namespace tetris {
 
 ConcreteClient::ConcreteClient(const std::string &server_socket_path)
-        : Client(), _push_message_listener(get_push_listener_socket_path()),
+        : Client(), _push_message_listener(get_push_listener_socket_path(), this),
           _managed(false), _communication_mutex()
 {
     _logger = debug::Logger::get();
@@ -40,6 +40,22 @@ void ConcreteClient::bind(Feature *feature)
     }
 }
 
+void ConcreteClient::bind(MappingFeature *feature)
+{
+    if (!_managed)
+        return;
+
+    feature->accept(this);
+
+    if (feature->need_handshake()) {
+        auto feature_id = feature->handshake();
+
+        _push_message_listener.add_subscriber(feature_id, feature);
+    }
+
+    _mapping_features.push_back(feature);
+}
+
 ServerResponse ConcreteClient::send(const ClientMessage &message)
 {
     ServerResponse response{};
@@ -55,6 +71,21 @@ std::string ConcreteClient::get_push_listener_socket_path()
     std::stringstream string_stream{};
     string_stream << "/tmp/tetris_push_listener_" << getpid();
     return string_stream.str();
+}
+
+ClientResponse ConcreteClient::handle(const ServerMessage &msg)
+{
+    if (msg.has_activated_op_info()) {
+        auto mapping = msg.activated_op_info();
+
+        for (auto f : _mapping_features)
+            f->mapping_update(mapping);
+    }
+
+    ClientResponse response{};
+    response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
+
+    return response;
 }
 
 std::map<std::string, std::string> retrieve_env_variables()

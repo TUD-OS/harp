@@ -226,7 +226,7 @@ void *thread_wrapper(void *arg)
     ti->ready = true;
 
     if (ti->named && ti->ready)
-        ti->managed = movable_threads->register_thread(ti->name, ti->tid);
+        ti->managed = movable_threads->register_thread(ti->tid, ti->name);
 
     pthread_mutex_unlock(&ti->mtx);
 
@@ -314,7 +314,7 @@ int pthread_setname_np(pthread_t thread_id, const char *name)
                 ti->named = true;
 
                 if (ti->named && ti->ready)
-                    ti->managed = movable_threads->register_thread(ti->name, ti->tid);
+                    ti->managed = movable_threads->register_thread(ti->tid, ti->name);
 
                 pthread_mutex_unlock(&ti->mtx);
 

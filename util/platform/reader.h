@@ -8,6 +8,9 @@
 #include "util/platform/platform.h"
 #include <yaml-cpp/yaml.h>
 
+
+namespace tetris {
+
 class YamlPlatformReader {
 public:
   std::unique_ptr<Platform> ReadFromFile(const std::string &filename) {
@@ -49,5 +52,7 @@ public:
     return platform;
   }
 };
+
+} /* namespace tetris */
 
 #endif /* __PLATFORM_READER_H__ */

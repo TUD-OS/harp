@@ -2,6 +2,10 @@
 #include "platform.h"
 
 #include <iostream>
+#include <optional>
+
+
+namespace tetris {
 
 std::string CoreTypeBasedEquivResAllocator::GetEquivClassName(
     const CPUCoreSet &core_set) const {
@@ -98,5 +102,20 @@ std::optional<Mapping> CoreTypeBasedEquivResAllocator::FindEquivMapping(
 
   auto thread_perm = ToThreadPermutation(*core_perm);
 
-  return Mapping{m, thread_perm};
+  return std::make_optional<Mapping>(m, thread_perm);
 }
+
+std::optional<OperatingPointAllocation> CoreTypeBasedEquivResAllocator::FindEquivOP(
+    const OperatingPoint &op, const CPUCoreSet &used_cpus) const {
+  auto core_perm =
+      GenerateCorePermutation(_platform->ToCPUCoreSet(op.cpus), used_cpus);
+  if (!core_perm) {
+    return {};
+  }
+
+  auto thread_perm = ToThreadPermutation(*core_perm);
+
+  return std::make_optional<OperatingPointAllocation>(op, thread_perm);
+}
+
+} /* namespace tetris */
