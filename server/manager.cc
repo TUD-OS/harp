@@ -21,6 +21,9 @@ Mapping Manager::select_best_mapping(Client &c) {
   LOGGER->info("Search for best mapping for '%s' [%d] using criteria %s\n",
                c.exec.c_str(), c.pid, c.comp.repr().c_str());
 
+  auto& platform = GetPlatform();
+  auto& allocator = platform.GetEquivResAllocator();
+
   /* First go through all mappings and take those that satisfy our filter
    * criteria */
   auto filter = [&c](const Mapping &m) -> bool { return c.filter(m); };
@@ -34,7 +37,7 @@ Mapping Manager::select_best_mapping(Client &c) {
           " * Mapping %s (%.0f@%s) [%s] doesn't satisfy filter criteria %s: "
           "%s=%f\n",
           m.name.c_str(), m.characteristic(c.comp.criteria()),
-          c.comp.criteria().c_str(), m.equivalence_class().name().c_str(),
+          c.comp.criteria().c_str(), allocator.GetEquivClassName(m).c_str(),
           c.filter.repr().c_str(), c.filter.criteria().c_str(),
           m.characteristic(c.filter.criteria()));
   }
@@ -52,23 +55,23 @@ Mapping Manager::select_best_mapping(Client &c) {
 
   /* Now get all the mappings (containing equivalent ones) from the possible
    * ones, that still fit on the non-occupied CPUs. */
-  CPUList occupied_cpus = _blocked_cpus;
+  CPUCoreSet occupied_cpus = _blocked_cpus;
   for (const auto &[name, cl] : _clients) {
     if (cl.pid == c.pid) continue;
-
-    occupied_cpus |= cl.cpus();
+    auto client_cores = platform.ToCPUCoreSet(cl.cpus());
+    occupied_cpus |= client_cores;
   }
 
-  if (occupied_cpus.nr_cpus() == 0)
+  if (occupied_cpus.Size() == 0)
     LOGGER->debug(" * Already taken cpu(s): none\n");
   else
     LOGGER->debug(
         " * Already taken cpu(s): %s\n",
-        string_util::join(occupied_cpus.cpulist(num_cpus), ",").c_str());
+        string_util::join(occupied_cpus.GetList(), ",").c_str());
 
   /* Get all the TETRiS mappings for this client */
   auto possible_tetris_mappings =
-      tetris_mappings(possible_mappings, occupied_cpus);
+      tetris_mappings(allocator, possible_mappings, occupied_cpus);
   if (possible_tetris_mappings.empty()) {
     LOGGER->debug(
         "No TETRiS mappings are available for client '%s' [%i] that fit the "
@@ -90,16 +93,16 @@ Mapping Manager::select_best_mapping(Client &c) {
   LOGGER->debug(" * Start search with mapping: %s (%.0f@%s) [%s]\n",
                 best->name.c_str(), best->characteristic(c.comp.criteria()),
                 c.comp.repr().c_str(),
-                best->equivalence_class().name().c_str());
+                allocator.GetEquivClassName(*best).c_str());
 
   for (auto m = best; m != possible_tetris_mappings.end(); ++m) {
     if (filter(*m) && comp(*m, *best)) {
       LOGGER->debug(
           " * Found better mapping: %s (%.0f@%s) [%s] vs %s (%.0f@%s) [%s]\n",
           m->name.c_str(), m->characteristic(c.comp.criteria()),
-          c.comp.repr().c_str(), m->equivalence_class().name().c_str(),
+          c.comp.repr().c_str(), allocator.GetEquivClassName(*m).c_str(),
           best->name.c_str(), best->characteristic(c.comp.criteria()),
-          c.comp.repr().c_str(), best->equivalence_class().name().c_str());
+          c.comp.repr().c_str(), allocator.GetEquivClassName(*best).c_str());
 
       /* Remember this one as best one */
       best = m;
@@ -108,7 +111,7 @@ Mapping Manager::select_best_mapping(Client &c) {
 
   LOGGER->info("The best mapping: %s (%.0f@%s) [%s]\n", best->name.c_str(),
                best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
-               best->equivalence_class().name().c_str());
+               allocator.GetEquivClassName(*best).c_str());
 
   return *best;
 }

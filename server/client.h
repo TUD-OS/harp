@@ -7,6 +7,7 @@
 #include "proto/tetris.pb.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
+#include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
 #include "util/mapping.h"
 
@@ -30,9 +31,9 @@ class Client {
     bool named;
     std::string name;
     int tid;
-    CPUList cpus;
+    CPUThreadSet cpus;
 
-    Thread(int tid, CPUList cpus)
+    Thread(int tid, CPUThreadSet cpus)
         : named{false}, name{}, tid{tid}, cpus{cpus}
     {
       std::stringstream ss;
@@ -40,7 +41,7 @@ class Client {
       name = ss.str();
     }
 
-    Thread(int tid, const std::string &name, CPUList cpus)
+    Thread(int tid, const std::string &name, CPUThreadSet cpus)
         : name{name}, tid{tid}, cpus{cpus} {}
   };
 
@@ -146,7 +147,7 @@ public:
         return push_listener_path;
     }
 
-    CPUList cpus() const
+    CPUThreadSet cpus() const
     {
         return active_mapping.cpus;
     }

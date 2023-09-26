@@ -5,6 +5,7 @@
 
 #include "client.h"
 #include "util/debug_util.h"
+#include "util/platform/cpu_sets.h"
 #include "util/platform/platform.h"
 
 /***
@@ -38,7 +39,7 @@ private:
   std::unique_ptr<Platform> _platform;
   std::map<int, Client> _clients;
   std::map<std::string, std::vector<Mapping>> _mappings;
-  CPUList _blocked_cpus;
+  CPUCoreSet _blocked_cpus;
 
   /**
    * \brief Selects the best mapping for a given client.
@@ -55,7 +56,7 @@ public:
   explicit Manager(std::unique_ptr<Platform> platform)
       : _platform{std::move(platform)}, _clients{}, _mappings{} {}
 
-  Platform *GetPlatform() const { return _platform.get(); }
+  const Platform& GetPlatform() const { return *_platform.get(); }
 
   /**
    * \brief Adds a new client to the client list upon connection.
@@ -104,13 +105,14 @@ public:
    * \brief Prints the currently active mappings for all clients.
    */
   void print_mappings() {
+    auto& allocator = _platform->GetEquivResAllocator();
     std::cout << "Currently active mappings:" << std::endl
               << "==========================" << std::endl;
     for (const auto &[name, client] : _clients) {
       std::cout << "Client '" << client.exec << "' [" << client.pid
                 << "] (ID: " << name << ")" << std::endl;
       std::cout << "-> mapping: " << client.active_mapping.name << " ["
-                << client.active_mapping.equivalence_class().name() << "]"
+                << allocator.GetEquivClassName(client.active_mapping) << "]"
                 << std::endl;
     }
     std::cout << "======= END OF LIST =======" << std::endl;

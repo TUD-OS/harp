@@ -37,7 +37,7 @@ public:
   std::string GetEquivClassName(const CPUThreadSet &threads) const override;
 
   std::string GetEquivClassName(const Mapping &m) const override {
-    throw std::runtime_error("Not yet implemented");
+    return GetEquivClassName(m.cpus);
   }
 
   std::optional<Mapping>

@@ -113,8 +113,8 @@ public:
     _equiv_res_allocator = std::move(allocator);
   }
 
-  EquivResAllocator *GetEquivResAllocator() const {
-    return _equiv_res_allocator.get();
+  EquivResAllocator &GetEquivResAllocator() const {
+    return *_equiv_res_allocator.get();
   }
 
   CPUThread *FindCPUThread(int index) const {

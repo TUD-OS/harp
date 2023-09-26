@@ -6,6 +6,7 @@
 
 #include "util/cpulist.h"
 #include "util/platform/config.h"
+#include "util/platform/cpu_sets.h"
 #include "util/platform/equivalence.h"
 
 
@@ -48,7 +49,7 @@ class Mapping
     std::map<std::string, int> thread_map;
     RegionAffinities<int> region_map;
     std::map<std::string, double> characteristics_map;
-    CPUList         cpus;
+    CPUThreadSet         cpus;
 
    private:
     Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
@@ -57,11 +58,12 @@ class Mapping
         // Convert thread CPU affinity.
         for (const auto& [name, orig_cpu] : base.thread_map) {
             if (conv_map.find(orig_cpu) != conv_map.end()) {
-                thread_map.emplace(name, conv_map.at(orig_cpu));
-                cpus.set(conv_map.at(orig_cpu));
+                auto new_cpu = conv_map.at(orig_cpu);
+                thread_map.emplace(name, new_cpu);
+                cpus.Set(new_cpu);
             } else {
                 thread_map.emplace(name, orig_cpu);
-                cpus.set(orig_cpu);
+                cpus.Set(orig_cpu);
             }
         }
         // Convert thread CPU affinity in parallel regions.
@@ -71,11 +73,12 @@ class Mapping
                 ProcessAffinities<int> process_affinities{};
                 for (const auto& [process_name, orig_cpu] : replica) {
                     if (conv_map.find(orig_cpu) != conv_map.end()) {
-                        process_affinities.emplace(process_name, conv_map.at(orig_cpu));
-                        cpus.set(conv_map.at(orig_cpu));
+                        auto new_cpu = conv_map.at(orig_cpu);
+                        process_affinities.emplace(process_name, new_cpu);
+                        cpus.Set(new_cpu);
                     } else {
                         process_affinities.emplace(process_name, orig_cpu);
-                        cpus.set(orig_cpu);
+                        cpus.Set(orig_cpu);
                     }
                 }
                 replica_affinities.push_back(process_affinities);
@@ -94,7 +97,7 @@ class Mapping
     {
         for (const auto& t : threads) {
             thread_map.emplace(t.first, cpu_nr_for_name(t.second));
-            cpus.set(cpu_nr_for_name(t.second));
+            cpus.Set(cpu_nr_for_name(t.second));
         }
 
         for (const auto& [region_name, replicas] : region_threads) {
@@ -103,7 +106,7 @@ class Mapping
                 ProcessAffinities<int> process_affinities{};
                 for (const auto& [process_name, affinity] : replica) {
                     process_affinities.emplace(process_name, cpu_nr_for_name(affinity));
-                    cpus.set(cpu_nr_for_name(affinity));
+                    cpus.Set(cpu_nr_for_name(affinity));
                 }
 
                 replica_affinities.push_back(process_affinities);
@@ -116,7 +119,7 @@ class Mapping
         }
     }
 
-    CPUList cpu(const std::string& thread) const
+    CPUThreadSet cpu(const std::string& thread) const
     {
         auto it = thread_map.find(thread);
         if (it != thread_map.end())
@@ -134,33 +137,6 @@ class Mapping
         throw std::runtime_error("Unknown characteristic criteria.");
     }
 
-    std::vector<Mapping> equivalent_mappings() const
-    {
-
-        for (const auto& equiv : equivalences)  {
-            if (equiv.is_in_equalence_class(cpus)) {
-                std::vector<Mapping> result;
-
-                for (const auto& conv_map : equiv.equivalent_mappings(cpus)) {
-                    result.push_back(Mapping{*this, conv_map});
-                }
-
-                return result;
-            }
-        }
-
-        throw std::runtime_error("Can't determine the mapping's equivalence class.");
-    }
-
-    const Equivalence& equivalence_class() const
-    {
-        for (const auto& equiv : equivalences) {
-            if (equiv.is_in_equalence_class(cpus))
-                return equiv;
-        }
-
-        throw std::runtime_error("Can't determine the mapping's equivalence class.");
-    }
 };
 
 #endif /* __MAPPING_H__ */

@@ -344,6 +344,7 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
  */
 void MappingReader::log_mappings_details(
     const std::map<std::string, std::vector<Mapping>> &app_mappings) {
+  auto &allocator = _platform->GetEquivResAllocator();
   for (const auto &app_mapping : app_mappings) {
     const auto &mappings = app_mapping.second;
 
@@ -390,7 +391,7 @@ void MappingReader::log_mappings_details(
         }
 
         LOGGER->debug("  |=> %s [%s] %s\n", m.name.c_str(),
-                      m.equivalence_class().name().c_str(),
+                      allocator.GetEquivClassName(m).c_str(),
                       string_util::join(mapping_characteristics, ", ").c_str());
       }
     }

@@ -12,7 +12,7 @@ protected:
 
   void SetUp() override {
     platform = reader.ReadFromFile(GetPlatformFilePath());
-    allocator = platform->GetEquivResAllocator();
+    allocator = &platform->GetEquivResAllocator();
   }
 
   void TearDown() override {}
