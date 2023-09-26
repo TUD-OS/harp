@@ -90,7 +90,8 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
     // Iterate over all entries in the directory
     for (const auto &entry : std::filesystem::directory_iterator(dir_path)) {
       // Ignore if the entry is not a regular file
-      if (!entry.is_regular_file()) continue;
+      if (!entry.is_regular_file())
+        continue;
 
       std::filesystem::path file = entry.path();
 
@@ -121,8 +122,8 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
   return mappings;
 }
 
-std::vector<Mapping> CsvMappingReader::read_mappings(
-    const std::string &file_path) {
+std::vector<Mapping>
+CsvMappingReader::read_mappings(const std::string &file_path) {
   // implement CSV reading here
   CSVData data{file_path};
   std::vector<Mapping> mappings;
@@ -166,8 +167,8 @@ std::vector<Mapping> CsvMappingReader::read_mappings(
  * \param file_path File path to the YAML mapping file
  * \return Vector of Mapping objects
  */
-std::vector<Mapping> YamlMappingReader::read_mappings(
-    const std::string &file_path) {
+std::vector<Mapping>
+YamlMappingReader::read_mappings(const std::string &file_path) {
   // Load the root node from YAML file
   YAML::Node root = YAML::LoadFile(file_path);
 
