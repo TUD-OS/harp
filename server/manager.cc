@@ -2,6 +2,7 @@
 
 #include "algorithm.h"
 #include "util/mapping_reader.h"
+#include "util/platform/platform.h"
 
 /**
  * \brief Selects the best mapping for a given client.
@@ -218,6 +219,20 @@ bool Manager::client_message(int fd) try {
 } catch (std::runtime_error &e) {
   LOGGER->warning("Error working with message for client %i: %s", fd, e.what());
   return true;
+}
+
+void Manager::print_mappings() {
+  auto &allocator = _platform->GetEquivResAllocator();
+  std::cout << "Currently active mappings:" << std::endl
+            << "==========================" << std::endl;
+  for (const auto &[name, client] : _clients) {
+    std::cout << "Client '" << client.exec << "' [" << client.pid
+              << "] (ID: " << name << ")" << std::endl;
+    std::cout << "-> mapping: " << client.active_mapping.name << " ["
+              << allocator.GetEquivClassName(client.active_mapping) << "]"
+              << std::endl;
+  }
+  std::cout << "======= END OF LIST =======" << std::endl;
 }
 
 void Manager::update_mappings() {

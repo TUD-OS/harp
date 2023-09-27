@@ -62,7 +62,7 @@ public:
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    _clients.emplace(fd, conn);
+    _clients.try_emplace(fd, *this, conn);
   }
 
   /**
@@ -104,19 +104,7 @@ public:
   /**
    * \brief Prints the currently active mappings for all clients.
    */
-  void print_mappings() {
-    auto& allocator = _platform->GetEquivResAllocator();
-    std::cout << "Currently active mappings:" << std::endl
-              << "==========================" << std::endl;
-    for (const auto &[name, client] : _clients) {
-      std::cout << "Client '" << client.exec << "' [" << client.pid
-                << "] (ID: " << name << ")" << std::endl;
-      std::cout << "-> mapping: " << client.active_mapping.name << " ["
-                << allocator.GetEquivClassName(client.active_mapping) << "]"
-                << std::endl;
-    }
-    std::cout << "======= END OF LIST =======" << std::endl;
-  }
+  void print_mappings();
 
   /**
    * \brief Updates the mappings for all clients.

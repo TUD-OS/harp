@@ -7,11 +7,13 @@
 #include "proto/tetris.pb.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
+#include "util/mapping.h"
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
-#include "util/mapping.h"
 
 using ConnectionPtr = std::shared_ptr<Connection>;
+
+class Manager;
 
 /**
  * \class Client
@@ -52,19 +54,21 @@ class Client {
      * are not required for this type of application */
     PASSIV = 0x1,
 
-    /* ACTIVE: the default managed type --> TETRiS will actively manage the application.
-     * For this type a simple mapping has to be provided. TETRiS will try to optimize
-     * the application depending on the application's criteria and the overall system state */
+    /* ACTIVE: the default managed type --> TETRiS will actively manage the
+     * application. For this type a simple mapping has to be provided. TETRiS
+     * will try to optimize the application depending on the application's
+     * criteria and the overall system state */
     ACTIVE = 0x2,
 
-    /* PER_THREAD: a subtype of ACTIVE --> TETRiS will distinguish mappings that have different
-     * assignments of threads to CPUs as different mappings and choose them according to
-     * the application's otimization criteria. For this type an appropriate mapping has to
-     * be provided by the client. */
+    /* PER_THREAD: a subtype of ACTIVE --> TETRiS will distinguish mappings that
+     * have different assignments of threads to CPUs as different mappings and
+     * choose them according to the application's otimization criteria. For this
+     * type an appropriate mapping has to be provided by the client. */
     PER_THREAD = 0x4,
 
-    /* SCALABLE: a subtype of ACTIVE --> TETRiS will send scaling information to the
-     * application. For this type an appropriate mapping has to be provided by the client */
+    /* SCALABLE: a subtype of ACTIVE --> TETRiS will send scaling information to
+     * the application. For this type an appropriate mapping has to be provided
+     * by the client */
     SCALABLE = 0x8
   };
 
@@ -105,10 +109,11 @@ class Client {
   };
 
  public:
+  const Manager& manager;
   ConnectionPtr connection;
   std::string exec;
   int pid;
-  
+
   std::vector<Mapping> mappings;
   Mapping active_mapping;
 
@@ -120,21 +125,12 @@ class Client {
   Comp comp;
 
 private:
-    bool receive_mappings(const tetris::ClientMessage::MappingsInfo& mapping_info);
+    bool receive_mappings(const tetris::ClientMessage::MappingsInfo&);
 
 public:
     Client(const Client &) = delete;
 
-    Client(const ConnectionPtr &conn) :
-            connection{conn}, exec{}, pid{-1},
-            mappings{}, active_mapping{}, type{Type::PASSIV},
-            filter{}, comp{}
-    {
-        std::stringstream path{};
-        path << "/tmp/tetris_push_listener_" << pid;
-
-        push_listener_path = path.str();
-    }
+    Client(const Manager& manager, const ConnectionPtr &conn);
 
     ~Client()
     {

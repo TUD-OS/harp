@@ -5,7 +5,6 @@
 
 #include "util/mapping.h"
 #include "util/platform/cpu_sets.h"
-#include "util/platform/platform.h"
 
 #include <map>
 #include <optional>

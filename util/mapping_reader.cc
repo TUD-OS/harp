@@ -19,7 +19,8 @@
  * \param json_mapping JSON object containing the mapping
  * \return Mapping object
  */
-Mapping JsonMappingReader::parse_mapping(const nlohmann::json &json_mapping) {
+Mapping JsonMappingReader::parse_mapping(const Platform &platform,
+                                         const nlohmann::json &json_mapping) {
   // Container for thread mappings.
   std::vector<std::pair<std::string, std::string>> threads;
 
@@ -66,7 +67,7 @@ Mapping JsonMappingReader::parse_mapping(const nlohmann::json &json_mapping) {
   }
 
   // Create and return the mapping object.
-  return Mapping{name, threads, regions, characteristics};
+  return Mapping{platform, name, threads, regions, characteristics};
 }
 
 /**
@@ -79,7 +80,8 @@ Mapping JsonMappingReader::parse_mapping(const nlohmann::json &json_mapping) {
  * \param dir The directory from which to read the mapping files.
  * \return A vector of valid Mapping objects.
  */
-std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
+std::vector<Mapping> JsonMappingReader::read_mappings(const Platform &platform,
+                                                      const std::string &dir) {
   // Prepare a container to store valid mappings
   std::vector<Mapping> mappings;
 
@@ -107,7 +109,7 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
         json_mapping_file >> json_mapping;
 
         // Parse the JSON mapping into a Mapping object
-        auto parsed_mapping = parse_mapping(json_mapping);
+        auto parsed_mapping = parse_mapping(platform, json_mapping);
 
         // Add mapping to the vector
         mappings.emplace_back(parsed_mapping);
@@ -123,7 +125,8 @@ std::vector<Mapping> JsonMappingReader::read_mappings(const std::string &dir) {
 }
 
 std::vector<Mapping>
-CsvMappingReader::read_mappings(const std::string &file_path) {
+CsvMappingReader::read_mappings(const Platform &platform,
+                                const std::string &file_path) {
   // implement CSV reading here
   CSVData data{file_path};
   std::vector<Mapping> mappings;
@@ -150,7 +153,7 @@ CsvMappingReader::read_mappings(const std::string &file_path) {
 
     auto name = row.fixed();
 
-    mappings.emplace_back(name, threads, regions, characteristics);
+    mappings.emplace_back(platform, name, threads, regions, characteristics);
   }
 
   return mappings;
@@ -168,7 +171,8 @@ CsvMappingReader::read_mappings(const std::string &file_path) {
  * \return Vector of Mapping objects
  */
 std::vector<Mapping>
-YamlMappingReader::read_mappings(const std::string &file_path) {
+YamlMappingReader::read_mappings(const Platform &platform,
+                                 const std::string &file_path) {
   // Load the root node from YAML file
   YAML::Node root = YAML::LoadFile(file_path);
 
@@ -255,7 +259,7 @@ YamlMappingReader::read_mappings(const std::string &file_path) {
     }
 
     // Create the mapping object and add it to the vector
-    mappings.emplace_back(mapping_name, threads, region_affinities,
+    mappings.emplace_back(platform, mapping_name, threads, region_affinities,
                           characteristics);
   }
 
@@ -298,11 +302,11 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
       if (file_extension == ".csv") {
         CsvMappingReader reader;
         app_mappings[application_name] =
-            reader.read_mappings(entry.path().string());
+            reader.read_mappings(_platform, entry.path().string());
       } else if (file_extension == ".yaml") {
         YamlMappingReader reader;
         app_mappings[application_name] =
-            reader.read_mappings(entry.path().string());
+            reader.read_mappings(_platform, entry.path().string());
       } else {
         LOGGER->warning("Unrecognized mapping format for '%s'.\n",
                         entryname.c_str());
@@ -319,7 +323,7 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
       if (std::filesystem::exists(knob_desc_path)) {
         JsonMappingReader reader;
         app_mappings[application_name] =
-            reader.read_mappings(entry.path().string());
+            reader.read_mappings(_platform, entry.path().string());
       } else {
         LOGGER->warning("Unrecognized mapping format for the directory '%s'.\n",
                         entryname.c_str());

@@ -1,23 +1,28 @@
 #include "client.h"
+#include "manager.h"
+
 #include "proto/tetris.pb.h"
 
-bool Client::receive_mappings(const tetris::ClientMessage::MappingsInfo &mapping_info) {
+Client::Client(const Manager &manager, const ConnectionPtr &conn)
+    : manager{manager}, connection{conn}, exec{}, pid{-1}, mappings{},
+      active_mapping{manager.GetPlatform()}, type{Type::PASSIV}, filter{},
+      comp{} {
+  std::stringstream path{};
+  path << "/tmp/tetris_push_listener_" << pid;
+
+  push_listener_path = path.str();
+}
+
+bool Client::receive_mappings(
+    const tetris::ClientMessage::MappingsInfo &mapping_info) {
   mappings.clear();
+
+  const auto &platform = manager.GetPlatform();
 
   /* Convert the protobuf mapping representation into our internal format */
   for (int i = 0; i < mapping_info.mappings_size(); i++) {
-    Mapping new_mapping{};
     auto cur = mapping_info.mappings(i);
-    for (int j = 0; j < cur.characteristics_size(); j++) {
-        auto cur_c = cur.characteristics(j);
-        new_mapping.characteristics_map[cur_c.name()] = cur_c.value();
-    }
-
-    for (int j = 0; j < cur.threads_size(); j++) {
-        auto cur_t = cur.threads(j);
-        new_mapping.thread_map[cur_t.name()] = cpu_nr_for_name(cur_t.cpu());
-    }
-
+    Mapping new_mapping{platform, cur};
     mappings.push_back(new_mapping);
   }
 
