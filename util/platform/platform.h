@@ -4,9 +4,9 @@
 #pragma once
 
 #include "util/platform/cpu_sets.h"
+#include "util/platform/equiv_res_alloc.h"
 
 #include "util/debug_util.h"
-#include "util/platform/equiv_res_alloc.h"
 
 #include <map>
 #include <memory>
@@ -121,6 +121,14 @@ public:
     if (_cpu_threads.count(index) == 0)
       return nullptr;
     return _cpu_threads.at(index);
+  }
+
+  CPUThread *FindCPUThread(const std::string &name) const {
+    for (const auto &[__, thread_ptr] : _cpu_threads) {
+      if (thread_ptr->GetName() == name)
+        return thread_ptr;
+    }
+    return nullptr;
   }
 
   CPUCore *FindCPUCore(int index) const {
