@@ -12,7 +12,7 @@ TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   std::string test_directory = "../examples/mappings";
 
   // Call the function to read mappings from the test directory
-  auto mapping_reader = MappingReader(platform.get());
+  auto mapping_reader = MappingReader(*platform.get());
   auto app_mappings = mapping_reader.read_mapping_directory(test_directory);
 
   // Check the number of applications for which mappings have been read

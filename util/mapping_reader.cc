@@ -344,7 +344,7 @@ MappingReader::read_mapping_directory(const std::string &base_dir) {
  */
 void MappingReader::log_mappings_details(
     const std::map<std::string, std::vector<Mapping>> &app_mappings) {
-  auto &allocator = _platform->GetEquivResAllocator();
+  auto &allocator = _platform.GetEquivResAllocator();
   for (const auto &app_mapping : app_mappings) {
     const auto &mappings = app_mapping.second;
 

@@ -52,7 +52,7 @@ public:
 
 class MappingReader {
 public:
-  explicit MappingReader(Platform *platform) : _platform{platform} {}
+  explicit MappingReader(const Platform &platform) : _platform{platform} {}
 
   std::map<std::string, std::vector<Mapping>>
   read_mapping_directory(const std::string &base_dir);
@@ -61,7 +61,7 @@ private:
   void
   log_mappings_details(const std::map<std::string, std::vector<Mapping>> &);
 
-  Platform *_platform;
+  const Platform &_platform;
 };
 
 #endif // MAPPING_READER_H
