@@ -43,9 +43,6 @@ class Mapping
     std::map<std::string, double> characteristics_map;
     CPUThreadSet         cpus;
 
-   private:
-    Mapping(const Mapping& base, const std::map<int, int>& conv_map);
-
    public:
     explicit Mapping(const Platform& platform): _platform{platform}, name{},
              thread_map{}, region_map{}, characteristics_map{} {}
@@ -57,6 +54,8 @@ class Mapping
             const std::vector<std::pair<std::string, std::string>>& threads,
             const RegionAffinities<std::string>& region_threads,
             const std::vector<std::pair<std::string, std::string>>& characteristics);
+
+    Mapping(const Mapping& base, const std::map<int, int>& conv_map);
 
     Mapping& operator=(const Mapping& other) {
       if (&_platform != &other._platform) {
