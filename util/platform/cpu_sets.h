@@ -79,6 +79,29 @@ public:
     return GetDerived();
   }
 
+  Derived operator^(const Derived &o) const {
+    Derived tmp = GetDerived();
+    for (auto c : o._set) {
+      if (tmp.At(c))
+        tmp.Erase(c);
+      else
+        tmp.Set(c);
+    }
+    return tmp;
+  }
+
+  Derived &operator^=(const Derived &o) {
+    for (auto c : o._set) {
+      if (this->At(c))
+        this->Erase(c);
+      else
+        this->Set(c);
+    }
+    return GetDerived();
+  }
+
+  bool At(int core_id) const { return _set.count(core_id) == 1; }
+
   void Set(int core_id) { _set.insert(core_id); }
 
   void Erase(int core_id) { _set.erase(core_id); }
