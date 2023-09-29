@@ -8,7 +8,6 @@
 
 #include <map>
 #include <optional>
-#include <stdexcept>
 #include <string>
 
 class Platform;
@@ -41,9 +40,13 @@ public:
 
   std::optional<Mapping>
   FindEquivMapping(const Mapping &m,
-                   const CPUCoreSet &used_cpus) const override {
-    throw std::runtime_error("Not yet implemented");
-  }
+                   const CPUCoreSet &used_cpus) const override;
+
+private:
+  std::optional<std::map<int, int>>
+  GenerateCorePermutation(const CPUCoreSet &, const CPUCoreSet &) const;
+
+  std::map<int, int> ToThreadPermutation(const std::map<int, int> &) const;
 
 private:
   Platform *_platform;
