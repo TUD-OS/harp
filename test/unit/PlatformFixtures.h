@@ -4,9 +4,9 @@
 
 class BasePlatformTest : public ::testing::Test {
 protected:
-  YamlPlatformReader reader;
-  std::unique_ptr<Platform> platform;
-  EquivResAllocator *allocator; // shortcut for allocator
+  tetris::YamlPlatformReader reader;
+  std::unique_ptr<tetris::Platform> platform;
+  tetris::EquivResAllocator *allocator; // shortcut for allocator
 
   virtual std::string GetPlatformFilePath() = 0;
 

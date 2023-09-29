@@ -3,6 +3,8 @@
 
 #include "util/platform/cpu_sets.h"
 
+using namespace tetris;
+
 TEST_F(OdroidTest, GetEquivClassName) {
   auto cores1 = CPUCoreSet{0, 2, 5, 7};
   EXPECT_EQ(allocator->GetEquivClassName(cores1), "2 A15 + 2 A7");
