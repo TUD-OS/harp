@@ -58,7 +58,7 @@ add_subdirectory(${TEST_SOURCE_DIRECTORY})
 # Copy mappigns directory
 add_custom_target(copy_mappings ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/mappings ${CMAKE_BINARY_DIR}/mappings
+    ${CMAKE_SOURCE_DIR}/examples ${CMAKE_BINARY_DIR}/examples
     COMMENT "Copying mappings to build directory"
 )
 add_dependencies(${TEST_TARGET_NAME} copy_mappings)

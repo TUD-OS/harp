@@ -5,13 +5,15 @@
 
 #include "client.h"
 #include "util/debug_util.h"
+#include "util/platform/cpu_sets.h"
+#include "util/platform/platform.h"
 
 /***
  * Failure handling for no mapping found
  ***/
 
 class NoMappingError : public std::runtime_error {
- public:
+public:
   using std::runtime_error::runtime_error;
 };
 
@@ -33,10 +35,11 @@ class NoMappingError : public std::runtime_error {
  */
 
 class Manager {
- private:
+private:
+  std::unique_ptr<Platform> _platform;
   std::map<int, Client> _clients;
   std::map<std::string, std::vector<Mapping>> _mappings;
-  CPUList _blocked_cpus;
+  CPUCoreSet _blocked_cpus;
 
   /**
    * \brief Selects the best mapping for a given client.
@@ -49,15 +52,17 @@ class Manager {
    */
   Mapping use_preferred_mapping(Client &, const std::string &);
 
- public:
-  explicit Manager()
-      : _clients{}, _mappings{} {}
+public:
+  explicit Manager(std::unique_ptr<Platform> platform)
+      : _platform{std::move(platform)}, _clients{}, _mappings{} {}
+
+  const Platform& GetPlatform() const { return *_platform.get(); }
 
   /**
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    _clients.emplace(fd, conn);
+    _clients.try_emplace(fd, *this, conn);
   }
 
   /**
@@ -74,9 +79,10 @@ class Manager {
     LOGGER->info("Change mapping for client '%s' [%d] to mapping %s\n",
                  c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
 
-    auto it = std::find_if(
-        c.mappings.begin(), c.mappings.end(),
-        [&](const auto &m) { return m.name == preferred_mapping_name; });
+    auto it =
+        std::find_if(c.mappings.begin(), c.mappings.end(), [&](const auto &m) {
+          return m.name == preferred_mapping_name;
+        });
     if (it == c.mappings.end()) {
       LOGGER->info("Unknown mapping %s for client %i\n",
                    preferred_mapping_name.c_str(), fd);
@@ -98,18 +104,7 @@ class Manager {
   /**
    * \brief Prints the currently active mappings for all clients.
    */
-  void print_mappings() {
-    std::cout << "Currently active mappings:" << std::endl
-              << "==========================" << std::endl;
-    for (const auto &[name, client] : _clients) {
-      std::cout << "Client '" << client.exec << "' [" << client.pid
-                << "] (ID: " << name << ")" << std::endl;
-      std::cout << "-> mapping: " << client.active_mapping.name << " ["
-                << client.active_mapping.equivalence_class().name() << "]"
-                << std::endl;
-    }
-    std::cout << "======= END OF LIST =======" << std::endl;
-  }
+  void print_mappings();
 
   /**
    * \brief Updates the mappings for all clients.

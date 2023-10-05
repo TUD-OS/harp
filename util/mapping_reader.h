@@ -9,11 +9,13 @@
 
 #include "util/mapping.h"
 
+#include "util/platform/platform.h"
+
 /**
  * @brief Abstract class for mapping reader
  */
 class BaseMappingReader {
- public:
+public:
   virtual ~BaseMappingReader() = default;
 
   /**
@@ -22,40 +24,50 @@ class BaseMappingReader {
    * @param path The path to the mappings
    * @return vector of mappings
    */
-  virtual std::vector<Mapping> read_mappings(const std::string &path) = 0;
+  virtual std::vector<Mapping> read_mappings(const Platform &,
+                                             const std::string &) = 0;
 };
 
 /**
  * @brief Reader for JSON format mappings
  */
 class JsonMappingReader : public BaseMappingReader {
- public:
+public:
   static constexpr char kKnobDescFilename[] = "__confdefs__.json";
-  std::vector<Mapping> read_mappings(const std::string &dir_path) override;
+  std::vector<Mapping> read_mappings(const Platform &,
+                                     const std::string &) override;
 
- private:
-  Mapping parse_mapping(const nlohmann::json &json_mapping);
+private:
+  Mapping parse_mapping(const Platform &, const nlohmann::json &);
 };
 
 // CsvMappingReader and YamlMappingReader classes are to be defined later
 class CsvMappingReader : public BaseMappingReader {
- public:
-  std::vector<Mapping> read_mappings(const std::string &file_path);
+public:
+  std::vector<Mapping> read_mappings(const Platform &,
+                                     const std::string &) override;
+  ;
 };
 
 class YamlMappingReader : public BaseMappingReader {
- public:
-  std::vector<Mapping> read_mappings(const std::string &file_path);
+public:
+  std::vector<Mapping> read_mappings(const Platform &,
+                                     const std::string &) override;
+  ;
 };
 
 class MappingReader {
- public:
-  static std::map<std::string, std::vector<Mapping>> read_mapping_directory(
-      const std::string &base_dir);
+public:
+  explicit MappingReader(const Platform &platform) : _platform{platform} {}
 
- private:
-  static void log_mappings_details(
-      const std::map<std::string, std::vector<Mapping>> &);
+  std::map<std::string, std::vector<Mapping>>
+  read_mapping_directory(const std::string &base_dir);
+
+private:
+  void
+  log_mappings_details(const std::map<std::string, std::vector<Mapping>> &);
+
+  const Platform &_platform;
 };
 
-#endif  // MAPPING_READER_H
+#endif // MAPPING_READER_H
