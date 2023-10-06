@@ -58,7 +58,10 @@ class Logger
 
         char buffer[255];
         std::snprintf(buffer, 255, "%s %s: %s", lvl, timestr, fmt);
-        std::printf(buffer, args...);
+
+        char result[1000];
+        std::snprintf(result, 1000, buffer, args...);
+        std::printf("%s", result);
         std::fflush(stdout);
     }
 
@@ -94,7 +97,9 @@ class Logger
     template <typename... Args>
     void always(const char* fmt, Args... args)
     {
-        std::printf(fmt, args...);
+        char result[1000];
+        std::snprintf(result, 1000, fmt, args...);
+        std::printf("%s", result);
         std::fflush(stdout);
     }
 
