@@ -6,12 +6,18 @@ mapping_template:
     dlp: [computeLine1, computeLine2]
   metadata: [execution_time, energy]
 mappings:
-  - name: mapping1
+  - name: mapping1_little
     processes: [ARM00, ARM01]
     regions:
       dlp:
-        - [ARM02, ARM03]
+        - [ARM03, ARM03]
     metadata: [100, 250]
+  - name: mapping1_big
+    processes: [ARM00, ARM01]
+    regions:
+      dlp:
+        - [ARM04, ARM04]
+    metadata: [70, 350]
   - name: mapping2
     processes: [ARM00, ARM00]
     regions:
