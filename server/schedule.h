@@ -45,23 +45,63 @@ class Schedule {
     void SetOperatingPoint(int client_id, OperatingPointAllocation op) {
       _ops[client_id] = op;
     }
+
+    std::optional<double> GetClientProgress(int client_id) const {
+      if (!_duration.has_value())
+        return {};
+      auto op = GetOperatingPoint(client_id);
+      if (!op.has_value())
+        return 0.0;
+      double exec_time = op->characteristic("execution_time");
+      return *_duration / exec_time;
+    }
+
+    CPUThreadSet GetThreadSet() const {
+      CPUThreadSet res;
+      for (auto &[cid, op] : _ops) {
+        res |= op.GetThreadSet();
+      }
+      return res;
+    }
+
+    bool HasOverlaps() const {
+      CPUThreadSet total_set;
+      for (auto &[cid, op] : _ops) {
+        auto op_set = op.GetThreadSet();
+        if (total_set.OverlapsWith(op_set))
+          return true;
+        total_set |= op.GetThreadSet();
+      }
+      return false;
+    }
   };
 
 private:
   ScheduleType _type;
-  std::map<int, Client *> _clients;
+  std::map<Client *, int> _cid; // client indices
   std::deque<std::unique_ptr<Segment>> _segments;
   double _start_time;
+
+  std::optional<int> GetClientId(Client *c) const {
+    if (_cid.count(c) > 0) {
+      return _cid.at(c);
+    }
+    return {};
+  }
 
 public:
   Schedule(const std::vector<Client *> &clients, double start_time,
            bool multi_segment)
-      : _clients{}, _segments{}, _start_time{start_time} {
-    for (auto &c : clients) {
-      _clients[c->pid] = c;
+      : _cid{}, _segments{}, _start_time{start_time} {
+    for (int i = 0; i < clients.size(); ++i) {
+      _cid[clients[i]] = i;
     }
     _type = multi_segment ? ScheduleType::kMultipleSegments
                           : ScheduleType::kSingleSegment;
+  }
+
+  bool IsMultiSegment() const {
+    return _type == ScheduleType::kMultipleSegments;
   }
 
   std::optional<double> GetTotalDuration() const {
@@ -88,7 +128,7 @@ public:
 
   std::optional<double> GetSegmentStartTime(size_t seg_idx) const {
     if (seg_idx >= _segments.size()) {
-      throw std::runtime_error("Segment index out of range.");
+      throw std::out_of_range("Segment index out of range.");
     }
 
     double start_time = _start_time;
@@ -100,7 +140,7 @@ public:
 
   std::optional<double> GetSegmentEndTime(size_t seg_idx) const {
     if (seg_idx >= _segments.size()) {
-      throw std::runtime_error("Segment index out of range.");
+      throw std::out_of_range("Segment index out of range.");
     }
 
     if (_type == ScheduleType::kSingleSegment)
@@ -129,27 +169,99 @@ public:
 
   std::optional<double> GetSegmentDuration(size_t seg_idx) const {
     if (seg_idx >= _segments.size()) {
-      throw std::runtime_error("Segment index out of range.");
+      throw std::out_of_range("Segment index out of range.");
     }
     return _segments[seg_idx]->GetDuration();
   }
 
   size_t GetNumberOfSegments() const { return _segments.size(); }
 
-  void SetOperatingPoint(size_t seg_idx, int client_id,
+  void SetOperatingPoint(size_t seg_idx, Client *client,
                          OperatingPointAllocation op) {
     if (seg_idx >= _segments.size()) {
-      throw std::runtime_error("Segment index out of range.");
+      throw std::out_of_range("Segment index out of range.");
     }
-    _segments[seg_idx]->SetOperatingPoint(client_id, op);
+    auto cid = GetClientId(client);
+    if (!cid.has_value()) {
+      throw std::runtime_error("No such client.");
+    }
+    _segments[seg_idx]->SetOperatingPoint(*cid, op);
   }
 
   std::optional<OperatingPointAllocation>
-  GetOperatingPoint(size_t seg_idx, int client_id) const {
+  GetOperatingPoint(size_t seg_idx, Client *client) const {
     if (seg_idx >= _segments.size()) {
-      throw std::runtime_error("Segment index out of range.");
+      throw std::out_of_range("Segment index out of range.");
     }
-    return _segments[seg_idx]->GetOperatingPoint(client_id);
+    auto cid = GetClientId(client);
+    if (!cid.has_value()) {
+      throw std::runtime_error("No such client.");
+    }
+    return _segments[seg_idx]->GetOperatingPoint(*cid);
+  }
+
+  CPUThreadSet GetSegmentThreadSet(size_t seg_idx) const {
+    if (seg_idx >= _segments.size()) {
+      throw std::out_of_range("Segment index out of range.");
+    }
+    return _segments[seg_idx]->GetThreadSet();
+  }
+
+  bool HasSegmentOverlaps(size_t seg_idx) const {
+    if (seg_idx >= _segments.size()) {
+      throw std::out_of_range("Segment index out of range.");
+    }
+    return _segments[seg_idx]->HasOverlaps();
+  }
+
+  size_t GetSegmentAtTimepoint(double tp) const {
+    if (!IsMultiSegment()) {
+      return 0;
+    }
+    double currentTime = _start_time;
+    for (size_t i = 0; i < _segments.size(); ++i) {
+      if (auto dur = _segments[i]->GetDuration()) {
+        if (tp >= currentTime && tp < currentTime + *dur) {
+          return i;
+        }
+        currentTime += *dur;
+      }
+    }
+    throw std::runtime_error("Timepoint not within any segment.");
+  }
+
+  std::optional<double> GetSegmentClientProgress(size_t seg_idx,
+                                                 Client *client) const {
+    if (!IsMultiSegment())
+      return {};
+    auto cid = GetClientId(client);
+    if (!cid.has_value()) {
+      throw std::runtime_error("No such client.");
+    }
+    return _segments[seg_idx]->GetClientProgress(*cid);
+  }
+
+  void SplitAtTimepoint(double tp) {
+    if (!IsMultiSegment())
+      throw std::runtime_error("Cannot split a single-segment schedule.");
+    size_t seg_idx = GetSegmentAtTimepoint(tp);
+    double dur1 = tp - *GetSegmentStartTime(seg_idx);
+    double dur2 = *_segments[seg_idx]->GetDuration() - dur1;
+
+    // Modify the current segment's duration.
+    _segments[seg_idx]->SetDuration(dur1);
+
+    // Create a new segment with the remaining duration.
+    auto new_segment = std::make_unique<Segment>(dur2);
+
+    for (auto &[c, cid] : _cid) {
+      auto op = _segments[seg_idx]->GetOperatingPoint(cid);
+      if (op.has_value()) {
+        new_segment->SetOperatingPoint(cid, *op);
+      }
+    }
+
+    _segments.insert(_segments.begin() + seg_idx + 1, std::move(new_segment));
   }
 };
 
