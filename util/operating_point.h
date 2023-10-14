@@ -66,6 +66,26 @@ class OperatingPointAllocation
     {
         return base.convert(cpu_allocation);
     }
+
+    double characteristic(const std::string& criteria) const
+    {
+      return base.characteristic(criteria);
+    }
+
+    CPUThreadSet GetThreadSet() const {
+      CPUThreadSet res;
+      auto cores = base.cpus.GetList();
+
+      for (auto& c: cores) {
+        if (cpu_allocation.count(c) > 0) {
+          res.Set(cpu_allocation.at(c));
+        } else {
+          res.Set(c);
+        }
+      }
+      return res;
+    }
+
 };
 
 } /* namespace tetris */
