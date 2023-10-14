@@ -18,6 +18,13 @@ protected:
   void TearDown() override {}
 };
 
+class SmallOdroidTest : public BasePlatformTest {
+protected:
+  std::string GetPlatformFilePath() override {
+    return "../examples/odroid-small/platform_odroid-small.yaml";
+  }
+};
+
 class OdroidTest : public BasePlatformTest {
 protected:
   std::string GetPlatformFilePath() override {
