@@ -10,11 +10,11 @@ using namespace tetris;
 
 class SmallOdroidScheduleTest : public SmallOdroidTest {
 protected:
-  std::unique_ptr<Client> CreateClient(std::vector<OperatingPoint> &ops) {
+  Client *CreateClient(std::vector<OperatingPoint> &ops) {
     // TODO: remove dummy manager object
     Manager manager{std::unique_ptr<Platform>()};
     ConnectionPtr conn;
-    auto c = std::make_unique<Client>(manager, conn);
+    auto c = new Client(manager, conn);
 
     for (auto &op : ops) {
       c->ops.emplace_back(op);
@@ -22,7 +22,7 @@ protected:
     return c;
   }
 
-  std::unique_ptr<Client> GetClientOP0() {
+  Client *GetClientOP0() {
     std::string extime = "execution_time";
     std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
@@ -38,7 +38,7 @@ protected:
     return CreateClient(ops);
   }
 
-  std::unique_ptr<Client> GetClientOP1() {
+  Client *GetClientOP1() {
     std::string extime = "execution_time";
     std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
@@ -54,7 +54,7 @@ protected:
     return CreateClient(ops);
   }
 
-  std::unique_ptr<Client> GetClientOP2() {
+  Client *GetClientOP2() {
     std::string extime = "execution_time";
     std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
@@ -71,21 +71,23 @@ protected:
     return CreateClient(ops);
   }
 
-  std::vector<std::unique_ptr<Client>> clients;
-  std::vector<Client *> raw_clients;
+  std::vector<Client *> clients;
   virtual void SetUp() {
     // Adding a sample client for use in tests
     clients.push_back(GetClientOP0());
     clients.push_back(GetClientOP1());
     clients.push_back(GetClientOP2());
-    for (auto &client_uptr : clients) {
-      raw_clients.push_back(client_uptr.get());
+  }
+
+  virtual void TearDown() {
+    for (Client *client : clients) {
+      delete client;
     }
   }
 };
 
 TEST_F(SmallOdroidScheduleTest, AddSegment) {
-  Schedule multi_sched(raw_clients, 0.0, true); // multi-segment
+  Schedule multi_sched(clients, 0.0, true); // multi-segment
   EXPECT_EQ(multi_sched.GetStartTime(), 0.0);
   EXPECT_EQ(multi_sched.GetNumberOfSegments(), 0); // No segment added yet
   multi_sched.AddSegment(10.0);
@@ -100,7 +102,7 @@ TEST_F(SmallOdroidScheduleTest, AddSegment) {
   EXPECT_EQ(multi_sched.GetSegmentEndTime(1).value(), 15.0);
   EXPECT_TRUE(multi_sched.IsMultiSegment());
 
-  Schedule single_sched(raw_clients, 0.0, false); // single-segment
+  Schedule single_sched(clients, 0.0, false); // single-segment
   single_sched.AddSegment();
   EXPECT_EQ(single_sched.GetNumberOfSegments(), 1);
   EXPECT_EQ(single_sched.GetSegmentDuration(0).has_value(), false);
@@ -110,13 +112,13 @@ TEST_F(SmallOdroidScheduleTest, AddSegment) {
 }
 
 TEST_F(SmallOdroidScheduleTest, OperatingPoints) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
   OperatingPointAllocation op(clients[0]->ops[0], {});
 
-  multi_sched.SetOperatingPoint(0, raw_clients[0], op);
-  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0].get());
+  multi_sched.SetOperatingPoint(0, clients[0], op);
+  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0]);
 
   EXPECT_TRUE(retrieved_op.has_value());
   EXPECT_EQ(retrieved_op->characteristic("execution_time"), 171);
@@ -124,7 +126,7 @@ TEST_F(SmallOdroidScheduleTest, OperatingPoints) {
 }
 
 TEST_F(SmallOdroidScheduleTest, InvalidSegmentIndex) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
   // Expecting some kind of error or exception handling
@@ -133,26 +135,26 @@ TEST_F(SmallOdroidScheduleTest, InvalidSegmentIndex) {
 }
 
 TEST_F(SmallOdroidScheduleTest, NoOperatingPointSet) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
   // Not setting any operating point yet
-  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0].get());
+  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0]);
   EXPECT_FALSE(retrieved_op.has_value());
 }
 
 TEST_F(SmallOdroidScheduleTest, SetOperatingPointWithoutSegment) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
 
   OperatingPointAllocation op(clients[0]->ops[0], {});
 
   // Expecting an error as no segment added yet
-  EXPECT_THROW(multi_sched.SetOperatingPoint(0, raw_clients[0], op),
+  EXPECT_THROW(multi_sched.SetOperatingPoint(0, clients[0], op),
                std::out_of_range);
 }
 
 TEST_F(SmallOdroidScheduleTest, SplitSegment) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
   multi_sched.SplitAtTimepoint(6.0); // Splitting the segment at 6 seconds
@@ -165,33 +167,31 @@ TEST_F(SmallOdroidScheduleTest, SplitSegment) {
 }
 
 TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
-  Schedule multi_sched(raw_clients, 0.0, true);
+  Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
   OperatingPointAllocation op0(clients[0]->ops[0], {});
   OperatingPointAllocation op1(clients[1]->ops[6], {});
 
-  multi_sched.SetOperatingPoint(0, raw_clients[0], op0);
-  multi_sched.SetOperatingPoint(0, raw_clients[1], op1);
+  multi_sched.SetOperatingPoint(0, clients[0], op0);
+  multi_sched.SetOperatingPoint(0, clients[1], op1);
   EXPECT_EQ(multi_sched.GetSegmentThreadSet(0), CPUThreadSet({0, 2, 3}));
   EXPECT_FALSE(multi_sched.HasSegmentOverlaps(0));
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, raw_clients[0]),
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[0]),
               10.0 / 171.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, raw_clients[1]),
-              10.0 / 42.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, raw_clients[2]), 0.0,
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[1]), 10.0 / 42.0,
               0.01);
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[2]), 0.0, 0.01);
 
   multi_sched.AddSegment(15.0);
   OperatingPointAllocation op2(clients[1]->ops[0], {});
-  multi_sched.SetOperatingPoint(1, raw_clients[0], op0);
-  multi_sched.SetOperatingPoint(1, raw_clients[1], op2);
+  multi_sched.SetOperatingPoint(1, clients[0], op0);
+  multi_sched.SetOperatingPoint(1, clients[1], op2);
   EXPECT_EQ(multi_sched.GetSegmentThreadSet(1), CPUThreadSet({0, 2}));
   EXPECT_TRUE(multi_sched.HasSegmentOverlaps(1));
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, raw_clients[0]),
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[0]),
               15.0 / 171.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, raw_clients[1]),
-              15.0 / 45.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, raw_clients[2]), 0.0,
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[1]), 15.0 / 45.0,
               0.01);
+  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[2]), 0.0, 0.01);
 }
