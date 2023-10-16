@@ -202,54 +202,62 @@ TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
 //
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
-  BruteforceMapper mapper(*platform.get());
+  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0]}, 0.0);
-  EXPECT_EQ(s1.GetNumberOfSegments(), 1);
-  auto s1_op = s1.GetOperatingPoint(0, clients[0]);
+  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
+  auto s1_op = s1->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s1_op.has_value());
   EXPECT_EQ(s1_op->GetThreadSet(), CPUThreadSet({0}));
-  EXPECT_EQ(s1.GetSegmentThreadSet(0), CPUThreadSet({0}));
+  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(1, 60.0));
 
   auto s2 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUThreadSet{0});
-  EXPECT_EQ(s2.GetNumberOfSegments(), 1);
-  auto s2_op = s2.GetOperatingPoint(0, clients[0]);
+  EXPECT_EQ(s2->GetNumberOfSegments(), 1);
+  auto s2_op = s2->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s2_op.has_value());
   EXPECT_EQ(s2_op->GetThreadSet(), CPUThreadSet({1}));
-  EXPECT_EQ(s2.GetSegmentThreadSet(0), CPUThreadSet({1}));
+  EXPECT_EQ(s2->GetSegmentThreadSet(0), CPUThreadSet({1}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s2), std::make_tuple(1, 60.0));
 
   auto s3 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUThreadSet{0, 1});
-  EXPECT_EQ(s3.GetNumberOfSegments(), 1);
-  auto s3_op = s3.GetOperatingPoint(0, clients[0]);
+  EXPECT_EQ(s3->GetNumberOfSegments(), 1);
+  auto s3_op = s3->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s3_op.has_value());
   EXPECT_EQ(s3_op->GetThreadSet(), CPUThreadSet({2}));
-  EXPECT_EQ(s3.GetSegmentThreadSet(0), CPUThreadSet({2}));
+  EXPECT_EQ(s3->GetSegmentThreadSet(0), CPUThreadSet({2}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s3), std::make_tuple(1, 129.0));
 }
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
-  BruteforceMapper mapper(*platform.get());
+  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
-  EXPECT_EQ(s1.GetNumberOfSegments(), 1);
-  auto s1_op0 = s1.GetOperatingPoint(0, clients[0]);
-  auto s1_op1 = s1.GetOperatingPoint(0, clients[1]);
+  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
+  auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
+  auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
   EXPECT_TRUE(s1_op0.has_value());
   EXPECT_TRUE(s1_op1.has_value());
   EXPECT_EQ(s1_op0->GetThreadSet(), CPUThreadSet({0}));
   EXPECT_EQ(s1_op1->GetThreadSet(), CPUThreadSet({1, 2}));
-  EXPECT_EQ(s1.GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2}));
+  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(2, 120.0));
 }
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
-  BruteforceMapper mapper(*platform.get());
+  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule(clients, 0.0);
-  EXPECT_EQ(s1.GetNumberOfSegments(), 1);
-  auto s1_op0 = s1.GetOperatingPoint(0, clients[0]);
-  auto s1_op1 = s1.GetOperatingPoint(0, clients[1]);
-  auto s1_op2 = s1.GetOperatingPoint(0, clients[2]);
+  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
+  auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
+  auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
+  auto s1_op2 = s1->GetOperatingPoint(0, clients[2]);
   EXPECT_TRUE(s1_op0.has_value());
   EXPECT_TRUE(s1_op1.has_value());
   EXPECT_TRUE(s1_op2.has_value());
   EXPECT_EQ(s1_op0->GetThreadSet(), CPUThreadSet({0}));
   EXPECT_EQ(s1_op1->GetThreadSet(), CPUThreadSet({1, 2}));
   EXPECT_EQ(s1_op2->GetThreadSet(), CPUThreadSet({3}));
-  EXPECT_EQ(s1.GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
+  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(3, 201.0));
 }

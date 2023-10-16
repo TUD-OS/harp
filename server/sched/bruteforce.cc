@@ -7,36 +7,15 @@ namespace tetris {
 /**
  * Create a schedule object with the current mapping list
  */
-Schedule BruteforceMapper::ToSchedule(const MappingList &ops) {
-  Schedule schedule(_clients, _start_time, false);
-  schedule.AddSegment();
+std::unique_ptr<Schedule> BruteforceMapper::ToSchedule(const MappingList &ops) {
+  auto schedule = std::make_unique<Schedule>(_clients, _start_time, false);
+  schedule->AddSegment();
   for (int i = 0; i < _clients.size(); ++i) {
     if (ops[i].has_value()) {
-      schedule.SetOperatingPoint(0, _clients[i], *ops[i]);
+      schedule->SetOperatingPoint(0, _clients[i], *ops[i]);
     }
   }
   return schedule;
-}
-
-/**
- * Evaluates the quality of a given list of mappings.
- *
- * \param ops The list of mappings to be evaluated.
- * \return The number of applications and the total energy consumption.
- */
-BruteforceMapper::MappingListValue
-BruteforceMapper::Evaluate(const MappingList &ops) {
-  int num_apps = 0;
-  double energy = 0.0;
-
-  for (const auto &m_opt : ops) {
-    if (m_opt.has_value()) {
-      num_apps++;
-      energy += m_opt->characteristic("energy");
-    }
-  }
-
-  return std::make_tuple(num_apps, energy);
 }
 
 /**
@@ -47,15 +26,15 @@ BruteforceMapper::Evaluate(const MappingList &ops) {
  * \param best_value The value of the best mappings found so far.
  */
 void BruteforceMapper::UpdateBestSolution() {
-  auto cur_value = Evaluate(_cur_ops);
-  const auto [num_apps, energy] = cur_value;
-  const auto [best_num_apps, best_energy] = _best_value;
+  auto schedule = ToSchedule(_cur_ops);
+  auto cur_value = _objective->EvaluateSchedule(*schedule.get());
+  const auto [num_apps, value] = cur_value;
+  const auto [best_num_apps, best_value] = _best_value;
   if ((num_apps > best_num_apps) ||
-      (num_apps == best_num_apps && energy < best_energy)) {
+      (num_apps == best_num_apps && value < best_value)) {
     _best_value = cur_value;
-    _best_ops = _cur_ops;
-    LOGGER->debug("New best mapping: num_apps=%d, energy=%f\n", num_apps,
-                  energy);
+    _best_schedule = std::move(schedule);
+    LOGGER->debug("New best mapping: num_apps=%d, value=%f\n", num_apps, value);
   }
 }
 
@@ -101,14 +80,15 @@ void BruteforceMapper::IterateClient(int n, CPUThreadSet busy_cpus) {
  * \param blocked_cpus The list of blocked CPUs.
  * \return The selected mappings.
  */
-Schedule BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
-                                            double start_time,
-                                            CPUThreadSet blocked_cpus) {
+std::unique_ptr<Schedule>
+BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
+                                   double start_time,
+                                   CPUThreadSet blocked_cpus) {
   // Initialize internal data structures
   _clients = clients;
   _start_time = start_time;
   _blocked = blocked_cpus;
-  _best_ops.clear();
+  _best_schedule = std::unique_ptr<Schedule>();
   _best_value = std::make_tuple(0, 0.0);
   _cur_ops.clear();
   _cur_ops.resize(clients.size());
@@ -116,7 +96,7 @@ Schedule BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
   // Start bruteforce
   IterateClient(0, blocked_cpus);
 
-  return ToSchedule(_best_ops);
+  return std::move(_best_schedule);
 }
 
 } // namespace tetris

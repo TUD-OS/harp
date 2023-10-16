@@ -3,9 +3,11 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include "server/client.h"
+#include "server/sched/objective.h"
 #include "server/schedule.h"
 #include "util/platform/cpu_sets.h"
 
@@ -16,6 +18,10 @@ namespace tetris {
  */
 class BaseScheduler {
 public:
+  virtual void
+  SetObjective(std::unique_ptr<OptimizationObjective> objective) = 0;
+
+  virtual OptimizationObjective *GetObjective() = 0;
   /**
    * Generates a schedule.
    *
@@ -23,8 +29,8 @@ public:
    * \param start_time The start time of the schedule
    * \return The selected mappings.
    */
-  virtual Schedule GenerateSchedule(std::vector<Client *> clients,
-                                    double start_time) {
+  virtual std::unique_ptr<Schedule>
+  GenerateSchedule(std::vector<Client *> clients, double start_time) {
     return GenerateSchedule(clients, start_time, CPUThreadSet());
   }
 
@@ -36,9 +42,9 @@ public:
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  virtual Schedule GenerateSchedule(std::vector<Client *> clients,
-                                    double start_time,
-                                    CPUThreadSet blocked_cpus) = 0;
+  virtual std::unique_ptr<Schedule>
+  GenerateSchedule(std::vector<Client *> clients, double start_time,
+                   CPUThreadSet blocked_cpus) = 0;
 };
 
 } // namespace tetris

@@ -24,15 +24,7 @@ private:
   /**
    * Create a schedule object with the current mapping list
    */
-  Schedule ToSchedule(const MappingList &ops);
-
-  /**
-   * Evaluates the quality of a given list of mappings.
-   *
-   * \param ops The list of mappings to be evaluated.
-   * \return The number of applications and the total energy consumption.
-   */
-  MappingListValue Evaluate(const MappingList &ops);
+  std::unique_ptr<Schedule> ToSchedule(const MappingList &ops);
 
   /**
    * Updates the best solution found so far.
@@ -48,7 +40,15 @@ private:
   void IterateClient(int n, CPUThreadSet busy_cpus);
 
 public:
-  BruteforceMapper(const Platform &platform) : _platform{platform} {}
+  explicit BruteforceMapper(const Platform &platform,
+                            std::unique_ptr<OptimizationObjective> objective)
+      : _platform{platform}, _objective{std::move(objective)} {}
+
+  void SetObjective(std::unique_ptr<OptimizationObjective> objective) override {
+    _objective = std::move(objective);
+  }
+
+  OptimizationObjective *GetObjective() override { return _objective.get(); }
 
   // Bring all overloads of GenerateSchedule()
   using BaseScheduler::GenerateSchedule;
@@ -61,16 +61,18 @@ public:
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  Schedule GenerateSchedule(std::vector<Client *> clients, double start_time,
-                            CPUThreadSet blocked_cpus) override;
+  std::unique_ptr<Schedule>
+  GenerateSchedule(std::vector<Client *> clients, double start_time,
+                   CPUThreadSet blocked_cpus) override;
 
 private:
   const Platform &_platform;
+  std::unique_ptr<OptimizationObjective> _objective;
   // temporary fields (initialized at each invokation of GenerateSchedule())
   std::vector<Client *> _clients;
   double _start_time;
   CPUThreadSet _blocked;
-  MappingList _best_ops;
+  std::unique_ptr<Schedule> _best_schedule;
   MappingListValue _best_value;
   MappingList _cur_ops;
 };
