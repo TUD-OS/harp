@@ -85,8 +85,8 @@ public:
 private:
     /// \brief Client instance.
     static std::unique_ptr<Client> _instance;
-
 };
+
 }
 
 #endif // __CLIENT_H__

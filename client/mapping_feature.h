@@ -6,12 +6,15 @@
 #include "proto/tetris.pb.h"
 #include "feature.h"
 
+#include "util/mapping.h"
+
+
 namespace tetris {
 
 // Forward definition of the TETRiS client class.
 class Client;
 
-using MappingUpdate = ServerMessage::OperatingPointAllocation;
+using MappingUpdate = Mapping;
 using MappingsInfo = ClientMessage::OperatingPointsInfo;
 
 /**
@@ -27,7 +30,7 @@ public:
     /**
      * \brief Builds a feature.
      */
-    MappingFeature();
+    MappingFeature() = default;
 
     /**
      * \brief Virtual default destructor.

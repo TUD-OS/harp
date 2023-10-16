@@ -76,10 +76,7 @@ std::string ConcreteClient::get_push_listener_socket_path()
 ClientResponse ConcreteClient::handle(const ServerMessage &msg)
 {
     if (msg.has_activated_op_info()) {
-        auto mapping = msg.activated_op_info();
-
-        for (auto f : _mapping_features)
-            f->mapping_update(mapping);
+        /* Call all mapping_features with the new mapping, so that they can adapt */
     }
 
     ClientResponse response{};
