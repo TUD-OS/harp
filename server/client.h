@@ -98,6 +98,9 @@ class Client {
   std::vector<tetris::OperatingPoint> ops;
   tetris::OperatingPointAllocation active_op;
 
+  double progress; // current progress (0.0...1.0)
+  std::chrono::system_clock::time_point progress_update; // last progress update
+
   std::string push_listener_path;
 
   int type;

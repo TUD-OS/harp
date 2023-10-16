@@ -8,12 +8,13 @@ using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn)
     : connection{conn}, exec{}, pid{-1}, ops{},
-      active_op{}, type{Type::PASSIV}, filter{},
+      active_op{}, progress{0.0},  type{Type::PASSIV}, filter{},
       comp{} {
   std::stringstream path{};
   path << "/tmp/tetris_push_listener_" << pid;
 
   push_listener_path = path.str();
+  progress_update = std::chrono::system_clock::now();
 }
 
 bool Client::receive_ops(
