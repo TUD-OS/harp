@@ -37,8 +37,8 @@ class Mapping
     const Platform& _platform;
    public:
     std::string     name;
-    std::map<std::string, CPUThreadSet> thread_map;
-    RegionAffinities<CPUThreadSet> region_map;
+    std::map<std::string, int> thread_map;
+    RegionAffinities<int> region_map;
     std::map<std::string, double> characteristics_map;
     CPUThreadSet         cpus;
 

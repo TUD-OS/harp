@@ -23,42 +23,32 @@ Mapping::Mapping(const Mapping& base, const std::map<int, int>& conv_map) :
       characteristics_map{base.characteristics_map}, cpus{}
 {
     // Convert thread CPU affinity.
-    for (const auto& [name, orig_t_cpus] : base.thread_map) {
-        CPUThreadSet new_t_cpus;
-
-        for (const auto& c : orig_t_cpus) {
-            if (conv_map.find(c) != conv_map.end()) {
-                auto new_cpu = conv_map.at(c);
-                new_t_cpus.Set(new_cpu);
-                cpus.Set(new_cpu);
-            } else {
-                new_t_cpus.Set(c);
-                cpus.Set(c);
-            }
+    for (const auto& [name, orig_t_cpu] : base.thread_map) {
+        if (conv_map.find(orig_t_cpu) != conv_map.end()) {
+            auto new_cpu = conv_map.at(orig_t_cpu);
+            thread_map.emplace(name, new_cpu);
+            cpus.Set(new_cpu);
+        } else {
+            thread_map.emplace(name, orig_t_cpu);
+            cpus.Set(orig_t_cpu);
         }
 
-        thread_map.emplace(name, new_t_cpus);
     }
 
     // Convert thread CPU affinity in parallel regions.
     for (const auto& [region_name, replicas] : base.region_map) {
-        ReplicaAffinities<CPUThreadSet> replica_affinities{};
+        ReplicaAffinities<int> replica_affinities{};
         for (const auto& replica : replicas) {
-            ProcessAffinities<CPUThreadSet> process_affinities{};
-            for (const auto& [process_name, orig_r_cpus] : replica) {
-                CPUThreadSet new_r_cpus;
-
-                for (const auto& c : orig_r_cpus) {
-                    if (conv_map.find(c) != conv_map.end()) {
-                        auto new_cpu = conv_map.at(c);
-                        new_r_cpus.Set(new_cpu);
-                        cpus.Set(new_cpu);
-                    } else {
-                        new_r_cpus.Set(c);
-                        cpus.Set(c);
-                    }
+            ProcessAffinities<int> process_affinities{};
+            for (const auto& [process_name, orig_r_cpu] : replica) {
+                if (conv_map.find(orig_r_cpu) != conv_map.end()) {
+                    auto new_cpu = conv_map.at(orig_r_cpu);
+                    process_affinities.emplace(process_name, new_cpu);
+                    cpus.Set(new_cpu);
+                } else {
+                    cpus.Set(orig_r_cpu);
+                    process_affinities.emplace(process_name, orig_r_cpu);
                 }
-                process_affinities.emplace(process_name, new_r_cpus);
             }
             replica_affinities.push_back(process_affinities);
         }
@@ -73,16 +63,16 @@ Mapping::Mapping(const Platform& platform, const std::string& name,
         _platform{platform}, name{name}, thread_map{}, characteristics_map{}, cpus{}
 {
     for (const auto& t : threads) {
-        thread_map.emplace(t.first, CPUThreadSet{cpu_nr_for_name(platform, t.second)});
+        thread_map.emplace(t.first, cpu_nr_for_name(platform, t.second));
         cpus.Set(cpu_nr_for_name(platform, t.second));
     }
 
     for (const auto& [region_name, replicas] : regions) {
-        ReplicaAffinities<CPUThreadSet> replica_affinities{};
+        ReplicaAffinities<int> replica_affinities{};
         for (const auto& replica : replicas) {
-            ProcessAffinities<CPUThreadSet> process_affinities{};
+            ProcessAffinities<int> process_affinities{};
             for (const auto& [process_name, affinity] : replica) {
-                process_affinities.emplace(process_name, CPUThreadSet{cpu_nr_for_name(platform, affinity)});
+                process_affinities.emplace(process_name, cpu_nr_for_name(platform, affinity));
                 cpus.Set(cpu_nr_for_name(platform, affinity));
             }
 
