@@ -104,6 +104,14 @@ public:
     return _type == ScheduleType::kMultipleSegments;
   }
 
+  std::vector<Client *> GetClients() const {
+    std::vector<Client *> res;
+    for (auto &[c, cid] : _cid) {
+      res.push_back(c);
+    }
+    return res;
+  }
+
   std::optional<double> GetTotalDuration() const {
     if (_type == ScheduleType::kSingleSegment)
       return {};
