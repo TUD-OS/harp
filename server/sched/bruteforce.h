@@ -1,5 +1,5 @@
-#ifndef __MAPPER_BRUTEFORCE_H__
-#define __MAPPER_BRUTEFORCE_H__
+#ifndef __SCHED_BRUTEFORCE_H__
+#define __SCHED_BRUTEFORCE_H__
 
 #pragma once
 
@@ -75,6 +75,7 @@ public:
 
 private:
   const Platform &_platform;
+  // temporary fields (initialized at each invokation of GenerateSchedule())
   std::vector<Client *> _clients;
   double _start_time;
   CPUThreadSet _blocked;
@@ -85,4 +86,4 @@ private:
 
 } // namespace tetris
 
-#endif /* __MAPPER_BRUTEFORCE_H__ */
+#endif /* __SCHED_BRUTEFORCE_H__ */
