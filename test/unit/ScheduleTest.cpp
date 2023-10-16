@@ -242,6 +242,36 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
   EXPECT_EQ(s1_op1->GetThreadSet(), CPUThreadSet({1, 2}));
   EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2}));
   EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(2, 120.0));
+
+  // Set another objective
+  mapper.SetObjective(std::make_unique<DelayObjective>());
+  obj = mapper.GetObjective();
+  auto s2 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
+  EXPECT_EQ(s2->GetNumberOfSegments(), 1);
+  auto s2_op0 = s2->GetOperatingPoint(0, clients[0]);
+  auto s2_op1 = s2->GetOperatingPoint(0, clients[1]);
+  EXPECT_TRUE(s2_op0.has_value());
+  EXPECT_TRUE(s2_op1.has_value());
+  EXPECT_EQ(s2_op0->GetThreadSet(), CPUThreadSet({2, 3}));
+  EXPECT_EQ(s2_op1->GetThreadSet(), CPUThreadSet({0, 1}));
+  EXPECT_EQ(s2->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
+  EXPECT_EQ(obj->EvaluateSchedule(*s2), std::make_tuple(2, 108.0));
+
+  // Set another objective
+  mapper.SetObjective(std::make_unique<GEDPObjective>(0.5));
+  obj = mapper.GetObjective();
+  auto s3 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
+  EXPECT_EQ(s3->GetNumberOfSegments(), 1);
+  auto s3_op0 = s3->GetOperatingPoint(0, clients[0]);
+  auto s3_op1 = s3->GetOperatingPoint(0, clients[1]);
+  EXPECT_TRUE(s3_op0.has_value());
+  EXPECT_TRUE(s3_op1.has_value());
+  EXPECT_EQ(s3_op0->GetThreadSet(), CPUThreadSet({0, 2}));
+  EXPECT_EQ(s3_op1->GetThreadSet(), CPUThreadSet({1, 3}));
+  EXPECT_EQ(s3->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
+  auto v = obj->EvaluateSchedule(*s3);
+  EXPECT_EQ(std::get<0>(v), 2);
+  EXPECT_NEAR(std::get<1>(v), 134.66, 0.01);
 }
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {

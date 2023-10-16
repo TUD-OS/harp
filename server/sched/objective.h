@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include "server/client.h"
 #include "server/schedule.h"
 
@@ -45,8 +47,17 @@ public:
   }
 };
 
-class EnergyObjective : public OptimizationObjective {
+class GEDPObjective : public OptimizationObjective {
+private:
+  double _alpha;
+
 public:
+  GEDPObjective(double alpha) : _alpha{alpha} {
+    if (alpha < 0 || alpha > 1) {
+      throw std::runtime_error("alpha must be in the range 0.0..1.0");
+    }
+  }
+
   std::tuple<int, double> EvaluateClient(const Schedule &schedule,
                                          Client *client) const override {
     if (schedule.IsMultiSegment()) {
@@ -60,10 +71,22 @@ public:
         return std::make_tuple(0, 0.0);
       auto op = *opt_op;
       double rem_cratio = 1.0 - client->progress;
-      double value = op.characteristic("energy") * rem_cratio;
+      double value =
+          pow(op.characteristic("energy") * rem_cratio, _alpha) *
+          pow(op.characteristic("execution_time") * rem_cratio, 1 - _alpha);
       return std::make_tuple(1, value);
     }
   }
+};
+
+class EnergyObjective : public GEDPObjective {
+public:
+  EnergyObjective() : GEDPObjective{1} {}
+};
+
+class DelayObjective : public GEDPObjective {
+public:
+  DelayObjective() : GEDPObjective{0} {}
 };
 
 } // namespace tetris
