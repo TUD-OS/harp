@@ -1,6 +1,7 @@
 #ifndef __MOVABLE_THREADS_H__
 #define __MOVABLE_THREADS_H__
 
+#include <memory>
 #pragma once
 
 #include "client/mapping_feature.h"
@@ -10,6 +11,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 namespace tetris {
 
@@ -20,14 +22,19 @@ class MovableThreads : public MappingFeature
         std::string name;
         pid_t tid;
         bool managed;
+        bool named;
 
-        ThreadInfo(const std::string& name, pid_t tid, bool managed) :
-            name{name}, tid{tid}, managed{managed}
+        ThreadInfo(const std::string& name, pid_t tid, bool managed, bool named = false) :
+            name{name}, tid{tid}, managed{managed}, named{named}
         {}
     };
 
     debug::LoggerPtr _logger;
     std::vector<ThreadInfo> _threads;
+    std::mutex _mtx;
+
+    std::unique_ptr<Mapping> _active_mapping;
+    std::vector<std::string> _assigned_threads;
 
    public:
     /* Constructor and Destructor */
@@ -54,7 +61,9 @@ class MovableThreads : public MappingFeature
 
    private:
     /* Internal interface */
+    void map_thread(const ThreadInfo &t);
     bool move_thread(pid_t tid, int cpu);
+    bool move_thread(pid_t tid, CPUThreadSet cpus);
 };
 
 } /* namespace tetris */
