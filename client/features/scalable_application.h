@@ -19,6 +19,8 @@ class ScalableApplication : public MappingFeature
 
     std::function<bool (int)> _scale_cb;
 
+    std::unique_ptr<Mapping> _active_mapping;
+
    public:
     /* Constructor and Destructor */
     ScalableApplication(std::function<bool (int)> scale_cb);
