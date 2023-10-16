@@ -5,7 +5,9 @@
 #include "push_message_listener.h"
 #include "util/connection.h"
 #include "util/protobuf_util.h"
+#include "util/pthread_direct.h"
 #include "proto/tetris.pb.h"
+
 
 namespace tetris {
 
@@ -14,7 +16,7 @@ PushMessageListener::PushMessageListener(const std::string &socket_path, Client 
 {
     _listening_socket.open(socket_path);
     _listening_socket.listening();
-    pthread_create(&_listener_thread, nullptr, listening, this);
+    direct_pthread_create(&_listener_thread, nullptr, listening, this);
 }
 
 void PushMessageListener::add_subscriber(const FeatureID &feature_id, Feature *feature)
