@@ -50,6 +50,9 @@ private:
 public:
   BruteforceMapper(const Platform &platform) : _platform{platform} {}
 
+  // Bring all overloads of GenerateSchedule()
+  using BaseScheduler::GenerateSchedule;
+
   /**
    * Selects client mappings considering a list of blocked CPUs.
    *
@@ -60,18 +63,6 @@ public:
    */
   Schedule GenerateSchedule(std::vector<Client *> clients, double start_time,
                             CPUThreadSet blocked_cpus) override;
-
-  /**
-   * Selects client mappings considering a list of blocked CPUs.
-   *
-   * \param clients The list of clients for which mappings need to be selected.
-   * \param start_time The start time of the schedule
-   * \return The selected mappings.
-   */
-  Schedule GenerateSchedule(std::vector<Client *> clients,
-                            double start_time) override {
-    return GenerateSchedule(clients, start_time, CPUThreadSet());
-  }
 
 private:
   const Platform &_platform;
