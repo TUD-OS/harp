@@ -3,9 +3,10 @@
 set_source_files_properties(
         ${PROTO_OUTPUT_SOURCES} PROPERTIES GENERATED TRUE)
 
-add_library(tetrisclient STATIC
+add_library(tetrisclient OBJECT
         client.cc
         feature.cc
+        mapping_feature.cc
         concrete_client.cc
         push_message_listener.cc
         features/movable_threads.cc
@@ -15,9 +16,15 @@ add_library(tetrisclient STATIC
         ${CMAKE_SOURCE_DIR}/util/path_util.cc
         ${CMAKE_SOURCE_DIR}/util/util.cc
         ${CMAKE_SOURCE_DIR}/util/debug_util.cc
+        ${CMAKE_SOURCE_DIR}/util/pthread_direct.cc
+        ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
+        ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
+        ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
+        ${CMAKE_SOURCE_DIR}/util/mapping.cc
         )
 # ensure through a dependency that Protobuf message sources file are going to be generated
 add_dependencies(tetrisclient generated_proto)
+
 # install and export the tetrisclient library
 install(TARGETS tetrisclient
         EXPORT tetrisclient-config
