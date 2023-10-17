@@ -31,7 +31,7 @@ public:
    */
   virtual std::unique_ptr<Schedule>
   GenerateSchedule(std::vector<Client *> clients, double start_time) {
-    return GenerateSchedule(clients, start_time, CPUThreadSet());
+    return GenerateSchedule(clients, start_time, CPUCoreSet());
   }
 
   /**
@@ -44,7 +44,7 @@ public:
    */
   virtual std::unique_ptr<Schedule>
   GenerateSchedule(std::vector<Client *> clients, double start_time,
-                   CPUThreadSet blocked_cpus) = 0;
+                   CPUCoreSet blocked_cores) = 0;
 };
 
 } // namespace tetris

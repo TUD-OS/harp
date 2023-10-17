@@ -42,15 +42,14 @@ void BruteforceMapper::UpdateBestSolution() {
  * Recursively iterates over all clients and tries all possible mappings.
  *
  * \param n The index of the current client.
- * \param busy_cpus The list of busy CPUs.
+ * \param busy_cores The list of busy CPUs.
  */
-void BruteforceMapper::IterateClient(int n, CPUThreadSet busy_cpus) {
+void BruteforceMapper::IterateClient(int n, CPUCoreSet busy_cores) {
   if (n >= _clients.size()) {
     UpdateBestSolution();
     return;
   }
 
-  CPUCoreSet busy_cores = _platform.ToCPUCoreSet(busy_cpus);
   auto &op_allocator = _platform.GetEquivResAllocator();
   auto &client = *_clients[n];
 
@@ -60,15 +59,15 @@ void BruteforceMapper::IterateClient(int n, CPUThreadSet busy_cpus) {
     if (opt_opa.has_value()) {
       auto opa = *opt_opa;
       _cur_ops[n] = opa;
-      auto opa_cpus = opa.GetThreadSet();
-      IterateClient(n + 1, busy_cpus | opa_cpus);
+      auto opa_cores = _platform.ToCPUCoreSet(opa.GetThreadSet());
+      IterateClient(n + 1, busy_cores | opa_cores);
     }
   }
 
   // Assign no mapping
   {
     _cur_ops[n] = std::nullopt;
-    IterateClient(n + 1, busy_cpus);
+    IterateClient(n + 1, busy_cores);
   }
 }
 
@@ -83,18 +82,18 @@ void BruteforceMapper::IterateClient(int n, CPUThreadSet busy_cpus) {
 std::unique_ptr<Schedule>
 BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
                                    double start_time,
-                                   CPUThreadSet blocked_cpus) {
+                                   CPUCoreSet blocked_cores) {
   // Initialize internal data structures
   _clients = clients;
   _start_time = start_time;
-  _blocked = blocked_cpus;
+  _blocked = blocked_cores;
   _best_schedule = std::unique_ptr<Schedule>();
   _best_value = std::make_tuple(0, 0.0);
   _cur_ops.clear();
   _cur_ops.resize(clients.size());
 
   // Start bruteforce
-  IterateClient(0, blocked_cpus);
+  IterateClient(0, _blocked);
 
   return std::move(_best_schedule);
 }

@@ -211,7 +211,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
   EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0}));
   EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(1, 60.0));
 
-  auto s2 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUThreadSet{0});
+  auto s2 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0});
   EXPECT_EQ(s2->GetNumberOfSegments(), 1);
   auto s2_op = s2->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s2_op.has_value());
@@ -219,7 +219,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
   EXPECT_EQ(s2->GetSegmentThreadSet(0), CPUThreadSet({1}));
   EXPECT_EQ(obj->EvaluateSchedule(*s2), std::make_tuple(1, 60.0));
 
-  auto s3 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUThreadSet{0, 1});
+  auto s3 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0, 1});
   EXPECT_EQ(s3->GetNumberOfSegments(), 1);
   auto s3_op = s3->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s3_op.has_value());

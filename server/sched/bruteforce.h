@@ -35,9 +35,9 @@ private:
    * Recursively iterates over all clients and tries all possible mappings.
    *
    * \param n The index of the current client.
-   * \param busy_cpus The set of busy CPUs.
+   * \param busy_cores The set of busy CPUs.
    */
-  void IterateClient(int n, CPUThreadSet busy_cpus);
+  void IterateClient(int n, CPUCoreSet busy_cores);
 
 public:
   explicit BruteforceMapper(const Platform &platform,
@@ -61,9 +61,9 @@ public:
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  std::unique_ptr<Schedule>
-  GenerateSchedule(std::vector<Client *> clients, double start_time,
-                   CPUThreadSet blocked_cpus) override;
+  std::unique_ptr<Schedule> GenerateSchedule(std::vector<Client *> clients,
+                                             double start_time,
+                                             CPUCoreSet blocked_cores) override;
 
 private:
   const Platform &_platform;
@@ -71,7 +71,7 @@ private:
   // temporary fields (initialized at each invokation of GenerateSchedule())
   std::vector<Client *> _clients;
   double _start_time;
-  CPUThreadSet _blocked;
+  CPUCoreSet _blocked;
   std::unique_ptr<Schedule> _best_schedule;
   MappingListValue _best_value;
   MappingList _cur_ops;
