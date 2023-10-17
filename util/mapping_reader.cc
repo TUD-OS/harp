@@ -1,15 +1,12 @@
 #include "mapping_reader.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <filesystem>
 #include <fstream>
 
 #include "util/csv.h"
 #include "util/debug_util.h"
-#include "util/string_util.h"
 #include "util/platform/platform.h"
-
+#include "util/string_util.h"
 
 namespace tetris {
 
@@ -163,23 +160,10 @@ CsvMappingReader::read_mappings(const Platform &platform,
   return mappings;
 }
 
-/**
- * \brief Read mappings from given YAML file
- *
- * This function reads the YAML file which is expected to contain a mapping
- * template and list of mappings. The mapping template consists of processes,
- * regions, and metadata. Each mapping contains a name, list of processes,
- * regions and metadata.
- *
- * \param file_path File path to the YAML mapping file
- * \return Vector of Mapping objects
- */
 std::vector<Mapping>
-YamlMappingReader::read_mappings(const Platform &platform,
-                                 const std::string &file_path) {
-  // Load the root node from YAML file
-  YAML::Node root = YAML::LoadFile(file_path);
-
+YamlMappingReader::parse_mappings_dpm(const Platform &platform,
+                                      const std::string &file_path,
+                                      const YAML::Node &root) {
   // Extract mapping template from root
   auto mapping_template_node = root["mapping_template"];
 
@@ -268,6 +252,92 @@ YamlMappingReader::read_mappings(const Platform &platform,
   }
 
   return mappings;
+}
+
+std::vector<Mapping>
+YamlMappingReader::parse_mappings_omp(const Platform &platform,
+                                      const std::string &file_path,
+                                      const YAML::Node &root) {
+  // Extract mapping template from root
+  auto mapping_template_node = root["mapping_template"];
+
+  // Extract template data
+  auto template_metadata =
+      mapping_template_node["metadata"].as<std::vector<std::string>>();
+
+  // Initialize vector to hold all Mapping objects
+  std::vector<Mapping> mappings;
+
+  // Process each mapping node
+  for (const auto &mapping_node : root["mappings"]) {
+    auto mapping_name = mapping_node["name"].as<std::string>();
+
+    std::vector<std::pair<std::string, std::string>> threads;
+
+    auto core_list = mapping_node["cores"].as<std::vector<std::string>>();
+
+    ReplicaAffinities<std::string> replica_affinities;
+    for (const auto &c : core_list) {
+      ProcessAffinities<std::string> process_affinities;
+      process_affinities.emplace("thread", c);
+      replica_affinities.push_back(process_affinities);
+    }
+    RegionAffinities<std::string> region_affinities;
+    region_affinities.emplace("parallel", replica_affinities);
+
+    // Metadata
+    std::vector<std::pair<std::string, std::string>> characteristics;
+    auto mapping_metadata =
+        mapping_node["metadata"].as<std::vector<std::string>>();
+
+    if (template_metadata.size() != mapping_metadata.size()) {
+      LOGGER->error(
+          "Mismatch between number of template metadata and mapping metadata "
+          "(%s)",
+          file_path);
+    }
+
+    for (size_t i = 0; i < template_metadata.size(); ++i) {
+      characteristics.emplace_back(template_metadata[i], mapping_metadata[i]);
+    }
+
+    // Create the mapping object and add it to the vector
+    mappings.emplace_back(platform, mapping_name, threads, region_affinities,
+                          characteristics);
+  }
+
+  return mappings;
+}
+
+/**
+ * \brief Read mappings from given YAML file
+ *
+ * This function reads the YAML file which is expected to contain a mapping
+ * template and list of mappings. The mapping template consists of processes,
+ * regions, and metadata. Each mapping contains a name, list of processes,
+ * regions and metadata.
+ *
+ * \param file_path File path to the YAML mapping file
+ * \return Vector of Mapping objects
+ */
+std::vector<Mapping>
+YamlMappingReader::read_mappings(const Platform &platform,
+                                 const std::string &file_path) {
+  // Load the root node from YAML file
+  YAML::Node root = YAML::LoadFile(file_path);
+
+  auto type_name = root["type"].as<std::string>();
+
+  std::transform(type_name.begin(), type_name.end(), type_name.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+
+  if (type_name == "dpm") {
+    return parse_mappings_dpm(platform, file_path, root);
+  }
+  if (type_name == "omp") {
+    return parse_mappings_omp(platform, file_path, root);
+  }
+  throw std::runtime_error("Unknown mapping type");
 }
 
 /**

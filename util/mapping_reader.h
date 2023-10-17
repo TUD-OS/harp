@@ -5,9 +5,10 @@
 #include <string>
 #include <vector>
 
+#include <yaml-cpp/yaml.h>
+
 #include "util/json.h"
 #include "util/mapping.h"
-
 
 namespace tetris {
 
@@ -50,6 +51,12 @@ public:
 };
 
 class YamlMappingReader : public BaseMappingReader {
+
+  std::vector<Mapping> parse_mappings_dpm(const Platform &, const std::string &,
+                                          const YAML::Node &);
+  std::vector<Mapping> parse_mappings_omp(const Platform &, const std::string &,
+                                          const YAML::Node &);
+
 public:
   std::vector<Mapping> read_mappings(const Platform &,
                                      const std::string &) override;

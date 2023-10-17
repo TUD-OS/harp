@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
       } else {
         // Check if the platform file exists in the default location
         std::string default_path =
-            "../examples/platforms/platform_" + platform + ".yaml";
+            "../examples/" + platform + "/platform.yaml";
         if (std::filesystem::exists(default_path)) {
           platform_path = default_path;
         } else {
