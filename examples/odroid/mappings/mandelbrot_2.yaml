@@ -1,5 +1,6 @@
 application: mandelbrot_yaml
 platform: maps_exynos
+type: dpm
 mapping_template:
   processes: [source, sink]
   regions:
