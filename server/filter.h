@@ -6,7 +6,7 @@
 
 #include "util/debug_util.h"
 #include "util/string_util.h"
-#include "util/mapping.h"
+#include "util/operating_point.h"
 
 #include <functional>
 #include <sstream>
@@ -20,7 +20,12 @@ class FilterComp
    public:
     virtual ~FilterComp() = default;
 
-    virtual bool comp(const Mapping& map) const = 0;
+    virtual bool comp(const tetris::OperatingPoint& op) const = 0;
+    virtual bool comp(const tetris::OperatingPointAllocation& op) const
+    {
+        return comp(op.base);
+    }
+
     virtual FilterComp* clone() const = 0;
 
     virtual std::string criteria() const = 0;
@@ -41,9 +46,9 @@ class StdComp : public FilterComp
         _criteria{criteria}, _value{value}, _comp{}
     {}
 
-    bool comp(const Mapping& map) const
+    bool comp(const tetris::OperatingPoint& op) const
     {
-        return _comp(map.characteristic(_criteria), _value);
+        return _comp(op.characteristic(_criteria), _value);
     }
 
     FilterComp* clone() const
@@ -67,7 +72,7 @@ class StdComp : public FilterComp
 
 struct NoComp : public FilterComp
 {
-    bool comp(const Mapping&) const
+    bool comp(const tetris::OperatingPoint&) const
     {
         return true;
     }
@@ -261,9 +266,9 @@ class Filter
         return _comp->repr();
     }
 
-    bool operator()(const Mapping& map) const
+    bool operator()(const tetris::OperatingPoint& op) const
     try {
-        return _comp->comp(map);
+        return _comp->comp(op);
     } catch (std::runtime_error&) {
         return false;
     }

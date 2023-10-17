@@ -6,10 +6,10 @@
 #include <vector>
 
 #include "util/json.h"
-
 #include "util/mapping.h"
 
-#include "util/platform/platform.h"
+
+namespace tetris {
 
 /**
  * @brief Abstract class for mapping reader
@@ -69,5 +69,7 @@ private:
 
   const Platform &_platform;
 };
+
+} /* namespace tetris */
 
 #endif // MAPPING_READER_H

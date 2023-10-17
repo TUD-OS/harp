@@ -8,8 +8,10 @@ ScalableApplication::ScalableApplication(std::function<bool (int)> scale_cb) :
     _logger{debug::Logger::get()}, _scale_cb{scale_cb}
 {}
 
-ScalableApplication::~ScalableApplication()
-{}
+bool ScalableApplication::need_handshake() const
+{
+    return false;
+}
 
 FeatureID ScalableApplication::handshake()
 {
@@ -27,19 +29,36 @@ FeatureID ScalableApplication::handshake()
     return -1;
 }
 
-ClientResponse ScalableApplication::forward(const ServerMessage &msg)
+ClientResponse ScalableApplication::handle(const ServerMessage &msg)
 {
+    bool success = true;
+
     tetris::ClientResponse response{};
-    response.set_type(tetris::ClientResponse::ERROR);
 
-    if (msg.has_scale_application_info()) {
-        auto max_threads = msg.scale_application_info().max_threads();
-
-        if (_scale_cb(max_threads))
-            response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
+    if (success) {
+        response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
+    } else {
+        response.set_type(tetris::ClientResponse::ERROR);
     }
-
     return response;
 }
 
-};
+void ScalableApplication::mapping_update(const MappingUpdate &mapping)
+{
+    LOGGER->debug(" > Updating application scaling\n");
+
+    _active_mapping = std::make_unique<Mapping>(mapping);
+
+    LOGGER->debug(" -> Using mapping %s\n", _active_mapping->name.c_str());
+    LOGGER->debug(" -* New scaling factor: %d\n", _active_mapping->cpus.Size());
+
+    if (!_scale_cb(_active_mapping->cpus.Size()))
+        LOGGER->warning(" --* Failed to resize to the required scaling factor\n");
+}
+
+bool ScalableApplication::extend_mapping(MappingsInfo &mappings)
+{
+    return false;
+}
+
+}

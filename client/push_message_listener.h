@@ -25,7 +25,7 @@ namespace tetris {
          *
          * \param [in] socket_path Path to the socket to run the listener on.
          */
-        explicit PushMessageListener(const std::string &socket_path);
+        explicit PushMessageListener(const std::string &socket_path, Client *client);
 
         /**
          * \brief Destroys the push message listener, closing the socket and joining the listener thread.
@@ -55,6 +55,9 @@ namespace tetris {
 
         /// \brief Push message listening socket.
         Socket _listening_socket;
+
+        /// \brief Pointer to the handling client
+        Client *_client;
 
         /// \brief Listener thread id.
         pthread_t _listener_thread;

@@ -5,6 +5,8 @@
 #ifndef __FEATURE_H__
 #define __FEATURE_H__
 
+#pragma once
+
 #include "proto/tetris.pb.h"
 
 namespace tetris {
@@ -51,14 +53,14 @@ public:
     bool is_bounded() const;
 
     /**
-     * \brief Forwards a message from the TETRiS server to the feature.
+     * \brief Handle a mesage from the TETRiS server for this feature.
      *
      * Called from the push listener thread when a command is received.
      *
      * \param request PushRequest received.
      * \return PushResponse associated to the request.
      */
-    virtual ClientResponse forward(const ServerMessage &msg) = 0;
+    virtual ClientResponse handle(const ServerMessage &msg) = 0;
 
     /**
      * \brief Checks if the feature needs a handshake.

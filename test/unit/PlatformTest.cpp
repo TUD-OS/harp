@@ -3,6 +3,8 @@
 
 #include "unit/PlatformFixtures.h"
 
+using namespace tetris;
+
 TEST_F(OdroidTest, PlatformStructure) {
   EXPECT_EQ(platform->GetCPUCores().size(), 8);
 

@@ -7,6 +7,7 @@
 #include "util/debug_util.h"
 #include "util/platform/cpu_sets.h"
 #include "util/platform/platform.h"
+#include "util/operating_point.h"
 
 /***
  * Failure handling for no mapping found
@@ -36,33 +37,32 @@ public:
 
 class Manager {
 private:
-  std::unique_ptr<Platform> _platform;
+  std::unique_ptr<tetris::Platform> _platform;
   std::map<int, Client> _clients;
-  std::map<std::string, std::vector<Mapping>> _mappings;
-  CPUCoreSet _blocked_cpus;
+  tetris::CPUCoreSet _blocked_cpus;
 
   /**
    * \brief Selects the best mapping for a given client.
    */
-  Mapping select_best_mapping(Client &c);
+  tetris::OperatingPointAllocation select_best_mapping(Client &c);
 
   /**
    * \brief Uses the client's preferred mapping if available, otherwise selects
    * the best one.
    */
-  Mapping use_preferred_mapping(Client &, const std::string &);
+  tetris::OperatingPointAllocation use_preferred_mapping(Client &, const std::string &);
 
 public:
-  explicit Manager(std::unique_ptr<Platform> platform)
-      : _platform{std::move(platform)}, _clients{}, _mappings{} {}
+  explicit Manager(std::unique_ptr<tetris::Platform> platform)
+      : _platform{std::move(platform)}, _clients{} {}
 
-  const Platform& GetPlatform() const { return *_platform.get(); }
+  const tetris::Platform& GetPlatform() const { return *_platform.get(); }
 
   /**
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    _clients.try_emplace(fd, *this, conn);
+    _clients.emplace(fd, conn);
   }
 
   /**
@@ -73,24 +73,24 @@ public:
   /**
    * \brief Changes the mapping for a specific application.
    */
-  void remap(int fd, const std::string &preferred_mapping_name) try {
+  void remap(int fd, const std::string &op_name) try {
     Client &c = _clients.at(fd);
 
     LOGGER->info("Change mapping for client '%s' [%d] to mapping %s\n",
-                 c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
+                 c.exec.c_str(), c.pid, op_name.c_str());
 
     auto it =
-        std::find_if(c.mappings.begin(), c.mappings.end(), [&](const auto &m) {
-          return m.name == preferred_mapping_name;
+        std::find_if(c.ops.begin(), c.ops.end(), [&](const auto &op) {
+          return op.name == op_name;
         });
-    if (it == c.mappings.end()) {
+    if (it == c.ops.end()) {
       LOGGER->info("Unknown mapping %s for client %i\n",
-                   preferred_mapping_name.c_str(), fd);
+                   op_name.c_str(), fd);
       return;
     } else {
       LOGGER->info("Changing mapping for client '%s' [%d] to mapping %s\n",
-                   c.exec.c_str(), c.pid, preferred_mapping_name.c_str());
-      c.update_mapping(*it);
+                   c.exec.c_str(), c.pid, op_name.c_str());
+      c.activate_op(tetris::OperatingPointAllocation{*it, {}});
     }
   } catch (std::out_of_range &) {
     LOGGER->error("Unknown client %i\n", fd);

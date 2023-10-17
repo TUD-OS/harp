@@ -1,8 +1,10 @@
 #include "manager.h"
 
 #include "algorithm.h"
-#include "util/mapping_reader.h"
+#include "util/operating_point.h"
 #include "util/platform/platform.h"
+
+using namespace tetris;
 
 /**
  * \brief Selects the best mapping for a given client.
@@ -18,7 +20,7 @@
  * \throw NoMappingError If no suitable mapping is found.
  */
 
-Mapping Manager::select_best_mapping(Client &c) {
+OperatingPointAllocation Manager::select_best_mapping(Client &c) {
   LOGGER->info("Search for best mapping for '%s' [%d] using criteria %s\n",
                c.exec.c_str(), c.pid, c.comp.repr().c_str());
 
@@ -27,12 +29,12 @@ Mapping Manager::select_best_mapping(Client &c) {
 
   /* First go through all mappings and take those that satisfy our filter
    * criteria */
-  auto filter = [&c](const Mapping &m) -> bool { return c.filter(m); };
+  auto filter = [&c](const OperatingPoint &op) -> bool { return c.filter(op); };
 
-  std::vector<Mapping> possible_mappings;
-  for (const auto &m : c.mappings) {
+  std::vector<OperatingPoint> possible_ops;
+  for (const auto &m : c.ops) {
     if (filter(m))
-      possible_mappings.push_back(m);
+      possible_ops.push_back(m);
     else
       LOGGER->debug(
           " * Mapping %s (%.0f@%s) [%s] doesn't satisfy filter criteria %s: "
@@ -43,7 +45,7 @@ Mapping Manager::select_best_mapping(Client &c) {
           m.characteristic(c.filter.criteria()));
   }
 
-  if (possible_mappings.empty()) {
+  if (possible_ops.empty()) {
     LOGGER->debug(
         "No mappings are available for client '%s' [%i] that satisfy the "
         "filter\n",
@@ -52,7 +54,7 @@ Mapping Manager::select_best_mapping(Client &c) {
   } else
     LOGGER->debug(
         " * There are %i mapping(s) for this client that satisfy the filter\n",
-        possible_mappings.size());
+        possible_ops.size());
 
   /* Now get all the mappings (containing equivalent ones) from the possible
    * ones, that still fit on the non-occupied CPUs. */
@@ -72,7 +74,7 @@ Mapping Manager::select_best_mapping(Client &c) {
 
   /* Get all the TETRiS mappings for this client */
   auto possible_tetris_mappings =
-      tetris_mappings(allocator, possible_mappings, occupied_cpus);
+      tetris_mappings(allocator, possible_ops, occupied_cpus);
   if (possible_tetris_mappings.empty()) {
     LOGGER->debug(
         "No TETRiS mappings are available for client '%s' [%i] that fit the "
@@ -86,23 +88,25 @@ Mapping Manager::select_best_mapping(Client &c) {
         possible_tetris_mappings.size());
 
   /* Now select the best one out of the remaining ones. */
-  auto comp = [&c](const Mapping &other, const Mapping &best) -> bool {
+  auto comp = [&c](const OperatingPointAllocation &other, const OperatingPointAllocation &best) -> bool {
     return c.comp(other, best);
   };
 
   auto best = possible_tetris_mappings.begin();
   LOGGER->debug(" * Start search with mapping: %s (%.0f@%s) [%s]\n",
-                best->name.c_str(), best->characteristic(c.comp.criteria()),
+                best->base.name.c_str(), best->base.characteristic(c.comp.criteria()),
                 c.comp.repr().c_str(),
                 allocator.GetEquivClassName(*best).c_str());
 
+  auto filter2 = [&c](const OperatingPointAllocation &op) -> bool { return c.filter(op.base); };
+
   for (auto m = best; m != possible_tetris_mappings.end(); ++m) {
-    if (filter(*m) && comp(*m, *best)) {
+    if (filter2(*m) && comp(*m, *best)) {
       LOGGER->debug(
           " * Found better mapping: %s (%.0f@%s) [%s] vs %s (%.0f@%s) [%s]\n",
-          m->name.c_str(), m->characteristic(c.comp.criteria()),
+          m->base.name.c_str(), m->base.characteristic(c.comp.criteria()),
           c.comp.repr().c_str(), allocator.GetEquivClassName(*m).c_str(),
-          best->name.c_str(), best->characteristic(c.comp.criteria()),
+          best->base.name.c_str(), best->base.characteristic(c.comp.criteria()),
           c.comp.repr().c_str(), allocator.GetEquivClassName(*best).c_str());
 
       /* Remember this one as best one */
@@ -110,8 +114,8 @@ Mapping Manager::select_best_mapping(Client &c) {
     }
   }
 
-  LOGGER->info("The best mapping: %s (%.0f@%s) [%s]\n", best->name.c_str(),
-               best->characteristic(c.comp.criteria()), c.comp.repr().c_str(),
+  LOGGER->info("The best mapping: %s (%.0f@%s) [%s]\n", best->base.name.c_str(),
+               best->base.characteristic(c.comp.criteria()), c.comp.repr().c_str(),
                allocator.GetEquivClassName(*best).c_str());
 
   return *best;
@@ -121,16 +125,16 @@ Mapping Manager::select_best_mapping(Client &c) {
  * \brief Uses the client's preferred mapping if available, otherwise selects
  * the best one.
  */
-Mapping Manager::use_preferred_mapping(
+OperatingPointAllocation Manager::use_preferred_mapping(
     Client &c, const std::string &preferred_mapping_name) {
   LOGGER->info("Use preferred mapping '%s' for '%s' [%d]\n",
                preferred_mapping_name.c_str(), c.exec.c_str(), c.pid);
 
   auto it = std::find_if(
-      c.mappings.begin(), c.mappings.end(),
+      c.ops.begin(), c.ops.end(),
       [&](const auto &m) { return m.name == preferred_mapping_name; });
-  if (it != c.mappings.end())
-    return *it;
+  if (it != c.ops.end())
+    return OperatingPointAllocation{*it, {}};
   else {
     LOGGER->info("Couldn't find preferred mapping\n");
     return select_best_mapping(c);
@@ -169,7 +173,7 @@ bool Manager::client_message(int fd) try {
     if (c.pid == -1) {
       /* The client is not yet fully registered with the server. Until now we only accept
        * registration requests. */
-      tetris::RegistrationRequest request{};
+      RegistrationRequest request{};
       auto res = protobuf_util::Receive(conn->locked(), request);
 
       if (res == Connection::InState::DONE) {
@@ -186,7 +190,7 @@ bool Manager::client_message(int fd) try {
         LOGGER->info(" -> The client registered! '%s' [%d]\n", c.exec.c_str(), c.pid);
 
         /* Construct and send the server's registration response */
-        tetris::RegistrationResponse response{};
+        RegistrationResponse response{};
         response.set_id(fd);
 
         if (protobuf_util::Send(conn->locked(), response) != Connection::OutState::DONE)
@@ -195,7 +199,7 @@ bool Manager::client_message(int fd) try {
     } else {
       /* The client is fully registered, receive the message and let
        * the client handle it properly */
-      tetris::ClientMessage msg{};
+      ClientMessage msg{};
       auto res = protobuf_util::Receive(conn->locked(), msg);
 
       if (res == Connection::InState::DONE) {
@@ -228,8 +232,8 @@ void Manager::print_mappings() {
   for (const auto &[name, client] : _clients) {
     std::cout << "Client '" << client.exec << "' [" << client.pid
               << "] (ID: " << name << ")" << std::endl;
-    std::cout << "-> mapping: " << client.active_mapping.name << " ["
-              << allocator.GetEquivClassName(client.active_mapping) << "]"
+    std::cout << "-> mapping: " << client.active_op.base.name << " ["
+              << allocator.GetEquivClassName(client.active_op) << "]"
               << std::endl;
   }
   std::cout << "======= END OF LIST =======" << std::endl;

@@ -13,6 +13,9 @@
 #include <stdexcept>
 #include <string>
 
+
+namespace tetris {
+
 template <typename T> class TD;
 
 class CPUCore;
@@ -227,5 +230,7 @@ private:
   std::vector<std::unique_ptr<CPUCore>> _cpu_cores;
   std::map<int, CPUThread *> _cpu_threads;
 };
+
+} /* namespace tetris */
 
 #endif /* __PLATFORM_H__ */

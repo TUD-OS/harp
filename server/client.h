@@ -7,7 +7,7 @@
 #include "proto/tetris.pb.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
-#include "util/mapping.h"
+#include "util/operating_point.h"
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
 
@@ -24,29 +24,6 @@ class Manager;
  */
 class Client {
  public:
-  /**
-   * \struct Thread
-   * \brief Represents a thread within a client, which includes its name, thread
-   * id and CPU affinity.
-   */
-  struct Thread {
-    bool named;
-    std::string name;
-    int tid;
-    CPUThreadSet cpus;
-
-    Thread(int tid, CPUThreadSet cpus)
-        : named{false}, name{}, tid{tid}, cpus{cpus}
-    {
-      std::stringstream ss;
-      ss << "thread-" << tid;
-      name = ss.str();
-    }
-
-    Thread(int tid, const std::string &name, CPUThreadSet cpus)
-        : name{name}, tid{tid}, cpus{cpus} {}
-  };
-
   /* The management type of an application */
   enum Type : int {
     /* PASSIV: the default type --> The application will be moved around as a
@@ -93,9 +70,14 @@ class Client {
 
     Comp() : _criteria{}, _comp{std::less<double>()} {}
 
-    bool operator()(const Mapping &other, const Mapping &best) {
+    bool operator()(const tetris::OperatingPoint &other, const tetris::OperatingPoint &best) {
       return _comp(other.characteristic(_criteria),
                    best.characteristic(_criteria));
+    }
+
+    bool operator()(const tetris::OperatingPointAllocation &other, const tetris::OperatingPointAllocation &best) {
+      return _comp(other.base.characteristic(_criteria), 
+                   best.base.characteristic(_criteria));
     }
 
     std::string criteria() const { return _criteria; }
@@ -109,13 +91,12 @@ class Client {
   };
 
  public:
-  const Manager& manager;
   ConnectionPtr connection;
   std::string exec;
   int pid;
 
-  std::vector<Mapping> mappings;
-  Mapping active_mapping;
+  std::vector<tetris::OperatingPoint> ops;
+  tetris::OperatingPointAllocation active_op;
 
   std::string push_listener_path;
 
@@ -125,12 +106,12 @@ class Client {
   Comp comp;
 
 private:
-    bool receive_mappings(const tetris::ClientMessage::MappingsInfo&);
+  bool receive_ops(const tetris::ClientMessage::OperatingPointsInfo&);
 
 public:
     Client(const Client &) = delete;
 
-    Client(const Manager& manager, const ConnectionPtr &conn);
+    Client(const ConnectionPtr &conn);
 
     ~Client()
     {
@@ -143,9 +124,9 @@ public:
         return push_listener_path;
     }
 
-    CPUThreadSet cpus() const
+    tetris::CPUThreadSet cpus() const
     {
-        return active_mapping.cpus;
+        return active_op.base.cpus;
     }
 
     void activate_type(const Type& t)
@@ -158,7 +139,7 @@ public:
         type &= ~t;
     }
 
-    void update_mapping(const Mapping &new_mapping);
+    void activate_op(const tetris::OperatingPointAllocation &new_op);
 
     tetris::ServerResponse handle_message(const tetris::ClientMessage &msg);
 };

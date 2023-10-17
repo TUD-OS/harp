@@ -3,6 +3,8 @@
 #include "util/mapping_reader.h"
 #include "util/platform/reader.h"
 
+using namespace tetris;
+
 // This test checks the functionality of the read_mapping_directory function
 TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   YamlPlatformReader platform_reader;

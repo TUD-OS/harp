@@ -3,22 +3,20 @@
 
 #pragma once
 
-
 #include "util/platform/cpu_sets.h"
-
 
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "proto/tetris.pb.h"
 
-
-
+namespace tetris {
 
 /* Forward declaration to avoid circular dependencies */
 class Platform;
+class OperatingPoint;
+
 
 /// \brief ProcessAffinities stores process names and corresponding CPU affinity.
 template <typename T>
@@ -31,6 +29,7 @@ using ReplicaAffinities = std::vector<ProcessAffinities<T>>;
 /// \brief RegionAffinities stores replicas inside a region with CPU affinities.
 template <typename T>
 using RegionAffinities = std::map<std::string, ReplicaAffinities<T>>;
+
 
 class Mapping
 {
@@ -45,14 +44,12 @@ class Mapping
 
    public:
     explicit Mapping(const Platform& platform): _platform{platform}, name{},
-             thread_map{}, region_map{}, characteristics_map{} {}
-
-    Mapping(const Platform&,
-            const tetris::ClientMessage::MappingsInfo::MappingData&);
+             thread_map{}, region_map{}, characteristics_map{}, cpus{}
+    {}
 
     Mapping(const Platform& platform, const std::string& name,
             const std::vector<std::pair<std::string, std::string>>& threads,
-            const RegionAffinities<std::string>& region_threads,
+            const RegionAffinities<std::string>& regions,
             const std::vector<std::pair<std::string, std::string>>& characteristics);
 
     Mapping(const Mapping& base, const std::map<int, int>& conv_map);
@@ -88,6 +85,9 @@ class Mapping
         throw std::runtime_error("Unknown characteristic criteria.");
     }
 
+    OperatingPoint op() const;
 };
+
+} /* namespace tetris */
 
 #endif /* __MAPPING_H__ */

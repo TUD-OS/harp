@@ -6,6 +6,8 @@
 
 #include "util/platform/cpu_sets.h"
 
+using namespace tetris;
+
 TEST(CPUCoreSetTest, Constructors) {
   CPUCoreSet set1;
   EXPECT_EQ(set1.Size(), 0);

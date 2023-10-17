@@ -9,6 +9,9 @@
 #include <set>
 #include <vector>
 
+
+namespace tetris {
+
 template <class Derived> class CPUSetBase {
 public:
   CPUSetBase() {}
@@ -189,5 +192,7 @@ public:
     return tmp;
   }
 };
+
+} /* namespace tetris */
 
 #endif /* __CPU_SETS_H__ */

@@ -8,6 +8,10 @@
 #include "util/csv.h"
 #include "util/debug_util.h"
 #include "util/string_util.h"
+#include "util/platform/platform.h"
+
+
+namespace tetris {
 
 /**
  * \brief Parse mapping from given JSON object
@@ -401,3 +405,5 @@ void MappingReader::log_mappings_details(
     }
   }
 }
+
+} /* namespace tetris */

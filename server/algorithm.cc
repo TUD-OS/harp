@@ -1,17 +1,21 @@
 #include "algorithm.h"
+#include "util/operating_point.h"
 
-std::vector<Mapping> tetris_mappings(const EquivResAllocator &allocator,
-                                     const std::vector<Mapping> &all_mappings,
+
+using namespace tetris;
+
+std::vector<OperatingPointAllocation> tetris_mappings(const EquivResAllocator &allocator,
+                                     const std::vector<OperatingPoint> &ops,
                                      const CPUCoreSet &occupied_cpus) {
   /* Get all the mappings that don't overlap with the already occupied CPUs.
    * Consider all the transformed mappings as well (do the TETRiS). */
-  std::vector<Mapping> result;
+  std::vector<OperatingPointAllocation> result;
 
   /* TODO: Do this properly ;) */
-  for (const auto &m : all_mappings) {
-    auto opt_m = allocator.FindEquivMapping(m, occupied_cpus);
-    if (opt_m) {
-      result.push_back(opt_m.value());
+  for (const auto &op : ops) {
+    auto o = allocator.FindEquivOP(op, occupied_cpus);
+    if (o) {
+      result.push_back(o.value());
     }
   }
 

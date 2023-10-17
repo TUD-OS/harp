@@ -4,6 +4,8 @@
 #include "util/platform/cpu_sets.h"
 #include "util/platform/equiv_res_alloc.h"
 
+using namespace tetris;
+
 class OdroidMappingTest : public OdroidTest {
 protected:
   Mapping GetMapping_0() {
