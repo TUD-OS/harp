@@ -1,0 +1,720 @@
+application: <fill>
+mapping_template:
+  cores: []
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E00
+  metadata:
+  - 38162.565766
+  - 659.521444
+  - 1
+  name: mapping0
+- cores:
+  - E00
+  - E01
+  metadata:
+  - 33328.340543
+  - 471.161331
+  - 2
+  name: mapping1
+- cores:
+  - E00
+  - E01
+  - E02
+  metadata:
+  - 30396.658131
+  - 423.468887
+  - 3
+  name: mapping2
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  metadata:
+  - 25766.434977
+  - 386.693285
+  - 4
+  name: mapping3
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  metadata:
+  - 21924.542977
+  - 416.096285
+  - 5
+  name: mapping4
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  metadata:
+  - 19091.901572
+  - 341.575724
+  - 6
+  name: mapping5
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  metadata:
+  - 17749.317104
+  - 311.304806
+  - 7
+  name: mapping6
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  metadata:
+  - 16013.510344
+  - 306.527047
+  - 8
+  name: mapping7
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  metadata:
+  - 14680.825395
+  - 350.235248
+  - 9
+  name: mapping8
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  metadata:
+  - 13629.775087
+  - 326.876177
+  - 10
+  name: mapping9
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  metadata:
+  - 13007.491686
+  - 336.640618
+  - 11
+  name: mapping10
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  metadata:
+  - 12998.232952
+  - 372.279442
+  - 12
+  name: mapping11
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  metadata:
+  - 12263.062812
+  - 415.524999
+  - 13
+  name: mapping12
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  metadata:
+  - 12170.393946
+  - 446.524858
+  - 14
+  name: mapping13
+- cores:
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  - E14
+  metadata:
+  - 12012.067792
+  - 485.374367
+  - 15
+  name: mapping14
+- cores:
+  - P0_0
+  - P0_1
+  metadata:
+  - 19339.727699
+  - 411.86595
+  - 2
+  name: mapping15
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  metadata:
+  - 14594.636915
+  - 427.907229
+  - 3
+  name: mapping16
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  metadata:
+  - 18385.732843
+  - 388.029158
+  - 4
+  name: mapping17
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  metadata:
+  - 19894.995456
+  - 386.427661
+  - 5
+  name: mapping18
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  metadata:
+  - 18867.468625
+  - 377.536204
+  - 6
+  name: mapping19
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  metadata:
+  - 16464.008603
+  - 386.363757
+  - 7
+  name: mapping20
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  metadata:
+  - 15186.815047
+  - 382.044737
+  - 8
+  name: mapping21
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  metadata:
+  - 14851.01971
+  - 374.990312
+  - 9
+  name: mapping22
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  metadata:
+  - 13611.444587
+  - 370.132414
+  - 10
+  name: mapping23
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  metadata:
+  - 12900.844278
+  - 407.834466
+  - 11
+  name: mapping24
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  metadata:
+  - 12535.063475
+  - 415.123876
+  - 12
+  name: mapping25
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  metadata:
+  - 12073.208154
+  - 458.813034
+  - 14
+  name: mapping26
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  metadata:
+  - 11826.194699
+  - 541.145404
+  - 16
+  name: mapping27
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  - E14
+  metadata:
+  - 11739.254821
+  - 575.029289
+  - 17
+  name: mapping28
+- cores:
+  - P0_0
+  - P0_1
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  - E14
+  - E15
+  metadata:
+  - 11641.290571
+  - 613.366289
+  - 18
+  name: mapping29
+- cores:
+  - P0_0
+  - P0_1
+  - P1_0
+  - P1_1
+  metadata:
+  - 11529.802404
+  - 350.849505
+  - 4
+  name: mapping30
+- cores:
+  - P0_0
+  - P0_1
+  - P1_0
+  - P1_1
+  - E00
+  metadata:
+  - 11120.98638
+  - 393.438568
+  - 5
+  name: mapping31
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  metadata:
+  - 21349.238035
+  - 373.404501
+  - 5
+  name: mapping32
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  metadata:
+  - 16874.189298
+  - 343.986607
+  - 7
+  name: mapping33
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  metadata:
+  - 15932.131221
+  - 318.778053
+  - 8
+  name: mapping34
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  metadata:
+  - 15082.746431
+  - 322.037262
+  - 9
+  name: mapping35
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  metadata:
+  - 13633.503695
+  - 357.939879
+  - 10
+  name: mapping36
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  metadata:
+  - 12853.210297
+  - 351.103471
+  - 11
+  name: mapping37
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  metadata:
+  - 12354.907516
+  - 360.27166
+  - 12
+  name: mapping38
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  metadata:
+  - 12133.507841
+  - 395.806604
+  - 13
+  name: mapping39
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  metadata:
+  - 11916.570847
+  - 444.887594
+  - 14
+  name: mapping40
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  metadata:
+  - 11856.547128
+  - 484.770182
+  - 15
+  name: mapping41
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  - E14
+  metadata:
+  - 11763.178141
+  - 517.695086
+  - 16
+  name: mapping42
+- cores:
+  - P0_0
+  - E00
+  - E01
+  - E02
+  - E03
+  - E04
+  - E05
+  - E06
+  - E07
+  - E08
+  - E09
+  - E10
+  - E11
+  - E12
+  - E13
+  - E14
+  - E15
+  metadata:
+  - 11659.091527
+  - 552.30602
+  - 17
+  name: mapping43
+- cores:
+  - P0_0
+  - P1_0
+  metadata:
+  - 11996.118804
+  - 323.522731
+  - 2
+  name: mapping44
+- cores:
+  - P0_0
+  - P1_0
+  - P2_0
+  metadata:
+  - 10078.143274
+  - 307.793524
+  - 3
+  name: mapping45
+- cores:
+  - P0_0
+  - P1_0
+  - P2_0
+  - P3_0
+  metadata:
+  - 8797.235954
+  - 294.8126
+  - 4
+  name: mapping46
+- cores:
+  - P0_0
+  - P1_0
+  - P2_0
+  - P3_0
+  - P4_0
+  metadata:
+  - 8786.843746
+  - 296.590611
+  - 5
+  name: mapping47
+platform: <fill>
+type: OMP
