@@ -11,10 +11,8 @@ using namespace tetris;
 class SmallOdroidScheduleTest : public SmallOdroidTest {
 protected:
   Client *CreateClient(std::vector<OperatingPoint> &ops) {
-    // TODO: remove dummy manager object
-    Manager manager{std::unique_ptr<Platform>()};
     ConnectionPtr conn;
-    auto c = new Client(manager, conn);
+    auto c = new Client(conn);
 
     for (auto &op : ops) {
       c->ops.emplace_back(op);
