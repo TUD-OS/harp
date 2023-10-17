@@ -9,7 +9,7 @@ using namespace tetris;
 TEST(MappingReaderTest, ReadMappingDirectoryOdroidTest) {
   YamlPlatformReader platform_reader;
   std::unique_ptr<Platform> platform =
-      platform_reader.ReadFromFile("../examples/odroid/platform_odroid.yaml");
+      platform_reader.ReadFromFile("../examples/odroid/platform.yaml");
   // Define the directory containing the test mapping data
   std::string test_directory = "../examples/odroid/mappings";
 
@@ -38,7 +38,7 @@ TEST(MappingReaderTest, ReadMappingDirectoryOdroidTest) {
 TEST(MappingReaderTest, ReadMappingDirectoryRaptorTest) {
   YamlPlatformReader platform_reader;
   std::unique_ptr<Platform> platform = platform_reader.ReadFromFile(
-      "../examples/raptor-lake-8P16E/platform_raptor-8P16E.yaml");
+      "../examples/raptor-lake-8P16E/platform.yaml");
   // Define the directory containing the test mapping data
   std::string test_directory = "../examples/raptor-lake-8P16E/mappings";
 
