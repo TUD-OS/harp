@@ -6,8 +6,8 @@
 
 using namespace tetris;
 
-Client::Client(const Manager &manager, const ConnectionPtr &conn)
-    : manager{manager}, connection{conn}, exec{}, pid{-1}, ops{},
+Client::Client(const ConnectionPtr &conn)
+    : connection{conn}, exec{}, pid{-1}, ops{},
       active_op{}, type{Type::PASSIV}, filter{},
       comp{} {
   std::stringstream path{};
@@ -19,8 +19,6 @@ Client::Client(const Manager &manager, const ConnectionPtr &conn)
 bool Client::receive_ops(
     const ClientMessage::OperatingPointsInfo &ops_info) {
   ops.clear();
-
-  const auto &platform = manager.GetPlatform();
 
   /* Convert the protobuf mapping representation into our internal format */
   for (int i = 0; i < ops_info.operating_points_size(); i++) {

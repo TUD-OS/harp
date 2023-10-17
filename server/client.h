@@ -91,7 +91,6 @@ class Client {
   };
 
  public:
-  const Manager& manager;
   ConnectionPtr connection;
   std::string exec;
   int pid;
@@ -112,7 +111,7 @@ private:
 public:
     Client(const Client &) = delete;
 
-    Client(const Manager& manager, const ConnectionPtr &conn);
+    Client(const ConnectionPtr &conn);
 
     ~Client()
     {

@@ -62,7 +62,7 @@ public:
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    _clients.try_emplace(fd, *this, conn);
+    _clients.emplace(fd, conn);
   }
 
   /**

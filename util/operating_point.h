@@ -13,9 +13,6 @@
 
 namespace tetris {
 
-/* Forward declare to circumvent circular dependencies */
-class Platform;
-
 
 class OperatingPoint {
    public:
