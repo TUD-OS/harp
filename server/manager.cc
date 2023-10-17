@@ -58,7 +58,7 @@ OperatingPointAllocation Manager::select_best_mapping(Client &c) {
 
   /* Now get all the mappings (containing equivalent ones) from the possible
    * ones, that still fit on the non-occupied CPUs. */
-  CPUCoreSet occupied_cpus = _blocked_cpus;
+  CPUCoreSet occupied_cpus = _blocked_cores;
   for (const auto &[name, cl] : _clients) {
     if (cl.pid == c.pid) continue;
     auto client_cores = platform.ToCPUCoreSet(cl.cpus());
@@ -232,13 +232,61 @@ void Manager::print_mappings() {
   for (const auto &[name, client] : _clients) {
     std::cout << "Client '" << client.exec << "' [" << client.pid
               << "] (ID: " << name << ")" << std::endl;
-    std::cout << "-> mapping: " << client.active_op.base.name << " ["
-              << allocator.GetEquivClassName(client.active_op) << "]"
-              << std::endl;
+    if (client.active_op.has_value()) {
+      std::cout << "-> mapping: " << client.active_op->base.name << " ["
+                << allocator.GetEquivClassName(*client.active_op) << "]"
+                << std::endl;
+    } else {
+      std::cout << "-> mapping: none" << std::endl;
+    }
   }
   std::cout << "======= END OF LIST =======" << std::endl;
 }
 
 void Manager::update_mappings() {
     /* TODO: Initiate update of the mappings */
+}
+
+void Manager::run_scheduler() {
+  auto start = std::chrono::high_resolution_clock::now();
+
+  // Update the current progress of each client
+  update_client_progresses(start);
+
+  // Run the scheduler
+  std::vector<Client*> clients;
+  for (auto& [cid, c]: _clients) {
+    clients.push_back(&c);
+  }
+
+  // Measure separately the call to GenerateSchedule()
+  auto before  = std::chrono::high_resolution_clock::now();
+
+  // 0.0 is a dummy start time
+  auto schedule = _scheduler->GenerateSchedule(clients, 0.0, _blocked_cores);
+
+  // The scheduling might be too too long, update progresses again
+  auto after = std::chrono::high_resolution_clock::now();
+  update_client_progresses(after);
+
+  // updates the mappings 
+  for (auto& c: clients) {
+    auto op = schedule->GetOperatingPoint(0, c);
+    if (op.has_value())
+      c->activate_op(*op);
+    else {
+      LOGGER->error("No mapping generated for client '%s' [%d]."
+          "Handling of such cases is not yet implemented.",
+          c->exec.c_str(), c->pid);
+      throw std::runtime_error("Not yet implemented");
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+
+  std::chrono::duration<double> full_dur = end - start;
+  auto full_dur_s = full_dur.count();
+  std::chrono::duration<double> sched_dur = after - before;
+  auto sched_dur_s = sched_dur.count();
+  LOGGER->info("Activated the cheduler: duration = %lfs [scheduling time: %lfs ]",
+      full_dur_s, sched_dur_s);
 }

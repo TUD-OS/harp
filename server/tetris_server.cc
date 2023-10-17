@@ -6,10 +6,11 @@
 #include <sys/signalfd.h>
 
 #include "manager.h"
+#include "sched/bruteforce.h"
+#include "sched/objective.h"
 #include "util/platform/reader.h"
 #include "util/socket.h"
 #include "util/string_util.h"
-
 
 using namespace tetris;
 
@@ -26,6 +27,10 @@ void usage() {
             << "Options:\n"
             << "   -h, --help                show this help message.\n"
             << "   -p, --platform <name>     specify the platform.\n"
+            << "   -o, --obj <objective>     specify the objective "
+               "(energy-saving, balanced,\n"
+            << "                             performance). Defaults to "
+               "\"energy-saving\".\n"
             << "\n";
 }
 
@@ -244,6 +249,7 @@ int main(int argc, char *argv[]) {
   /* Parsing command line arguments. */
   std::string mappings_path;
   std::string platform_path;
+  std::string objective_name;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg{argv[i]};
@@ -280,6 +286,15 @@ int main(int argc, char *argv[]) {
           return 1;
         }
       }
+    } else if (arg == "-o" || arg == "--obj") {
+      if (i + 1 >= argc) {
+        std::cerr << "Expected objective name after " << arg << ".\n";
+        usage();
+        return 1;
+      }
+
+      i++;
+      objective_name = argv[i];
     } else {
       mappings_path = arg;
     }
@@ -295,17 +310,37 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::cout << "Welcome to TETRiS" << std::endl;
-
-  /* Setup logging */
-  logger = debug::Logger::get();
+  if (objective_name.empty()) {
+    objective_name = "energy-saving";
+  }
 
   /* Create a platform */
   auto reader = YamlPlatformReader();
   auto platform = reader.ReadFromFile(platform_path);
 
+  /* Create a scheduler */
+  std::unique_ptr<OptimizationObjective> objective;
+  if (objective_name == "energy-saving")
+    objective = std::make_unique<EnergySavingObjective>();
+  else if (objective_name == "balanced")
+    objective = std::make_unique<BalancedObjective>();
+  else if (objective_name == "performance")
+    objective = std::make_unique<PerformanceObjective>();
+  else {
+    std::cerr << "Unknown objective.\n";
+    usage();
+    return 1;
+  }
+  std::unique_ptr<BaseScheduler> scheduler =
+      std::make_unique<BruteforceMapper>(*platform, std::move(objective));
+
+  std::cout << "Welcome to TETRiS" << std::endl;
+
+  /* Setup logging */
+  logger = debug::Logger::get();
+
   /* Setting up the manager */
-  Manager manager{std::move(platform)};
+  Manager manager{std::move(platform), std::move(scheduler)};
 
   // Setting up the server and control sockets
   int server_fd = -1;
