@@ -33,7 +33,7 @@ public:
  * \private
  *  \property _clients A map of client identifiers to Client objects.
  *  \property _mappings A map of applications to vectors of possible mappings.
- *  \property _blocked_cpus A list of blocked CPUs.
+ *  \property _blocked_cores A list of blocked CPUs.
  */
 
 class Manager {
@@ -41,7 +41,7 @@ private:
   std::unique_ptr<tetris::Platform> _platform;
   std::unique_ptr<tetris::BaseScheduler> _scheduler;
   std::map<int, Client> _clients;
-  tetris::CPUCoreSet _blocked_cpus;
+  tetris::CPUCoreSet _blocked_cores;
 
   /**
    * \brief Selects the best mapping for a given client.
@@ -54,6 +54,12 @@ private:
    */
   tetris::OperatingPointAllocation use_preferred_mapping(Client &,
                                                          const std::string &);
+
+  void update_client_progresses(std::chrono::high_resolution_clock::time_point new_tp) {
+    for (auto& [cid, c]: _clients) {
+      c.update_progress(new_tp);
+    }
+  }
 
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
@@ -97,6 +103,16 @@ public:
   } catch (std::out_of_range &) {
     LOGGER->error("Unknown client %i\n", fd);
   }
+
+  /**
+   * Run the scheduler.
+   *
+   * First, it updates the current progress for all clients. Then, it runs the
+   * scheduler and gets the operating point allocation for each client.
+   * Third, it assigns the found operating point allocation and triggers the
+   *  message sending to the client.
+   */
+  void run_scheduler();
 
   /**
    * \brief Handles the incoming message from a client.

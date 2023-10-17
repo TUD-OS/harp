@@ -14,7 +14,7 @@ Client::Client(const ConnectionPtr &conn)
   path << "/tmp/tetris_push_listener_" << pid;
 
   push_listener_path = path.str();
-  progress_update = std::chrono::system_clock::now();
+  progress_tp = std::chrono::high_resolution_clock::now();
 }
 
 bool Client::receive_ops(
