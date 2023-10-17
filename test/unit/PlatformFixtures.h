@@ -18,16 +18,23 @@ protected:
   void TearDown() override {}
 };
 
+class SmallOdroidTest : public BasePlatformTest {
+protected:
+  std::string GetPlatformFilePath() override {
+    return "../examples/odroid-small/platform_odroid-small.yaml";
+  }
+};
+
 class OdroidTest : public BasePlatformTest {
 protected:
   std::string GetPlatformFilePath() override {
-    return "../examples/platforms/platform_odroid.yaml";
+    return "../examples/odroid/platform_odroid.yaml";
   }
 };
 
 class RaptorLakeTest : public BasePlatformTest {
 protected:
   std::string GetPlatformFilePath() override {
-    return "../examples/platforms/platform_raptor-8P16E.yaml";
+    return "../examples/raptor-lake-8P16E/platform_raptor-8P16E.yaml";
   }
 };

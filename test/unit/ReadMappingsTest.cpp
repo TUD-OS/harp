@@ -9,9 +9,9 @@ using namespace tetris;
 TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   YamlPlatformReader platform_reader;
   std::unique_ptr<Platform> platform = platform_reader.ReadFromFile(
-      "../examples/platforms/platform_odroid.yaml");
+      "../examples/odroid/platform_odroid.yaml");
   // Define the directory containing the test mapping data
-  std::string test_directory = "../examples/mappings";
+  std::string test_directory = "../examples/odroid/mappings";
 
   // Call the function to read mappings from the test directory
   auto mapping_reader = MappingReader(*platform.get());
@@ -25,7 +25,7 @@ TEST(MappingReaderTest, ReadMappingDirectoryTest) {
   EXPECT_EQ(app_mappings["mandelbrot"].size(), 4);
 
   EXPECT_EQ(app_mappings.count("mandelbrot_2"), 1);
-  EXPECT_EQ(app_mappings["mandelbrot_2"].size(), 3);
+  EXPECT_EQ(app_mappings["mandelbrot_2"].size(), 4);
 
   EXPECT_EQ(app_mappings.count("htop"), 1);
   EXPECT_EQ(app_mappings["htop"].size(), 2);
