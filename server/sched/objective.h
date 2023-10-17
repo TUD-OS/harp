@@ -89,6 +89,21 @@ public:
   DelayObjective() : GEDPObjective{0} {}
 };
 
+class PerformanceObjective : public GEDPObjective {
+public:
+  PerformanceObjective() : GEDPObjective{0.25} {}
+};
+
+class BalancedObjective : public GEDPObjective {
+public:
+  BalancedObjective() : GEDPObjective{0.5} {}
+};
+
+class EnergySavingObjective : public GEDPObjective {
+public:
+  EnergySavingObjective() : GEDPObjective{0.75} {}
+};
+
 } // namespace tetris
 
 #endif /* __SCHED_OBJECTIVE_H__ */

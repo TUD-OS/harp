@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "server/client.h"
-#include "server/manager.h"
 #include "server/sched/bruteforce.h"
 #include "server/schedule.h"
 
