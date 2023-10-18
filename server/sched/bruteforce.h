@@ -72,6 +72,9 @@ private:
   std::vector<Client *> _clients;
   double _start_time;
   CPUCoreSet _blocked;
+
+  std::vector<std::vector<OperatingPoint>> _cl_pareto; // Pareto front of ops
+
   std::unique_ptr<Schedule> _best_schedule;
   MappingListValue _best_value;
   MappingList _cur_ops;
