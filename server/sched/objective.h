@@ -10,9 +10,36 @@
 
 namespace tetris {
 
+class Platform;
+
 class OptimizationObjective {
+private:
+  struct OPParetoState {
+    std::map<std::string, int> cores;
+    double value;
+    bool is_pareto;
+
+    bool Dominates(const OPParetoState &other) {
+      bool res = true;
+      for (auto &[name, core_count] : cores) {
+        if (core_count > other.cores.at(name))
+          return false;
+      }
+      if (value > other.value) {
+        return false;
+      }
+      return true;
+    }
+  };
+
 public:
   virtual ~OptimizationObjective() = default;
+
+  /**
+   * Evaluate an operating point.
+   */
+  virtual double EvaluateOP(const OperatingPoint &op,
+                            double rem_cratio = 1.0) const = 0;
 
   /**
    * Evaluate the job w.r.t. some objective value.
@@ -45,17 +72,39 @@ public:
     }
     return std::make_tuple(num_apps, value);
   }
+
+  /**
+   * Filter Pareto-optimal operating points.
+   *
+   * Filter the given operating points w.r.t. the following objectives:
+   * number of used cores of each type and the objective value.
+   */
+  virtual std::vector<OperatingPoint>
+  FilterParetoFront(const Platform &platform,
+                    const std::vector<OperatingPoint> &ops) const;
 };
 
 class GEDPObjective : public OptimizationObjective {
 private:
   double _alpha;
 
+  double EvaluateGEDP(double energy, double exec_time,
+                      double rem_cratio) const {
+    return pow(energy * rem_cratio, _alpha) *
+           pow(exec_time * rem_cratio, 1 - _alpha);
+  }
+
 public:
   GEDPObjective(double alpha) : _alpha{alpha} {
     if (alpha < 0 || alpha > 1) {
       throw std::runtime_error("alpha must be in the range 0.0..1.0");
     }
+  }
+
+  double EvaluateOP(const OperatingPoint &op,
+                    double rem_cratio = 1.0) const override {
+    return EvaluateGEDP(op.characteristic("energy"),
+                        op.characteristic("execution_time"), rem_cratio);
   }
 
   std::tuple<int, double> EvaluateClient(const Schedule &schedule,
@@ -71,9 +120,7 @@ public:
         return std::make_tuple(0, 0.0);
       auto op = *opt_op;
       double rem_cratio = 1.0 - client->progress;
-      double value =
-          pow(op.characteristic("energy") * rem_cratio, _alpha) *
-          pow(op.characteristic("execution_time") * rem_cratio, 1 - _alpha);
+      double value = EvaluateOP(op.base, rem_cratio);
       return std::make_tuple(1, value);
     }
   }

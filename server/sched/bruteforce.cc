@@ -51,9 +51,8 @@ void BruteforceMapper::IterateClient(int n, CPUCoreSet busy_cores) {
   }
 
   auto &op_allocator = _platform.GetEquivResAllocator();
-  auto &client = *_clients[n];
 
-  for (auto &op : client.ops) {
+  for (auto &op : _cl_pareto[n]) {
     // Find an equivalent mapping that is not ovelapping with busy cpus
     auto opt_opa = op_allocator.FindEquivOP(op, busy_cores);
     if (opt_opa.has_value()) {
@@ -87,10 +86,19 @@ BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
   _clients = clients;
   _start_time = start_time;
   _blocked = blocked_cores;
+  _cl_pareto.clear();
   _best_schedule = std::unique_ptr<Schedule>();
   _best_value = std::make_tuple(0, 0.0);
   _cur_ops.clear();
   _cur_ops.resize(clients.size());
+
+  // Filter Pareto-front for each client
+  for (const auto &c : _clients) {
+    _cl_pareto.push_back(_objective->FilterParetoFront(_platform, c->ops));
+    LOGGER->debug("Filtering operating points for '%s' [%d] from %d to %d.\n",
+                  c->exec.c_str(), c->pid, c->ops.size(),
+                  _cl_pareto.back().size());
+  }
 
   // Start bruteforce
   IterateClient(0, _blocked);
