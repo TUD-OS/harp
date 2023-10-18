@@ -13,7 +13,6 @@
 #include <stdexcept>
 #include <string>
 
-
 namespace tetris {
 
 template <typename T> class TD;
@@ -193,6 +192,21 @@ public:
         res.Set(t->GetID());
       }
     }
+    return res;
+  }
+
+  std::map<std::string, int>
+  CountCoresPerType(const CPUCoreSet &core_set) const {
+    std::map<std::string, int> res;
+    for (const auto &[name, _] : _cpu_types) {
+      res.emplace(name, 0);
+    }
+
+    auto cores = GetCPUCores(core_set);
+    for (auto &c : cores) {
+      res[c->GetType().GetName()]++;
+    }
+
     return res;
   }
 
