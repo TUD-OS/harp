@@ -79,7 +79,7 @@ public:
   void client_connect(int fd, const ConnectionPtr &conn) {
     auto c = std::make_unique<Client>(conn, this);
     _clients.emplace(fd, std::move(c));
-    _needs_reschedule = true;
+    reschedule();
   }
 
   /**
@@ -87,7 +87,7 @@ public:
    */
   void client_disconnect(int fd) {
     _clients.erase(fd);
-    _needs_reschedule = true;
+    reschedule();
   }
 
   /**

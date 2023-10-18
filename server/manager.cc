@@ -125,6 +125,12 @@ void Manager::run_scheduler() {
       clients.push_back(c.get());
   }
 
+  if (clients.empty()) {
+    /* We have nothing to schedule here -> bail early */
+    LOGGER->debug(" --> No active clients to schedule\n");
+    return;
+  }
+
   // Measure separately the call to GenerateSchedule()
   auto before  = std::chrono::high_resolution_clock::now();
 
@@ -137,7 +143,7 @@ void Manager::run_scheduler() {
   update_client_progresses(after);
 
   // print
-  LOGGER->info("%s", schedule->ToString().c_str());
+  LOGGER->info("%s\n", schedule->ToString().c_str());
 
   // updates the mappings 
   for (auto& c: clients) {
