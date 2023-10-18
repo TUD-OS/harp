@@ -4,21 +4,31 @@
 #include "proto/tetris.pb.h"
 #include "util/operating_point.h"
 
+#include <sstream>
+
+
 using namespace tetris;
 
-Client::Client(const ConnectionPtr &conn)
+Client::Client(const ConnectionPtr &conn, Manager *manager)
     : connection{conn}, exec{}, pid{-1}, ops{},
-      active_op{}, progress{0.0},  type{Type::PASSIV}, filter{},
-      comp{} {
-  std::stringstream path{};
-  path << "/tmp/tetris_push_listener_" << pid;
-
-  push_listener_path = path.str();
+      active_op{}, progress{0.0}, type{Type::PASSIV}, _manager{manager}
+{
   progress_tp = std::chrono::high_resolution_clock::now();
+}
+
+std::string Client::push_path() const
+{
+    std::stringstream path{};
+    path << "/tmp/tetris_push_listener_" << pid;
+
+    return path.str();
 }
 
 bool Client::receive_ops(
     const ClientMessage::OperatingPointsInfo &ops_info) {
+  /* Mark the client active since we now have operating points */
+  type = Type::ACTIVE;
+
   ops.clear();
 
   /* Convert the protobuf mapping representation into our internal format */
@@ -26,6 +36,9 @@ bool Client::receive_ops(
     auto cur = ops_info.operating_points(i);
     ops.emplace_back(cur);
   }
+
+  LOGGER->info(" -> Received %d operating points from client %d\n", ops.size(), pid);
+  _manager->reschedule();
 
   return true;
 }
@@ -38,14 +51,28 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
   /* Send the new mapping information to the client so that client library knows
    * about the change and can react accordingly. */
   ServerMessage msg{};
+  msg.set_feature_id(0);
   msg.set_type(ServerMessage::ACTIVATE_OP);
   auto op_info = msg.mutable_activated_op_info();
   op_info->set_identifier(new_op.base.name);
 
+  for (const auto& [fc, tc] : new_op.cpu_allocation) {
+    auto conv = op_info->add_cpu_convs();
+    conv->set_cpu_id_from(fc);
+    conv->set_cpu_id_to(tc);
+  }
+
   LOGGER->info(" -> sending mapping info to client\n");
 
-  Connection conn{push_listener_path};
-  auto response = protobuf_util::Send(conn.locked(), msg);
+  Connection conn{push_path()};
+  ClientResponse response;
+
+  protobuf_util::Send(conn.locked(), msg);
+  protobuf_util::Receive(conn.locked(), response);
+
+  if (response.type() != ClientResponse::ACKNOWLEDGE) {
+      LOGGER->warning(" -! Client didn't acknowledge the message!\n");
+  }
 
   LOGGER->info(" * done\n");
 }
@@ -57,6 +84,7 @@ ServerResponse Client::handle_message(const ClientMessage &msg)
 
   switch(msg.type()) {
     case ClientMessage::OPERATING_POINTS:
+      LOGGER->debug(" -> Received operating point message from client\n");
       /* Parse the mapping information from the client */
       if (msg.has_ops_info() && receive_ops(msg.ops_info())) {
         response.set_type(ServerResponse::ACKNOWLEDGE);

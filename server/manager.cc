@@ -3,6 +3,7 @@
 #include "algorithm.h"
 #include "util/operating_point.h"
 #include "util/platform/platform.h"
+#include <memory>
 
 using namespace tetris;
 
@@ -140,6 +141,7 @@ OperatingPointAllocation Manager::use_preferred_mapping(
     return select_best_mapping(c);
   }
 }
+using ClientPtr = std::unique_ptr<Client>;
 
 /**
  * \brief Handles the incoming message from a client.
@@ -161,16 +163,15 @@ OperatingPointAllocation Manager::use_preferred_mapping(
  * closed. Returns true if an error occurs or if the client is not being
  * managed.
  */
-
 bool Manager::client_message(int fd) try {
-  Client &c = _clients.at(fd);
-  ConnectionPtr conn = c.connection;
+  ClientPtr &c = _clients.at(fd);
+  ConnectionPtr conn = c->connection;
 
   bool done = false;
   bool close = false;
 
   while (!done) {
-    if (c.pid == -1) {
+    if (c->pid == -1) {
       /* The client is not yet fully registered with the server. Until now we only accept
        * registration requests. */
       RegistrationRequest request{};
@@ -184,10 +185,10 @@ bool Manager::client_message(int fd) try {
         close = true;
         done = true;
       } else {
-        c.pid = request.pid();
-        c.exec = request.exec();
+        c->pid = request.pid();
+        c->exec = request.exec();
 
-        LOGGER->info(" -> The client registered! '%s' [%d]\n", c.exec.c_str(), c.pid);
+        LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(), c->pid);
 
         /* Construct and send the server's registration response */
         RegistrationResponse response{};
@@ -210,7 +211,8 @@ bool Manager::client_message(int fd) try {
         close = true;
         done = true;
       } else {
-        auto response = c.handle_message(msg);
+        LOGGER->debug(" -> Forward message to client [%d]\n", c->pid);
+        auto response = c->handle_message(msg);
         if (protobuf_util::Send(conn->locked(), response) != Connection::OutState::DONE)
           LOGGER->error("Failed to acknowledge the new-thread message\n");
       }
@@ -230,11 +232,11 @@ void Manager::print_mappings() {
   std::cout << "Currently active mappings:" << std::endl
             << "==========================" << std::endl;
   for (const auto &[name, client] : _clients) {
-    std::cout << "Client '" << client.exec << "' [" << client.pid
+    std::cout << "Client '" << client->exec << "' [" << client->pid
               << "] (ID: " << name << ")" << std::endl;
-    if (client.active_op.has_value()) {
-      std::cout << "-> mapping: " << client.active_op->base.name << " ["
-                << allocator.GetEquivClassName(*client.active_op) << "]"
+    if (client->active_op.has_value()) {
+      std::cout << "-> mapping: " << client->active_op->base.name << " ["
+                << allocator.GetEquivClassName(*(client->active_op)) << "]"
                 << std::endl;
     } else {
       std::cout << "-> mapping: none" << std::endl;
@@ -248,6 +250,7 @@ void Manager::update_mappings() {
 }
 
 void Manager::run_scheduler() {
+  _needs_reschedule = false;
   auto start = std::chrono::high_resolution_clock::now();
 
   // Update the current progress of each client
@@ -256,7 +259,8 @@ void Manager::run_scheduler() {
   // Run the scheduler
   std::vector<Client*> clients;
   for (auto& [cid, c]: _clients) {
-    clients.push_back(&c);
+    if (c->type == Client::ACTIVE)
+      clients.push_back(c.get());
   }
 
   // Measure separately the call to GenerateSchedule()
@@ -287,6 +291,6 @@ void Manager::run_scheduler() {
   auto full_dur_s = full_dur.count();
   std::chrono::duration<double> sched_dur = after - before;
   auto sched_dur_s = sched_dur.count();
-  LOGGER->info("Activated the cheduler: duration = %lfs [scheduling time: %lfs ]",
+  LOGGER->info("Activated the cheduler: duration = %lfs [scheduling time: %lfs ]\n",
       full_dur_s, sched_dur_s);
 }

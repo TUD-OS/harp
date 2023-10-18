@@ -1,6 +1,7 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
+#include <memory>
 #pragma once
 
 #include "client.h"
@@ -40,8 +41,10 @@ class Manager {
 private:
   std::unique_ptr<tetris::Platform> _platform;
   std::unique_ptr<tetris::BaseScheduler> _scheduler;
-  std::map<int, Client> _clients;
+  std::map<int, std::unique_ptr<Client>> _clients;
   tetris::CPUCoreSet _blocked_cores;
+
+  bool _needs_reschedule;
 
   /**
    * \brief Selects the best mapping for a given client.
@@ -57,7 +60,7 @@ private:
 
   void update_client_progresses(std::chrono::high_resolution_clock::time_point new_tp) {
     for (auto& [cid, c]: _clients) {
-      c.update_progress(new_tp);
+      c->update_progress(new_tp);
     }
   }
 
@@ -65,7 +68,8 @@ public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
                    std::unique_ptr<tetris::BaseScheduler> scheduler)
       : _platform{std::move(platform)},
-        _scheduler{std::move(scheduler)}, _clients{} {}
+        _scheduler{std::move(scheduler)}, _clients{}, _needs_reschedule{false}
+  {}
 
   const tetris::Platform &GetPlatform() const { return *_platform.get(); }
 
@@ -73,13 +77,18 @@ public:
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    _clients.emplace(fd, conn);
+    auto c = std::make_unique<Client>(conn, this);
+    _clients.emplace(fd, std::move(c));
+    _needs_reschedule = true;
   }
 
   /**
    * \brief Removes a client from the client list upon disconnection.
    */
-  void client_disconnect(int fd) { _clients.erase(fd); }
+  void client_disconnect(int fd) {
+    _clients.erase(fd);
+    _needs_reschedule = true;
+  }
 
   /**
    * \brief Changes the mapping for a specific application.
@@ -128,6 +137,18 @@ public:
    * \brief Updates the mappings for all clients.
    */
   void update_mappings();
+
+  /**
+   * \brief Note that we have to generate a new schedule due to changed client states
+   **/
+  void reschedule() {
+      LOGGER->info(" -> Marked for reschedule!\n");
+      _needs_reschedule = true;
+  }
+
+  bool needs_reschedule() const {
+      return _needs_reschedule;
+  }
 };
 
 #endif /* __MANAGER_H__ */

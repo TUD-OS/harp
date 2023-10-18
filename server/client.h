@@ -3,15 +3,14 @@
 
 #pragma once
 
-#include <optional>
-
-#include "filter.h"
 #include "proto/tetris.pb.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
 #include "util/operating_point.h"
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
+
+#include <optional>
 
 using ConnectionPtr = std::shared_ptr<Connection>;
 
@@ -103,20 +102,17 @@ class Client {
   double progress; // current progress (0.0...1.0)
   std::chrono::high_resolution_clock::time_point progress_tp; // last progress update
 
-  std::string push_listener_path;
-
   int type;
 
-  Filter filter;
-  Comp comp;
-
 private:
+  Manager *_manager;
+
   bool receive_ops(const tetris::ClientMessage::OperatingPointsInfo&);
 
 public:
     Client(const Client &) = delete;
 
-    Client(const ConnectionPtr &conn);
+    Client(const ConnectionPtr &conn, Manager *manager);
 
     ~Client()
     {
@@ -124,10 +120,7 @@ public:
             LOGGER->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
     }
 
-    std::string push_path() const
-    {
-        return push_listener_path;
-    }
+    std::string push_path() const;
 
     tetris::CPUThreadSet cpus() const
     {

@@ -12,7 +12,7 @@ class SmallOdroidScheduleTest : public SmallOdroidTest {
 protected:
   Client *CreateClient(std::vector<OperatingPoint> &ops) {
     ConnectionPtr conn;
-    auto c = new Client(conn);
+    auto c = new Client(conn, nullptr);
 
     for (auto &op : ops) {
       c->ops.emplace_back(op);

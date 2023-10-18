@@ -229,7 +229,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
         }
       } else if (cur->events & EPOLLIN) {
         /* Some client tried to send us data. */
-        logger->debug("The client sent a message\n");
+        logger->debug("Received a client message\n");
 
         if (manager.client_message(cur->data.fd)) {
           manager.client_disconnect(cur->data.fd);
@@ -242,6 +242,10 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
         ::close(cur->data.fd);
       }
     }
+
+    /* Check whether we need to reschedule */
+    if (manager.needs_reschedule())
+        manager.run_scheduler();
   }
 }
 
