@@ -21,11 +21,13 @@ class MovableThreads : public MappingFeature
     struct ThreadInfo {
         std::string name;
         pid_t tid;
+        int cpu;
         bool managed;
         bool named;
+        bool assigned;
 
         ThreadInfo(const std::string& name, pid_t tid, bool managed, bool named = false) :
-            name{name}, tid{tid}, managed{managed}, named{named}
+            name{name}, tid{tid}, cpu{0}, managed{managed}, named{named}, assigned{false}
         {}
     };
 
@@ -34,7 +36,7 @@ class MovableThreads : public MappingFeature
     std::mutex _mtx;
 
     std::unique_ptr<Mapping> _active_mapping;
-    std::vector<std::string> _assigned_threads;
+    CPUThreadSet _available_cpus;
 
    public:
     /* Constructor and Destructor */
@@ -61,9 +63,9 @@ class MovableThreads : public MappingFeature
 
    private:
     /* Internal interface */
-    void map_thread(const ThreadInfo &t);
-    bool move_thread(pid_t tid, int cpu);
-    bool move_thread(pid_t tid, CPUThreadSet cpus);
+    void map_thread(ThreadInfo &t);
+    bool move_thread(ThreadInfo &t, int cpu);
+    bool move_thread(ThreadInfo &t, CPUThreadSet cpus);
 };
 
 } /* namespace tetris */
