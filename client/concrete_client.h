@@ -6,6 +6,12 @@
 #include "push_message_listener.h"
 #include "util/connection.h"
 #include "util/debug_util.h"
+#include "util/platform/platform.h"
+
+#include <string>
+#include <vector>
+#include <memory>
+
 
 namespace tetris {
 
@@ -20,7 +26,9 @@ public:
     /**
      * \brief Builds a concrete client.
      */
-    explicit ConcreteClient(const std::string &server_socket_path);
+    explicit ConcreteClient(const std::string &server_socket_path,
+            const std::string &platform_desc_path,
+            const std::string &mapping_path);
 
     /**
      * \copydoc bind(TETRiS::Feature *feature)
@@ -75,6 +83,12 @@ private:
 
     /// \brief List of bind MappingFeatures
     std::vector<tetris::MappingFeature*> _mapping_features;
+
+    std::unique_ptr<Platform> _platform;
+    std::unique_ptr<Mapping> _active_mapping;
+
+    /// \brief List of available Mappings for this client
+    std::vector<Mapping> _mappings;
 };
 }
 

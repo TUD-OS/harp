@@ -9,9 +9,10 @@ namespace tetris {
 
 std::unique_ptr<Client> ClientProvider::_instance;
 
-void ClientProvider::initialize(const std::string &socket_path)
+void ClientProvider::initialize(const std::string &socket_path, const std::string &platform_path,
+        const std::string &mapping_path)
 {
-    _instance = std::make_unique<ConcreteClient>(socket_path);
+    _instance = std::make_unique<ConcreteClient>(socket_path, platform_path, mapping_path);
 }
 
 void ClientProvider::finalize()

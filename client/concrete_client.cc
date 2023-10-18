@@ -5,20 +5,64 @@
 #include "concrete_client.h"
 #include "client.h"
 #include "util/protobuf_util.h"
+#include "util/platform/reader.h"
+#include "util/mapping_reader.h"
 
 #include <memory>
 #include <sstream>
 
 namespace tetris {
 
-ConcreteClient::ConcreteClient(const std::string &server_socket_path)
+ConcreteClient::ConcreteClient(const std::string &server_socket_path,
+        const std::string &platform_desc_path, const std::string &mapping_path)
         : Client(), _push_message_listener(get_push_listener_socket_path(), this),
           _managed(false), _communication_mutex()
 {
     _logger = debug::Logger::get();
     try {
+        /* Read the platform file */
+        YamlPlatformReader platform_reader;
+        _platform = std::move(platform_reader.ReadFromFile(platform_desc_path));
+
+        /* Read the mappings */
+        YamlMappingReader mapping_reader;
+        _mappings = std::move(mapping_reader.read_mappings(*_platform, mapping_path));
+        _logger->debug(" -> Loaded %d mappings for this client\n", _mappings.size());
+
         _tetris_server_connection.connect(server_socket_path);
         _managed = register_client();
+
+        if (_managed) {
+            /* Send over the mappings to the server, so that we can get scheduled */
+            ClientMessage msg;
+            msg.set_type(ClientMessage::OPERATING_POINTS);
+            auto ops_info = msg.mutable_ops_info();
+
+            for (const auto& m : _mappings) {
+                auto op_data = ops_info->add_operating_points();
+
+                op_data->set_identifier(m.name);
+                for (const auto& [cn, cv] : m.characteristics_map) {
+                    auto c = op_data->add_characteristics();
+                    c->set_name(cn);
+                    c->set_value(cv);
+                }
+
+                for (const auto& c : m.cpus) {
+                    op_data->add_cpu_ids(c);
+                }
+            }
+
+            ServerResponse response{};
+            _communication_mutex.lock();
+            protobuf_util::Send(_tetris_server_connection.locked(), msg);
+            protobuf_util::Receive(_tetris_server_connection.locked(), response);
+            _communication_mutex.unlock();
+
+            if (response.type() != ServerResponse::ACKNOWLEDGE) {
+                _logger->warning("The server failed to parse our mappings!\n");
+            }
+        }
     } catch (std::exception &e) {
         _logger->info("No TETRiS server, TETRiS is unused.\n");
         _managed = false;
@@ -54,6 +98,9 @@ void ConcreteClient::bind(MappingFeature *feature)
     }
 
     _mapping_features.push_back(feature);
+
+    if (_active_mapping)
+        feature->mapping_update(*_active_mapping);
 }
 
 ServerResponse ConcreteClient::send(const ClientMessage &message)
@@ -75,25 +122,37 @@ std::string ConcreteClient::get_push_listener_socket_path()
 
 ClientResponse ConcreteClient::handle(const ServerMessage &msg)
 {
+    ClientResponse response{};
+    response.set_type(tetris::ClientResponse::ERROR);
+
     if (msg.has_activated_op_info()) {
         /* Call all mapping_features with the new mapping, so that they can adapt */
-    }
+        auto active_op = msg.activated_op_info();
 
-    ClientResponse response{};
-    response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
+        auto map_id = active_op.identifier();
+        _logger->info(" * Got mapping update from server: %s\n", map_id.c_str());
+
+        std::map<int, int> conv_map;
+        for (int i = 0; i < active_op.cpu_convs_size(); ++i) {
+            auto conv = active_op.cpu_convs(i);
+            conv_map.emplace(conv.cpu_id_from(), conv.cpu_id_to());
+        }
+
+        auto it = std::find_if(_mappings.begin(), _mappings.end(), [&map_id](const Mapping& m) { return m.name == map_id; });
+        if (it != _mappings.end()) {
+            _active_mapping = std::make_unique<Mapping>(*it, conv_map);
+            _logger->debug(" -> Active mapping %s\n", _active_mapping->name.c_str());
+
+            /* Tell the features to react to the new mapping */
+            for (const auto& feature : _mapping_features) {
+                feature->mapping_update(*_active_mapping);
+            }
+
+            response.set_type(ClientResponse::ACKNOWLEDGE);
+        }
+    }
 
     return response;
-}
-
-std::map<std::string, std::string> retrieve_env_variables()
-{
-    std::map<std::string, std::string> env_variables{};
-    for (auto &env : {"TETRIS_MAPPING_TYPE", "TETRIS_MAPPING_TYPE", "TETRIS_COMPARE_CRITERIA",
-                      "TETRIS_COMPARE_MORE_IS_BETTER", "TETRIS_PREFERRED_MAPPING", "TETRIS_FILTER_CRITERIA"}) {
-        if (getenv(env))
-            env_variables.emplace(env, getenv(env));
-    }
-    return env_variables;
 }
 
 bool ConcreteClient::register_client()

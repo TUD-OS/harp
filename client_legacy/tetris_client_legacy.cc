@@ -153,8 +153,12 @@ static bool is_scalable_app() {
     return cstate.is_scalable;
 }
 
+std::atomic_int parallel_threads;
+
 bool scale_application_cb(int nr_threads)
 {
+    logger->debug("Setting scaling factor to %d\n", nr_threads);
+    parallel_threads = nr_threads;
     return true;
 }
 
@@ -172,25 +176,53 @@ void __attribute__((constructor)) setup(void)
     threads = std::make_unique<ThreadList>();
 
     logger->info("Loading TETRIS support\n");
+    bool tetris_possible = true;
+    /* Get the platform from the environment */
+    if (!getenv("TETRIS_PLATFORM")) {
+        logger->error("Missing TETRIS_PLATFORM definition!\n");
+        tetris_possible = false;
+    }
+    if (!getenv("TETRIS_MAPPING")) {
+        logger->error("Missing TETRIS_MAPPING definition!\n");
+        tetris_possible = false;
+    }
 
-    tetris_client = std::make_unique<tetris::ConcreteClient>(tetris::SERVER_SOCKET);
-    if (tetris_client->is_managed()) {
-        logger->info("->> Managed by TETRIS <<-\n");
+    if (tetris_possible) {
+        std::string platform_path = getenv("TETRIS_PLATFORM");
+        std::string mapping_path = getenv("TETRIS_MAPPING");
 
-        /* Register with TETRiS that this client supports movable threads */
-        logger->info("->> Register as application with movable threads\n");
+        /* Initialize all the features */
         movable_threads = std::make_unique<tetris::MovableThreads>();
-        tetris_client->bind(movable_threads.get());
-
         if (is_scalable_app()) {
-            logger->info("->> Register as scalable application\n");
+            parallel_threads = 0;
             scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb);
-            tetris_client->bind(scalable_app.get());
+        }
+
+        tetris_client = std::make_unique<tetris::ConcreteClient>(tetris::SERVER_SOCKET,
+                platform_path, mapping_path);
+        if (tetris_client->is_managed()) {
+            logger->info("->> Managed by TETRIS <<-\n");
+
+            /* Register with TETRiS that this client supports movable threads */
+            if (movable_threads) {
+                logger->info("->> Register as application with movable threads\n");
+                tetris_client->bind(movable_threads.get());
+
+                /* Register the main thread */
+                movable_threads->register_thread(getpid());
+            }
+
+            if (scalable_app) {
+                logger->info("->> Register as scalable application\n");
+                tetris_client->bind(scalable_app.get());
+            }
+        } else {
+            logger->info("->> NOT managed by TETRIS <<-\n");
         }
     } else {
-        logger->info("->> NOT managed by TETRIS <<-\n");
+        logger->info("Prerequisites not met for proper TETRiS support!\n");
     }
-}
+} 
 
 extern "C"
 void __attribute__((destructor)) tierdown(void)
@@ -227,12 +259,16 @@ void *thread_wrapper(void *arg)
 
     if (ti->named && ti->ready)
         ti->managed = movable_threads->register_thread(ti->tid, ti->name);
+    else
+        ti->managed = movable_threads->register_thread(ti->tid);
 
     pthread_mutex_unlock(&ti->mtx);
 
     /* Call the actual function. */
     t.stop();
     void *ret = ti->func(ti->arg);
+
+    movable_threads->unregister_thread(ti->tid);
 
     /* If necessary we can do some tear down before returning */
     return ret;
@@ -276,6 +312,38 @@ int pthread_create(pthread_t *thread_id, const pthread_attr_t *attr,
             /* The program is NOT managed by TETRIS. Just call the real
              * pthread_create function. */
             return real_func(thread_id, attr, routine, arg);
+        }
+    } else {
+        /* Something went wrong while getting the function. ABORT */
+        logger->error("Failed to get real pthread_create function.\n");
+        exit(-1);
+    }
+}
+
+extern "C"
+[[noreturn]] void pthread_exit(void *retval)
+{
+    using real_func_t = void (*)(void *);
+
+    Timer t{time_ns};
+
+    /* Get the real pthread_create function. */
+    real_func_t real_func = nullptr;
+    real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "pthread_exit"));
+
+    if (real_func != nullptr) {
+        if (tetris_client && tetris_client->is_managed()) {
+            auto tid = syscall(SYS_gettid);
+            movable_threads->unregister_thread(tid);
+
+            t.stop();
+            real_func(retval);
+        } else {
+            /* The program is NOT managed by TETRIS. Just call the real
+             * pthread_create function. */
+
+            t.stop();
+            real_func(retval);
         }
     } else {
         /* Something went wrong while getting the function. ABORT */
@@ -368,3 +436,33 @@ int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
     }
 }
 
+/***
+ * libgomp wrappers
+ ***/
+extern "C"
+void GOMP_parallel (void (*fn) (void*), void *data, unsigned int num_threads, unsigned int flags)
+{
+    using real_func_t = void (*)(void (*) (void*), void *, unsigned int, unsigned int);
+
+    Timer t{time_ns};
+
+    /* Get the real GOMP_parallel function. */
+    real_func_t real_func = nullptr;
+    real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "GOMP_parallel"));
+
+    if (real_func) {
+        if (parallel_threads != 0) {
+            /* Call the function with our internal parallel thread count if already set */
+            unsigned int own_num_threads = parallel_threads;
+            t.stop();
+            real_func(fn, data, own_num_threads, flags);
+        } else {
+            /* Otherwise use the given num_threads as parallel thread count */
+            t.stop();
+            real_func(fn, data, num_threads, flags);
+        }
+    } else {
+        logger->error("Failed to get real GOMP_parallel function.\n");
+        exit(-1);
+    }
+}

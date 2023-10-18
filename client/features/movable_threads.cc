@@ -83,10 +83,17 @@ bool MovableThreads::register_thread(pid_t tid, const std::string& name)
 {
     {
         std::lock_guard<std::mutex> lock(_mtx);
-        auto ti = _threads.emplace_back(name, tid, false, true);
-        ti.managed = true;
+        /* Before adding the thread first check if it was already registered before. In this case
+         * only update the naming info */
+        auto it = std::find_if(_threads.begin(), _threads.end(), [tid](const ThreadInfo& t) { return t.tid == tid; });
+        if (it != _threads.end()) {
+            it->name = name;
+        } else {
+            auto ti = _threads.emplace_back(name, tid, false, true);
+            ti.managed = true;
 
-        map_thread(ti);
+            map_thread(ti);
+        }
     }
 
     LOGGER->debug("Thread registered: %d, %s\n", tid, name.c_str());

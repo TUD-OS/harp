@@ -69,7 +69,7 @@ public:
      *
      * \param server_socket_path Path of the TETRiS server socket.
      */
-    static void initialize(const std::string &socket_path);
+    static void initialize(const std::string &socket_path, const std::string &platform_path, const std::string &mapping_path);
 
     /**
      * \brief Finalizes the TETRiS client.
