@@ -204,6 +204,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
   BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0]}, 0.0);
+  LOGGER->debug("%s", s1->ToString().c_str());
   EXPECT_EQ(s1->GetNumberOfSegments(), 1);
   auto s1_op = s1->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s1_op.has_value());
@@ -212,6 +213,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
   EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(1, 60.0));
 
   auto s2 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0});
+  LOGGER->debug("%s", s2->ToString().c_str());
   EXPECT_EQ(s2->GetNumberOfSegments(), 1);
   auto s2_op = s2->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s2_op.has_value());
@@ -220,6 +222,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
   EXPECT_EQ(obj->EvaluateSchedule(*s2), std::make_tuple(1, 60.0));
 
   auto s3 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0, 1});
+  LOGGER->debug("%s", s3->ToString().c_str());
   EXPECT_EQ(s3->GetNumberOfSegments(), 1);
   auto s3_op = s3->GetOperatingPoint(0, clients[0]);
   EXPECT_TRUE(s3_op.has_value());
@@ -233,6 +236,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
   EXPECT_EQ(s1->GetNumberOfSegments(), 1);
+  LOGGER->debug("%s", s1->ToString().c_str());
   auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
   auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
   EXPECT_TRUE(s1_op0.has_value());
@@ -247,6 +251,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
   obj = mapper.GetObjective();
   auto s2 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
   EXPECT_EQ(s2->GetNumberOfSegments(), 1);
+  LOGGER->debug("%s", s2->ToString().c_str());
   auto s2_op0 = s2->GetOperatingPoint(0, clients[0]);
   auto s2_op1 = s2->GetOperatingPoint(0, clients[1]);
   EXPECT_TRUE(s2_op0.has_value());
@@ -260,6 +265,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
   mapper.SetObjective(std::make_unique<GEDPObjective>(0.5));
   obj = mapper.GetObjective();
   auto s3 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
+  LOGGER->debug("%s", s3->ToString().c_str());
   EXPECT_EQ(s3->GetNumberOfSegments(), 1);
   auto s3_op0 = s3->GetOperatingPoint(0, clients[0]);
   auto s3_op1 = s3->GetOperatingPoint(0, clients[1]);
@@ -277,7 +283,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
   BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule(clients, 0.0);
-  std::cout << s1->ToString();
+  LOGGER->debug("%s", s1->ToString().c_str());
   EXPECT_EQ(s1->GetNumberOfSegments(), 1);
   auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
   auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);

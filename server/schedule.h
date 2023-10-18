@@ -281,8 +281,8 @@ public:
     }
 
     std::stringstream ss;
-    ss << "Schedule | " << _cid.size() << "  jobs | start_time " << _start_time
-       << " | " << _segments.size() << "  segment\n";
+    ss << "Schedule | " << _cid.size() << " clients | start_time "
+       << _start_time << " | " << _segments.size() << " segment(s)\n";
     if (_segments.size() == 0)
       return ss.str();
     for (const auto &[c, cid] : _cid) {
