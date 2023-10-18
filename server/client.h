@@ -37,58 +37,6 @@ class Client {
      * will try to optimize the application depending on the application's
      * criteria and the overall system state */
     ACTIVE = 0x2,
-
-    /* PER_THREAD: a subtype of ACTIVE --> TETRiS will distinguish mappings that
-     * have different assignments of threads to CPUs as different mappings and
-     * choose them according to the application's otimization criteria. For this
-     * type an appropriate mapping has to be provided by the client. */
-    PER_THREAD = 0x4,
-
-    /* SCALABLE: a subtype of ACTIVE --> TETRiS will send scaling information to
-     * the application. For this type an appropriate mapping has to be provided
-     * by the client */
-    SCALABLE = 0x8
-  };
-
-  /**
-   * \class Comp
-   * \brief Helper class for comparing mappings based on certain criteria.
-   */
-  class Comp {
-   private:
-    std::string _criteria;
-    bool _more_is_better;
-    std::function<bool(const double, const double)> _comp;
-
-   public:
-    Comp(const std::string compare_criteria, bool compare_more_is_better)
-        : _criteria{compare_criteria}, _more_is_better{compare_more_is_better} {
-      if (_more_is_better)
-        _comp = std::greater<double>{};
-      else
-        _comp = std::less<double>{};
-    }
-
-    Comp() : _criteria{}, _comp{std::less<double>()} {}
-
-    bool operator()(const tetris::OperatingPoint &other, const tetris::OperatingPoint &best) {
-      return _comp(other.characteristic(_criteria),
-                   best.characteristic(_criteria));
-    }
-
-    bool operator()(const tetris::OperatingPointAllocation &other, const tetris::OperatingPointAllocation &best) {
-      return _comp(other.base.characteristic(_criteria), 
-                   best.base.characteristic(_criteria));
-    }
-
-    std::string criteria() const { return _criteria; }
-
-    std::string repr() const {
-      std::stringstream ss;
-      ss << _criteria << "(" << (_more_is_better ? ">" : "<") << ")";
-
-      return ss.str();
-    }
   };
 
  public:

@@ -218,7 +218,6 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
 
           switch (siginfo.ssi_signo) {
           case SIGUSR1:
-            manager.update_mappings();
             break;
           case SIGUSR2:
             manager.print_mappings();

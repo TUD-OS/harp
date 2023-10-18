@@ -91,29 +91,6 @@ public:
   }
 
   /**
-   * \brief Changes the mapping for a specific application.
-   */
-  void remap(int fd, const std::string &op_name) try {
-    Client &c = _clients.at(fd);
-
-    LOGGER->info("Change mapping for client '%s' [%d] to mapping %s\n",
-                 c.exec.c_str(), c.pid, op_name.c_str());
-
-    auto it = std::find_if(c.ops.begin(), c.ops.end(),
-                           [&](const auto &op) { return op.name == op_name; });
-    if (it == c.ops.end()) {
-      LOGGER->info("Unknown mapping %s for client %i\n", op_name.c_str(), fd);
-      return;
-    } else {
-      LOGGER->info("Changing mapping for client '%s' [%d] to mapping %s\n",
-                   c.exec.c_str(), c.pid, op_name.c_str());
-      c.activate_op(tetris::OperatingPointAllocation{*it, {}});
-    }
-  } catch (std::out_of_range &) {
-    LOGGER->error("Unknown client %i\n", fd);
-  }
-
-  /**
    * Run the scheduler.
    *
    * First, it updates the current progress for all clients. Then, it runs the
@@ -132,11 +109,6 @@ public:
    * \brief Prints the currently active mappings for all clients.
    */
   void print_mappings();
-
-  /**
-   * \brief Updates the mappings for all clients.
-   */
-  void update_mappings();
 
   /**
    * \brief Note that we have to generate a new schedule due to changed client states

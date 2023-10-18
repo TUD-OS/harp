@@ -3,7 +3,6 @@ set_source_files_properties(
 
 # Add the library target
 add_library(tetrisserverlib STATIC
-    algorithm.cc
     client.cc
     manager.cc
     sched/bruteforce.cc
