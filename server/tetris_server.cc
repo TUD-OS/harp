@@ -29,7 +29,7 @@ void usage() {
             << "   -p, --platform <name>     specify the platform.\n"
             << "   -o, --obj <objective>     specify the objective "
                "(energy-saving, balanced,\n"
-            << "                             performance). Defaults to "
+            << "                             performance, energy, delay). Defaults to "
                "\"energy-saving\".\n"
             << "\n";
 }
@@ -329,6 +329,10 @@ int main(int argc, char *argv[]) {
     objective = std::make_unique<BalancedObjective>();
   else if (objective_name == "performance")
     objective = std::make_unique<PerformanceObjective>();
+  else if (objective_name == "energy")
+    objective = std::make_unique<EnergyObjective>();
+  else if (objective_name == "delay")
+    objective = std::make_unique<DelayObjective>();
   else {
     std::cerr << "Unknown objective.\n";
     usage();

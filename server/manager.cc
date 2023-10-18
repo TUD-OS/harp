@@ -133,7 +133,11 @@ void Manager::run_scheduler() {
 
   // The scheduling might be too too long, update progresses again
   auto after = std::chrono::high_resolution_clock::now();
+
   update_client_progresses(after);
+
+  // print
+  LOGGER->info("%s", schedule->ToString());
 
   // updates the mappings 
   for (auto& c: clients) {
@@ -153,6 +157,6 @@ void Manager::run_scheduler() {
   auto full_dur_s = full_dur.count();
   std::chrono::duration<double> sched_dur = after - before;
   auto sched_dur_s = sched_dur.count();
-  LOGGER->info("Activated the cheduler: duration = %lfs [scheduling time: %lfs ]\n",
+  LOGGER->info("Activated the scheduler: duration = %lfs [scheduling time: %lfs ]\n",
       full_dur_s, sched_dur_s);
 }

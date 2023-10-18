@@ -1,14 +1,17 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
+#include <sstream>
 #pragma once
 
 #include "client.h"
 #include "util/operating_point.h"
+#include "util/string_util.h"
 
 #include <deque>
 #include <map>
 #include <optional>
+#include <sstream>
 #include <vector>
 
 namespace tetris {
@@ -270,6 +273,31 @@ public:
     }
 
     _segments.insert(_segments.begin() + seg_idx + 1, std::move(new_segment));
+  }
+
+  std::string ToString() const {
+    if (IsMultiSegment()) {
+      throw std::runtime_error("Not yet implemented");
+    }
+
+    std::stringstream ss;
+    ss << "Schedule | " << _cid.size() << "  jobs | start_time " << _start_time
+       << " | " << _segments.size() << "  segment\n";
+    for (const auto &[c, cid] : _cid) {
+      ss << "  - '" << c->exec << "' [" << c->pid << "]  progress "
+         << c->progress << " | ";
+      auto op = _segments[0]->GetOperatingPoint(cid);
+      if (op.has_value()) {
+        ss << "OP '" << op->base.name << "' exec_time "
+           << op->characteristic("execution_time") << " energy "
+           << op->characteristic("energy") << " | ";
+        auto cores = op->GetThreadSet();
+        ss << string_util::join(cores.GetList(), ",") << "\n";
+      } else {
+        ss << "NONE\n";
+      }
+    }
+    return ss.str();
   }
 };
 
