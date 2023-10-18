@@ -137,7 +137,7 @@ void Manager::run_scheduler() {
   update_client_progresses(after);
 
   // print
-  LOGGER->info("%s", schedule->ToString());
+  LOGGER->info("%s", schedule->ToString().c_str());
 
   // updates the mappings 
   for (auto& c: clients) {

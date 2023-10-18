@@ -277,6 +277,7 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
   BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule(clients, 0.0);
+  std::cout << s1->ToString();
   EXPECT_EQ(s1->GetNumberOfSegments(), 1);
   auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
   auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
