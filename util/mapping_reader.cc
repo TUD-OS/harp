@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <utility>
 
 #include "util/csv.h"
 #include "util/debug_util.h"
@@ -275,15 +276,9 @@ YamlMappingReader::parse_mappings_omp(const Platform &platform,
     std::vector<std::pair<std::string, std::string>> threads;
 
     auto core_list = mapping_node["cores"].as<std::vector<std::string>>();
-
-    ReplicaAffinities<std::string> replica_affinities;
     for (const auto &c : core_list) {
-      ProcessAffinities<std::string> process_affinities;
-      process_affinities.emplace("thread", c);
-      replica_affinities.push_back(process_affinities);
+        threads.push_back(std::make_pair(std::string{"thread"}+c, c));
     }
-    RegionAffinities<std::string> region_affinities;
-    region_affinities.emplace("parallel", replica_affinities);
 
     // Metadata
     std::vector<std::pair<std::string, std::string>> characteristics;
@@ -302,8 +297,7 @@ YamlMappingReader::parse_mappings_omp(const Platform &platform,
     }
 
     // Create the mapping object and add it to the vector
-    mappings.emplace_back(platform, mapping_name, threads, region_affinities,
-                          characteristics);
+    mappings.emplace_back(platform, mapping_name, threads, RegionAffinities<std::string>{}, characteristics);
   }
 
   return mappings;
