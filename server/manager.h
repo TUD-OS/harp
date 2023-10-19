@@ -90,7 +90,6 @@ public:
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
     auto c = std::make_unique<Client>(conn, this);
-    _tracelog->RegisterClient(c.get());
     _clients.emplace(fd, std::move(c));
     reschedule();
   }

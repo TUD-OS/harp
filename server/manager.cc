@@ -55,6 +55,7 @@ bool Manager::client_message(int fd) try {
         c->exec = request.exec();
 
         LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(), c->pid);
+        _tracelog->RegisterClient(c.get());
 
         /* Construct and send the server's registration response */
         RegistrationResponse response{};
