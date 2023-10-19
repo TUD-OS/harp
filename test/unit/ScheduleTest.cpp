@@ -1,19 +1,23 @@
 #include "unit/PlatformFixtures.h"
 
+#include <chrono>
 #include <memory>
 
 #include "server/client.h"
 #include "server/sched/bruteforce.h"
 #include "server/schedule.h"
+#include "server/trace_logger.h"
 
 using namespace tetris;
 
 class SmallOdroidScheduleTest : public SmallOdroidTest {
 protected:
-  Client *CreateClient(std::vector<OperatingPoint> &ops) {
+  Client *CreateClient(const std::string &name,
+                       std::vector<OperatingPoint> &ops) {
     ConnectionPtr conn;
     auto c = new Client(conn, nullptr);
 
+    c->exec = name;
     for (auto &op : ops) {
       c->ops.emplace_back(op);
     }
@@ -33,7 +37,7 @@ protected:
         {"0L1B", {{extime, 86}, {energy, 129}}, CPUThreadSet{2}},
         {"0L2B", {{extime, 46}, {energy, 142}}, CPUThreadSet{2, 3}}};
 
-    return CreateClient(ops);
+    return CreateClient("app1", ops);
   }
 
   Client *GetClientOP1() {
@@ -49,7 +53,7 @@ protected:
         {"0L2B", {{extime, 42}, {energy, 110}}, CPUThreadSet{2, 3}},
         {"0L1B", {{extime, 76}, {energy, 112}}, CPUThreadSet{2}}};
 
-    return CreateClient(ops);
+    return CreateClient("app2", ops);
   }
 
   Client *GetClientOP2() {
@@ -66,7 +70,7 @@ protected:
         {"0L1B", {{extime, 34}, {energy, 81}}, CPUThreadSet{2}},
     };
 
-    return CreateClient(ops);
+    return CreateClient("app3", ops);
   }
 
   std::vector<Client *> clients;
@@ -296,4 +300,64 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
   EXPECT_EQ(s1_op2->GetThreadSet(), CPUThreadSet({3}));
   EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
   EXPECT_EQ(obj->EvaluateSchedule(*s1), std::make_tuple(3, 201.0));
+}
+
+TEST_F(SmallOdroidScheduleTest,
+       BruteforceMapper_SimulateThreeJobsWithTraceLogger) {
+  std::chrono::high_resolution_clock::time_point zero_time;
+
+  TraceLogger logger(zero_time);
+  logger.RegisterPlatform(*platform);
+
+  BruteforceMapper mapper(*platform.get(),
+                          std::make_unique<BalancedObjective>());
+
+  std::vector<Client *> active = clients;
+
+  for (auto &c : active) {
+    c->update_progress(zero_time);
+    logger.RegisterClient(c);
+  }
+
+  auto s1 = mapper.GenerateSchedule(active, 0.0);
+  LOGGER->debug("%s", s1->ToString().c_str());
+
+  // assign operating points
+  for (auto &c : active) {
+    c->active_op = s1->GetOperatingPoint(0, c);
+    logger.LogClientMappingBegin(zero_time, c, *c->active_op);
+  }
+
+  auto time_34ms = zero_time + std::chrono::milliseconds(34);
+  for (auto &c : active) {
+    c->update_progress(time_34ms);
+    LOGGER->debug("client_progress: %.3lf\n", c->progress);
+    logger.LogClientMappingEnd(time_34ms, c);
+    if (c->exec == "app3")
+      logger.DeregisterClient(c);
+  }
+
+  active.erase(
+      std::remove_if(active.begin(), active.end(),
+                     [](const Client *c) { return c->exec == "app3"; }),
+      active.end());
+
+  auto s2 = mapper.GenerateSchedule(active, 0.0);
+  LOGGER->debug("%s", s2->ToString().c_str());
+
+  // assign operating points
+  for (auto &c : active) {
+    c->active_op = s2->GetOperatingPoint(0, c);
+    logger.LogClientMappingBegin(time_34ms, c, *c->active_op);
+  }
+
+  auto time_63ms = zero_time + std::chrono::milliseconds(63);
+  for (auto &c : active) {
+    c->update_progress(time_63ms);
+    LOGGER->debug("client_progress: %.3lf\n", c->progress);
+    logger.LogClientMappingEnd(time_63ms, c);
+    logger.DeregisterClient(c);
+  }
+
+  logger.ExportToFile("unit_test.trace.json");
 }
