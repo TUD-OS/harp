@@ -147,9 +147,14 @@ void Manager::run_scheduler() {
 
   // updates the mappings 
   for (auto& c: clients) {
+    if (c->active_op.has_value()) {
+      _tracelog->LogClientMappingEnd(after, c);
+    }
     auto op = schedule->GetOperatingPoint(0, c);
-    if (op.has_value())
+    if (op.has_value()) {
       c->activate_op(*op);
+      _tracelog->LogClientMappingBegin(after, c, *op);
+    }
     else {
       LOGGER->error("No mapping generated for client '%s' [%d]."
           "Handling of such cases is not yet implemented.",

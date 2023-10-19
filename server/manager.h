@@ -1,11 +1,15 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
-#include <memory>
+#include <chrono>
 #pragma once
+
+#include <memory>
 
 #include "client.h"
 #include "sched/base.h"
+#include "trace_logger.h"
+
 #include "util/debug_util.h"
 #include "util/operating_point.h"
 #include "util/platform/cpu_sets.h"
@@ -46,6 +50,8 @@ private:
 
   bool _needs_reschedule;
 
+  std::unique_ptr<tetris::TraceLogger> _tracelog;
+
   /**
    * \brief Selects the best mapping for a given client.
    */
@@ -58,9 +64,10 @@ private:
   tetris::OperatingPointAllocation use_preferred_mapping(Client &,
                                                          const std::string &);
 
-  void update_client_progresses(std::chrono::high_resolution_clock::time_point new_tp) {
-    for (auto& [cid, c]: _clients) {
-      c->update_progress(new_tp);
+  void update_client_progresses(
+      std::chrono::high_resolution_clock::time_point new_tp) {
+    for (auto &[cid, c] : _clients) {
+      c->update_progress(new_tp, true);
     }
   }
 
@@ -68,8 +75,11 @@ public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
                    std::unique_ptr<tetris::BaseScheduler> scheduler)
       : _platform{std::move(platform)},
-        _scheduler{std::move(scheduler)}, _clients{}, _needs_reschedule{false}
-  {}
+        _scheduler{std::move(scheduler)}, _clients{}, _needs_reschedule{false},
+        _tracelog{std::make_unique<tetris::TraceLogger>(
+            std::chrono::high_resolution_clock::now())} {
+    _tracelog->RegisterPlatform(*_platform);
+  }
 
   const tetris::Platform &GetPlatform() const { return *_platform.get(); }
 
@@ -78,6 +88,7 @@ public:
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
     auto c = std::make_unique<Client>(conn, this);
+    _tracelog->RegisterClient(c.get());
     _clients.emplace(fd, std::move(c));
     reschedule();
   }
@@ -86,6 +97,14 @@ public:
    * \brief Removes a client from the client list upon disconnection.
    */
   void client_disconnect(int fd) {
+    auto now = std::chrono::high_resolution_clock::now();
+    auto& c = *_clients.at(fd);
+
+    if (c.active_op.has_value()) {
+      _tracelog->LogClientMappingEnd(now, &c);
+    }
+    _tracelog->DeregisterClient(&c);
+
     _clients.erase(fd);
     reschedule();
   }
@@ -111,16 +130,15 @@ public:
   void print_mappings();
 
   /**
-   * \brief Note that we have to generate a new schedule due to changed client states
+   * \brief Note that we have to generate a new schedule due to changed client
+   *states
    **/
   void reschedule() {
-      LOGGER->info(" -> Marked for reschedule!\n");
-      _needs_reschedule = true;
+    LOGGER->info(" -> Marked for reschedule!\n");
+    _needs_reschedule = true;
   }
 
-  bool needs_reschedule() const {
-      return _needs_reschedule;
-  }
+  bool needs_reschedule() const { return _needs_reschedule; }
 };
 
 #endif /* __MANAGER_H__ */
