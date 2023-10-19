@@ -94,7 +94,7 @@ public:
 
     void update_progress(std::chrono::high_resolution_clock::time_point new_tp) {
       if (active_op.has_value()) {
-        std::chrono::duration<double> diff = progress_tp - new_tp;
+        std::chrono::duration<double> diff = new_tp - progress_tp;
         auto diff_s = diff.count();
         auto extime = active_op->characteristic("execution_time");
         auto cur_progress = diff_s/extime;
