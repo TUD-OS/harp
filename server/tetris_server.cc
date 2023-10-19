@@ -118,8 +118,14 @@ int setup_epoll(const std::vector<int> &fds) {
   return epoll_fd;
 }
 
+struct Config {
+    std::string platform_path;
+    std::string objective_name;
+    std::string trace_filename;
+};
+
 void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
-                       Manager &manager) {
+                       Manager &manager, Config &config) {
   // Code for managing event loop
   epoll_event events[MAXEVENTS];
   bool done = false;
@@ -219,6 +225,8 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
 
           switch (siginfo.ssi_signo) {
           case SIGUSR1:
+            // Export the trace
+            manager.GetTraceLogger().ExportToFile(config.trace_filename);
             break;
           case SIGUSR2:
             manager.print_mappings();
@@ -251,10 +259,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
 
 int main(int argc, char *argv[]) {
   /* Parsing command line arguments. */
-  std::string mappings_path;
-  std::string platform_path;
-  std::string objective_name;
-  std::string trace_filename;
+  Config config;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg{argv[i]};
@@ -277,14 +282,14 @@ int main(int argc, char *argv[]) {
           std::cerr << "Specified .yaml platform file does not exist.\n";
           return 1;
         } else {
-          platform_path = platform;
+          config.platform_path = platform;
         }
       } else {
         // Check if the platform file exists in the default location
         std::string default_path =
             "../examples/" + platform + "/platform.yaml";
         if (std::filesystem::exists(default_path)) {
-          platform_path = default_path;
+          config.platform_path = default_path;
         } else {
           std::cerr << "Specified platform is not available and it's not a "
                        "valid .yaml file path.\n";
@@ -299,7 +304,7 @@ int main(int argc, char *argv[]) {
       }
 
       i++;
-      objective_name = argv[i];
+      config.objective_name = argv[i];
     } else if (arg == "-t" || arg == "--trace") {
       if (i + 1 >= argc) {
         std::cerr << "Expected trace filename after " << arg << ".\n";
@@ -308,45 +313,43 @@ int main(int argc, char *argv[]) {
       }
 
       i++;
-      trace_filename = argv[i];
+      config.trace_filename = argv[i];
     } else {
-      mappings_path = arg;
+        std::cerr << "Unexpected command line option: " << arg << ".\n";
+        usage();
+        return 1;
     }
   }
 
-  if (mappings_path.empty()) {
-    mappings_path = std::filesystem::current_path().string();
-  }
-
-  if (platform_path.empty()) {
+  if (config.platform_path.empty()) {
     std::cerr << "Platform not specified.\n";
     usage();
     return 1;
   }
 
-  if (objective_name.empty()) {
-    objective_name = "energy-saving";
+  if (config.objective_name.empty()) {
+    config.objective_name = "energy-saving";
   }
 
-  if (trace_filename.empty()) {
-    trace_filename = "trace.json";
+  if (config.trace_filename.empty()) {
+    config.trace_filename = "trace.json";
   }
 
   /* Create a platform */
   auto reader = YamlPlatformReader();
-  auto platform = reader.ReadFromFile(platform_path);
+  auto platform = reader.ReadFromFile(config.platform_path);
 
   /* Create a scheduler */
   std::unique_ptr<OptimizationObjective> objective;
-  if (objective_name == "energy-saving")
+  if (config.objective_name == "energy-saving")
     objective = std::make_unique<EnergySavingObjective>();
-  else if (objective_name == "balanced")
+  else if (config.objective_name == "balanced")
     objective = std::make_unique<BalancedObjective>();
-  else if (objective_name == "performance")
+  else if (config.objective_name == "performance")
     objective = std::make_unique<PerformanceObjective>();
-  else if (objective_name == "energy")
+  else if (config.objective_name == "energy")
     objective = std::make_unique<EnergyObjective>();
-  else if (objective_name == "delay")
+  else if (config.objective_name == "delay")
     objective = std::make_unique<DelayObjective>();
   else {
     std::cerr << "Unknown objective.\n";
@@ -389,11 +392,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* The event loop */
-  manage_event_loop(epoll_fd, server_fd, control_fd, sig_fd, manager);
-
-  // Export the trace
-  manager.GetTraceLogger().ExportToFile(trace_filename);
-
+  manage_event_loop(epoll_fd, server_fd, control_fd, sig_fd, manager, config);
 
   std::cout << "Exiting" << std::endl;
   ::close(sig_fd);
