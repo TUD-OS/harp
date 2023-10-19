@@ -5,6 +5,7 @@ set_source_files_properties(
 add_library(tetrisserverlib STATIC
     client.cc
     manager.cc
+    trace_logger.cc
     sched/bruteforce.cc
     sched/objective.cc
     ${PROTO_OUTPUT_SOURCES}
