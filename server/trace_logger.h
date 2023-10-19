@@ -37,7 +37,7 @@ class TraceLogger {
   };
 
 private:
-  void CheckFinished() {
+  void CheckFinished() const {
     if (_active_clients.size() > 0) {
       throw std::runtime_error("List of active clients is not empty.");
     }
@@ -78,7 +78,7 @@ public:
   LogClientMappingEnd(const std::chrono::high_resolution_clock::time_point &now,
                       Client *);
 
-  void ExportToFile(const std::string &path);
+  void ExportToFile(const std::string &path) const;
 
 private:
   std::chrono::high_resolution_clock::time_point _start_time;

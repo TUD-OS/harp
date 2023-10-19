@@ -149,7 +149,7 @@ void TraceLogger::ExportSegment(nlohmann::json &trace,
   }
 }
 
-void TraceLogger::ExportToFile(const std::string &path) {
+void TraceLogger::ExportToFile(const std::string &path) const {
   CheckFinished();
 
   nlohmann::json trace;
