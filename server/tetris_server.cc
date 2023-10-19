@@ -22,7 +22,7 @@ const static int MAXEVENTS = 100;
 debug::LoggerPtr logger;
 
 void usage() {
-  std::cout << "usage: tetrisserver [-h] [-p platform]\n"
+  std::cout << "usage: tetrisserver [-h] [-p platform] [-o objective] [-t trace_file]\n"
             << "\n"
             << "Options:\n"
             << "   -h, --help                show this help message.\n"
@@ -31,6 +31,7 @@ void usage() {
                "(energy-saving, balanced,\n"
             << "                             performance, energy, delay). Defaults to "
                "\"energy-saving\".\n"
+            << "   -t, --trace <trace_file>  path to export the trace (defaults to \"trace.json\""
             << "\n";
 }
 
@@ -253,6 +254,7 @@ int main(int argc, char *argv[]) {
   std::string mappings_path;
   std::string platform_path;
   std::string objective_name;
+  std::string trace_filename;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg{argv[i]};
@@ -298,6 +300,15 @@ int main(int argc, char *argv[]) {
 
       i++;
       objective_name = argv[i];
+    } else if (arg == "-t" || arg == "--trace") {
+      if (i + 1 >= argc) {
+        std::cerr << "Expected trace filename after " << arg << ".\n";
+        usage();
+        return 1;
+      }
+
+      i++;
+      trace_filename = argv[i];
     } else {
       mappings_path = arg;
     }
@@ -315,6 +326,10 @@ int main(int argc, char *argv[]) {
 
   if (objective_name.empty()) {
     objective_name = "energy-saving";
+  }
+
+  if (trace_filename.empty()) {
+    trace_filename = "trace.json";
   }
 
   /* Create a platform */
@@ -375,6 +390,10 @@ int main(int argc, char *argv[]) {
 
   /* The event loop */
   manage_event_loop(epoll_fd, server_fd, control_fd, sig_fd, manager);
+
+  // Export the trace
+  manager.GetTraceLogger().ExportToFile(trace_filename);
+
 
   std::cout << "Exiting" << std::endl;
   ::close(sig_fd);

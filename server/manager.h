@@ -81,7 +81,9 @@ public:
     _tracelog->RegisterPlatform(*_platform);
   }
 
-  const tetris::Platform &GetPlatform() const { return *_platform.get(); }
+  const tetris::Platform &GetPlatform() const { return *_platform; }
+
+  const tetris::TraceLogger &GetTraceLogger() const { return *_tracelog; }
 
   /**
    * \brief Adds a new client to the client list upon connection.
@@ -98,7 +100,7 @@ public:
    */
   void client_disconnect(int fd) {
     auto now = std::chrono::high_resolution_clock::now();
-    auto& c = *_clients.at(fd);
+    auto &c = *_clients.at(fd);
 
     if (c.active_op.has_value()) {
       _tracelog->LogClientMappingEnd(now, &c);
