@@ -116,13 +116,21 @@ void TraceLogger::ExportSegment(nlohmann::json &trace,
                    {"pid", 0},
                    {"tid", client_id},
                    {"ts", segment.begin_ts},
-                   {"args", {}}});
+                   {"args",
+                    {{"begin_progress", segment.begin_progress},
+                     {"end_progress", segment.end_progress},
+                     {"mapping_exec_time", segment.exec_time},
+                     {"mapping_energy", segment.energy}}}});
   trace.push_back({{"name", mapping_name},
                    {"ph", "E"},
                    {"pid", 0},
                    {"tid", client_id},
                    {"ts", segment.end_ts},
-                   {"args", {}}});
+                   {"args",
+                    {{"begin_progress", segment.begin_progress},
+                     {"end_progress", segment.end_progress},
+                     {"mapping_exec_time", segment.exec_time},
+                     {"mapping_energy", segment.energy}}}});
 
   // Show in CPUs frame
   for (const auto &cpu_id : segment.cpus.GetList()) {
