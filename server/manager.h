@@ -102,6 +102,7 @@ public:
     auto &c = *_clients.at(fd);
 
     if (c.active_op.has_value()) {
+      c.update_progress(now);
       _tracelog->LogClientMappingEnd(now, &c);
     }
     _tracelog->DeregisterClient(&c);
