@@ -64,14 +64,18 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
 
   LOGGER->info(" -> sending mapping info to client\n");
 
-  Connection conn{push_path()};
-  ClientResponse response;
+  try {
+    Connection conn{push_path()};
+    ClientResponse response;
 
-  protobuf_util::Send(conn.locked(), msg);
-  protobuf_util::Receive(conn.locked(), response);
+    protobuf_util::Send(conn.locked(), msg);
+    protobuf_util::Receive(conn.locked(), response);
 
-  if (response.type() != ClientResponse::ACKNOWLEDGE) {
-      LOGGER->warning(" -! Client didn't acknowledge the message!\n");
+    if (response.type() != ClientResponse::ACKNOWLEDGE) {
+        LOGGER->warning(" -! Client didn't acknowledge the message!\n");
+    }
+  } catch (std::exception &e) {
+    LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
   }
 
   LOGGER->info(" * done\n");
