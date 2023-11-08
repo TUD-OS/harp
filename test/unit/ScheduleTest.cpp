@@ -27,7 +27,7 @@ protected:
   OperatingPoint CreateOP(const std::string &name, double extime, double energy,
                           const CPUThreadSet &thread_set) {
     auto cores_count =
-        platform->CountCoresPerType(platform->ToCPUCoreSet(thread_set));
+        platform->GetCoreCountPerType(platform->ToCPUCoreSet(thread_set));
     return OperatingPoint{name,
                           {{"execution_time", extime}, {"energy", energy}},
                           thread_set,

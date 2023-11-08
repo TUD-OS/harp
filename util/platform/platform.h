@@ -196,7 +196,7 @@ public:
   }
 
   std::map<std::string, int>
-  CountCoresPerType(const CPUCoreSet &core_set) const {
+  GetCoreCountPerType(const CPUCoreSet &core_set) const {
     std::map<std::string, int> res;
     for (const auto &[name, _] : _cpu_types) {
       res.emplace(name, 0);
