@@ -7,6 +7,7 @@ add_library(tetrisserverlib STATIC
     manager.cc
     trace_logger.cc
     sched/bruteforce.cc
+    sched/lr.cc
     sched/objective.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
