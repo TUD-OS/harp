@@ -100,7 +100,7 @@ void ConcreteClient::bind(MappingFeature *feature)
     _mapping_features.push_back(feature);
 
     if (_active_mapping)
-        feature->mapping_update(*_active_mapping);
+        feature->mapping_update(*_active_mapping, {});
 }
 
 ServerResponse ConcreteClient::send(const ClientMessage &message)
@@ -145,7 +145,7 @@ ClientResponse ConcreteClient::handle(const ServerMessage &msg)
 
             /* Tell the features to react to the new mapping */
             for (const auto& feature : _mapping_features) {
-                feature->mapping_update(*_active_mapping);
+                feature->mapping_update(*_active_mapping, conv_map);
             }
 
             response.set_type(ClientResponse::ACKNOWLEDGE);

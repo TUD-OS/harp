@@ -6,7 +6,6 @@ set_source_files_properties(
 add_library(tetrisclient OBJECT
         client.cc
         feature.cc
-        mapping_feature.cc
         concrete_client.cc
         push_message_listener.cc
         features/movable_threads.cc

@@ -29,13 +29,9 @@ class ScalableApplication : public MappingFeature
 
    public:
     /* Feature interface */
-    bool need_handshake() const override;
+    bool need_handshake() const override { return false; };
 
-    FeatureID handshake() override;
-
-    ClientResponse handle(const ServerMessage &msg) override;
-
-    void mapping_update(const MappingUpdate &mapping) override;
+    void mapping_update(const MappingUpdate &mapping, const ConversionMap &conv) override;
 
     bool extend_mapping(MappingsInfo &mappings) override;
 };

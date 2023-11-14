@@ -50,7 +50,7 @@ void MockClient::bind(MappingFeature *feature)
 
     /* If we already have an active mapping, let the feature know about this! */
     if (_active_mapping)
-        feature->mapping_update(*_active_mapping);
+        feature->mapping_update(*_active_mapping, {});
 }
 
 ServerResponse MockClient::send(const ClientMessage &message)
@@ -96,7 +96,7 @@ ClientResponse MockClient::handle(const MockServerMessage &msg)
         _active_mapping = std::make_unique<Mapping>(*_platform, "test-mapping", thread_map, regions, characteristics);
 
         for (const auto f : _mapping_features)
-            f->mapping_update(*_active_mapping);
+            f->mapping_update(*_active_mapping, {});
     }
 
     ClientResponse response{};

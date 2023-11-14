@@ -1,6 +1,7 @@
 #ifndef __MAPPING_FEATURE_H__
 #define __MAPPING_FEATURE_H__
 
+#include <stdexcept>
 #pragma once
 
 #include "proto/tetris.pb.h"
@@ -15,6 +16,7 @@ namespace tetris {
 class Client;
 
 using MappingUpdate = Mapping;
+using ConversionMap = std::map<int, int>;
 using MappingsInfo = ClientMessage::OperatingPointsInfo;
 
 /**
@@ -42,9 +44,11 @@ public:
      *
      * When the client gets an updated mapping info, handle the changes accordingly.
      * 
-     * \param mapping updated mapping received from the TETRiS server.
+     * \param mapping The updated and converted mapping received from the TETRiS server.
+     * \param conv The conversion map that contains the information on which CPUs should be used.
+     *             The conversion map is already applied to the given mapping argument.
      */
-    virtual void mapping_update(const MappingUpdate &mapping)
+    virtual void mapping_update(const MappingUpdate &mapping, const ConversionMap &conv)
     {}
 
     /**
@@ -58,6 +62,20 @@ public:
     virtual bool extend_mapping(MappingsInfo &mappings)
     {
         return false;
+    }
+
+public:
+    /* Provide default implementation for the original Feature interface for MappingFeatures
+     * that don't want to communicate with the server */
+    ClientResponse handle(const ServerMessage &msg) override
+    {
+        throw std::runtime_error("Not implemented!\n");
+    }
+
+
+    FeatureID handshake() override
+    {
+        throw std::runtime_error("Not implemented!\n");
     }
 };
 

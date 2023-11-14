@@ -18,44 +18,7 @@ MovableThreads::MovableThreads() :
     _logger = debug::Logger::get();
 }
 
-bool MovableThreads::need_handshake() const
-{
-    return false;
-}
-
-FeatureID MovableThreads::handshake()
-{
-    tetris::ClientMessage msg;
-
-    msg.set_type(tetris::ClientMessage::FEATURE_SUBSCRIBE);
-    auto feature_info = msg.mutable_feature_info();
-    feature_info->set_type(tetris::ClientMessage::FeatureInfo::MOVABLE_THREADS);
-
-    auto response = this->get_client()->send(msg);
-    if ((response.type() == tetris::ServerResponse::FEATURE_ACKNOWLEDGE) 
-            && response.has_feature_ack_info()) {
-        return response.feature_ack_info().id();
-    }
-
-    return -1;
-}
-
-ClientResponse MovableThreads::handle(const ServerMessage &msg)
-{
-    bool success = true;
-
-    tetris::ClientResponse response{};
-
-    if (success) {
-        response.set_type(tetris::ClientResponse::ACKNOWLEDGE);
-    } else {
-        response.set_type(tetris::ClientResponse::ERROR);
-    }
-
-    return response;
-}
-
-void MovableThreads::mapping_update(const MappingUpdate &mapping)
+void MovableThreads::mapping_update(const MappingUpdate &mapping, const ConversionMap& /*unused*/)
 {
     LOGGER->debug(" > Updating thread<->CPU assignments\n");
 
