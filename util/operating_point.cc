@@ -1,13 +1,13 @@
 #include "util/operating_point.h"
 
+#include "util/platform/platform.h"
+
 namespace tetris {
 
 OperatingPoint::OperatingPoint(
+    const Platform &platform,
     const ClientMessage::OperatingPointsInfo::OPData &op)
     : name{}, characteristics{}, cpus{}, cores_count{} {
-  throw std::runtime_error(
-      "Need to initialize cores_count. Either add an extra field in the "
-      "Protobuf interface, or pass a platform object in this ctor");
   name = op.identifier();
 
   for (int i = 0; i < op.characteristics_size(); ++i) {
@@ -18,6 +18,9 @@ OperatingPoint::OperatingPoint(
   for (int i = 0; i < op.cpu_ids_size(); ++i) {
     cpus.Set(op.cpu_ids(i));
   }
+
+  // Initialize cores_count
+  cores_count = platform.GetCoreCountPerType(platform.ToCPUCoreSet(cpus));
 }
 
 } /* namespace tetris */

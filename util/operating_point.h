@@ -12,6 +12,8 @@
 
 namespace tetris {
 
+class Platform;
+
 class OperatingPoint {
 public:
   std::string name;
@@ -30,7 +32,8 @@ public:
       : name{name}, characteristics{characteristics}, cpus{cpus},
         cores_count{cores_count} {}
 
-  OperatingPoint(const ClientMessage::OperatingPointsInfo::OPData &op);
+  OperatingPoint(const Platform &platform,
+                 const ClientMessage::OperatingPointsInfo::OPData &op);
 
   double characteristic(const std::string &criteria) const {
     if (characteristics.find(criteria) != characteristics.end())
