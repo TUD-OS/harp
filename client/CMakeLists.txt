@@ -3,7 +3,7 @@
 set_source_files_properties(
         ${PROTO_OUTPUT_SOURCES} PROPERTIES GENERATED TRUE)
 
-add_library(tetrisclient OBJECT
+add_library(tetrisclient STATIC
         client.cc
         feature.cc
         concrete_client.cc
@@ -24,6 +24,12 @@ add_library(tetrisclient OBJECT
 # ensure through a dependency that Protobuf message sources file are going to be generated
 add_dependencies(tetrisclient generated_proto)
 
+target_include_directories(tetrisclient
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util>
+    $<INSTALL_INTERFACE:include/tetris>
+)
+
 # install and export the tetrisclient library
 install(TARGETS tetrisclient
         EXPORT tetrisclient-config
@@ -31,9 +37,28 @@ install(TARGETS tetrisclient
         LIBRARY DESTINATION lib
         INCLUDES DESTINATION include
         )
-install(FILES ${CMAKE_SOURCE_DIR}/client/client.h ${CMAKE_SOURCE_DIR}/client/feature.h DESTINATION include/tetris)
-install(FILES ${CMAKE_SOURCE_DIR}/util/tetris.h DESTINATION include/tetris/util)
-install(FILES ${CMAKE_BINARY_DIR}/proto/tetris.pb.h DESTINATION include/tetris/proto)
-install(FILES ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h DESTINATION include/tetris/features)
+install(FILES
+  ${CMAKE_SOURCE_DIR}/client/client.h
+  ${CMAKE_SOURCE_DIR}/client/feature.h
+  ${CMAKE_SOURCE_DIR}/client/mapping_feature.h
+  DESTINATION include/tetris
+)
+install(FILES
+  ${CMAKE_SOURCE_DIR}/util/tetris.h
+  ${CMAKE_SOURCE_DIR}/util/mapping.h
+  DESTINATION include/tetris/util
+)
+install(FILES
+  ${CMAKE_SOURCE_DIR}/util/platform/cpu_sets.h
+  DESTINATION include/tetris/util/platform
+)
+install(FILES
+  ${CMAKE_BINARY_DIR}/proto/tetris.pb.h
+  DESTINATION include/tetris/proto
+)
+install(FILES
+  ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h
+  DESTINATION include/tetris/features
+)
 export(TARGETS tetrisclient FILE "${CMAKE_CURRENT_BINARY_DIR}/tetrisclient-config.cmake")
 install(EXPORT tetrisclient-config DESTINATION lib/cmake/tetrisclient)
