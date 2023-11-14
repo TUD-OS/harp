@@ -3,7 +3,6 @@
 
 #include "feature.h"
 #include "mapping_feature.h"
-#include "util/tetris.h"
 
 #include <string>
 #include <memory>
