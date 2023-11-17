@@ -39,13 +39,19 @@ install(TARGETS tetrisclient
         )
 install(FILES
   ${CMAKE_SOURCE_DIR}/client/client.h
+  ${CMAKE_SOURCE_DIR}/client/concrete_client.h
   ${CMAKE_SOURCE_DIR}/client/feature.h
   ${CMAKE_SOURCE_DIR}/client/mapping_feature.h
+  ${CMAKE_SOURCE_DIR}/client/push_message_listener.h
   DESTINATION include/tetris
 )
 install(FILES
-  ${CMAKE_SOURCE_DIR}/util/tetris.h
+  ${CMAKE_SOURCE_DIR}/util/lock_util.h
   ${CMAKE_SOURCE_DIR}/util/mapping.h
+  ${CMAKE_SOURCE_DIR}/util/path_util.h
+  ${CMAKE_SOURCE_DIR}/util/socket.h
+  ${CMAKE_SOURCE_DIR}/util/tetris.h
+  ${CMAKE_SOURCE_DIR}/util/util.h
   DESTINATION include/tetris/util
 )
 install(FILES
