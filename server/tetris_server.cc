@@ -7,6 +7,7 @@
 
 #include "manager.h"
 #include "sched/bruteforce.h"
+#include "sched/lr.h"
 #include "sched/objective.h"
 #include "util/platform/reader.h"
 #include "util/socket.h"
@@ -22,16 +23,21 @@ const static int MAXEVENTS = 100;
 debug::LoggerPtr logger;
 
 void usage() {
-  std::cout << "usage: tetrisserver [-h] [-p platform] [-o objective] [-t trace_file]\n"
+  std::cout << "usage: tetrisserver [-h] [-p platform] [-o objective] [-t "
+               "trace_file]\n"
             << "\n"
             << "Options:\n"
             << "   -h, --help                show this help message.\n"
             << "   -p, --platform <name>     specify the platform.\n"
+            << "   -m, --mapper <name>       specify the mapper (BF, LR). "
+               "Defaults to BF.\n"
             << "   -o, --obj <objective>     specify the objective "
                "(energy-saving, balanced,\n"
-            << "                             performance, energy, delay). Defaults to "
+            << "                             performance, energy, delay). "
+               "Defaults to "
                "\"energy-saving\".\n"
-            << "   -t, --trace <trace_file>  path to export the trace (defaults to \"trace.json\""
+            << "   -t, --trace <trace_file>  path to export the trace "
+               "(defaults to \"trace.json\""
             << "\n";
 }
 
@@ -119,9 +125,10 @@ int setup_epoll(const std::vector<int> &fds) {
 }
 
 struct Config {
-    std::string platform_path;
-    std::string objective_name;
-    std::string trace_filename;
+  std::string platform_path;
+  std::string mapper_name;
+  std::string objective_name;
+  std::string trace_filename;
 };
 
 void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
@@ -253,7 +260,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
 
     /* Check whether we need to reschedule */
     if (manager.needs_reschedule())
-        manager.run_scheduler();
+      manager.run_scheduler();
   }
 }
 
@@ -286,8 +293,7 @@ int main(int argc, char *argv[]) {
         }
       } else {
         // Check if the platform file exists in the default location
-        std::string default_path =
-            "../examples/" + platform + "/platform.yaml";
+        std::string default_path = "../examples/" + platform + "/platform.yaml";
         if (std::filesystem::exists(default_path)) {
           config.platform_path = default_path;
         } else {
@@ -296,6 +302,15 @@ int main(int argc, char *argv[]) {
           return 1;
         }
       }
+    } else if (arg == "-m" || arg == "--mapper") {
+      if (i + 1 >= argc) {
+        std::cerr << "Expected mapper name after " << arg << ".\n";
+        usage();
+        return 1;
+      }
+
+      i++;
+      config.mapper_name = argv[i];
     } else if (arg == "-o" || arg == "--obj") {
       if (i + 1 >= argc) {
         std::cerr << "Expected objective name after " << arg << ".\n";
@@ -315,9 +330,9 @@ int main(int argc, char *argv[]) {
       i++;
       config.trace_filename = argv[i];
     } else {
-        std::cerr << "Unexpected command line option: " << arg << ".\n";
-        usage();
-        return 1;
+      std::cerr << "Unexpected command line option: " << arg << ".\n";
+      usage();
+      return 1;
     }
   }
 
@@ -325,6 +340,10 @@ int main(int argc, char *argv[]) {
     std::cerr << "Platform not specified.\n";
     usage();
     return 1;
+  }
+
+  if (config.mapper_name.empty()) {
+    config.mapper_name = "BF";
   }
 
   if (config.objective_name.empty()) {
@@ -356,8 +375,20 @@ int main(int argc, char *argv[]) {
     usage();
     return 1;
   }
-  std::unique_ptr<BaseScheduler> scheduler =
-      std::make_unique<BruteforceMapper>(*platform, std::move(objective));
+
+  std::unique_ptr<BaseScheduler> scheduler;
+  if (config.mapper_name == "BF")
+    scheduler =
+        std::make_unique<BruteforceMapper>(*platform, std::move(objective));
+  else if (config.mapper_name == "LR")
+    // TODO: pass `max_rounds` from the CL argument
+    scheduler = std::make_unique<LagrangianRelaxationMapper>(
+        *platform, std::move(objective), 500);
+  else {
+    std::cerr << "Unknown mapper.\n";
+    usage();
+    return 1;
+  }
 
   std::cout << "Welcome to TETRiS" << std::endl;
 

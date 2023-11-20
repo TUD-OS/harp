@@ -5,6 +5,7 @@
 
 #include "server/client.h"
 #include "server/sched/bruteforce.h"
+#include "server/sched/lr.h"
 #include "server/schedule.h"
 #include "util/mapping_reader.h"
 
@@ -88,4 +89,46 @@ TEST_F(RaptorLakeScheduleTest, BF_FourClients) {
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Scheduling time: %lfs\n", dur_s);
+
+  LOGGER->info("%s", s->ToString().c_str());
+}
+
+TEST_F(RaptorLakeScheduleTest, LR_FourClients_Energy) {
+  std::vector<Client *> clients;
+  clients.push_back(GetClientEP());
+  clients.push_back(GetClientCG());
+  clients.push_back(GetClientMG());
+  clients.push_back(GetClientFT());
+  LagrangianRelaxationMapper mapper(*platform,
+                                    std::make_unique<EnergyObjective>(), 500);
+
+  auto start = std::chrono::high_resolution_clock::now();
+  auto s = mapper.GenerateSchedule(clients, 0.0);
+  auto end = std::chrono::high_resolution_clock::now();
+
+  std::chrono::duration<double> dur = end - start;
+  auto dur_s = dur.count();
+  LOGGER->info("Scheduling time: %lfs\n", dur_s);
+
+  LOGGER->info("%s", s->ToString().c_str());
+}
+
+TEST_F(RaptorLakeScheduleTest, LR_FourClients_EDP) {
+  std::vector<Client *> clients;
+  clients.push_back(GetClientEP());
+  clients.push_back(GetClientCG());
+  clients.push_back(GetClientMG());
+  clients.push_back(GetClientFT());
+  LagrangianRelaxationMapper mapper(*platform,
+                                    std::make_unique<BalancedObjective>(), 500);
+
+  auto start = std::chrono::high_resolution_clock::now();
+  auto s = mapper.GenerateSchedule(clients, 0.0);
+  auto end = std::chrono::high_resolution_clock::now();
+
+  std::chrono::duration<double> dur = end - start;
+  auto dur_s = dur.count();
+  LOGGER->info("Scheduling time: %lfs\n", dur_s);
+
+  LOGGER->info("%s", s->ToString().c_str());
 }
