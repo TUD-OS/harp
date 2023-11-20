@@ -554,7 +554,7 @@ Energy PowercapMeasure::energy()
         if (cur_value < _last_value) {
             std::ifstream max_file{"/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj"};
             unsigned long max_value;
-            pfile >> max_value;
+            max_file >> max_value;
 
             result.package = max_value - _last_value + cur_value;
         } else {
