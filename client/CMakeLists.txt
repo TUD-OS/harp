@@ -37,11 +37,12 @@ install(EXPORT client_internal-config DESTINATION lib/cmake/tetrisclient)
 # Target for the static tetris library
 add_library(tetrisclient STATIC 
     tetris_lib.cc
+    $<TARGET_OBJECTS:client_internal>
 )
 
 # ensure through a dependency that Protobuf message sources file are going to be generated
 add_dependencies(tetrisclient generated_proto)
-target_link_libraries(tetrisclient client_internal ${Protobuf_LIBRARIES})
+target_link_libraries(tetrisclient PRIVATE ${Protobuf_LIBRARIES})
 
 target_include_directories(tetrisclient
   PUBLIC
