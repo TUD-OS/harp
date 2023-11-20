@@ -6,7 +6,7 @@ add_library(tetrismockclient SHARED
         mock_message_listener.cc
         mock_library.cc
     )
-target_link_libraries(tetrismockclient ${Protobuf_LIBRARIES} tetrisclient yaml-cpp)
+target_link_libraries(tetrismockclient client_internal ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrismockclient generated_proto)
 add_dependencies(tetrismockclient tetrisclient)
 

@@ -2,7 +2,7 @@
 #define __CONCRETE_CLIENT_H__
 
 #include "client.h"
-#include "client/mapping_feature.h"
+#include "mapping_feature.h"
 #include "push_message_listener.h"
 #include "util/connection.h"
 #include "util/debug_util.h"

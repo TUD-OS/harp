@@ -4,6 +4,10 @@
 
 #include "util.h"
 
+#include <stdexcept>
+
+#include <fcntl.h>
+
 void util::make_fd_non_blocking(int fd)
 {
     int flags;

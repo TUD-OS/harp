@@ -171,9 +171,18 @@ YamlMappingReader::parse_mappings_dpm(const Platform &platform,
   // Extract template data
   auto template_processes =
       mapping_template_node["processes"].as<std::vector<std::string>>();
-  auto template_regions =
-      mapping_template_node["regions"]
-          .as<std::map<std::string, std::vector<std::string>>>();
+  std::map<std::string, std::vector<std::string>> template_regions;
+  if (mapping_template_node["regions"]) {
+    template_regions =
+        mapping_template_node["regions"]
+            .as<std::map<std::string, std::vector<std::string>>>();
+  }
+  std::map<std::string, std::vector<std::string>> template_par_regions;
+  if (mapping_template_node["par_regions"]) {
+    template_par_regions =
+        mapping_template_node["par_regions"]
+            .as<std::map<std::string, std::vector<std::string>>>();
+  }
   auto template_metadata =
       mapping_template_node["metadata"].as<std::vector<std::string>>();
 
@@ -192,7 +201,7 @@ YamlMappingReader::parse_mappings_dpm(const Platform &platform,
     if (template_processes.size() != process_cores.size()) {
       LOGGER->error(
           "Mismatch between number of template processes and process cores "
-          "(%s)",
+          "(%s)\n",
           file_path);
       return std::vector<Mapping>{};
     }
@@ -203,20 +212,45 @@ YamlMappingReader::parse_mappings_dpm(const Platform &platform,
 
     // Map regions
     RegionAffinities<std::string> region_affinities;
+
+    // Basic regions
     auto region_node = mapping_node["regions"];
     for (const auto &region : region_node) {
       ReplicaAffinities<std::string> replica_affinities;
       auto region_name = region.first.as<std::string>();
       auto processes_in_region = template_regions[region_name];
+      ProcessAffinities<std::string> process_affinities;
+      auto cores_for_region = region.second.as<std::vector<std::string>>();
+      if (processes_in_region.size() != cores_for_region.size()) {
+        LOGGER->error(
+            "Mismatch between number of processes and cores in region (%s)\n",
+            region_name.c_str());
+        return std::vector<Mapping>{};
+      }
+
+      for (size_t i = 0; i < processes_in_region.size(); ++i) {
+        process_affinities.emplace(processes_in_region[i], cores_for_region[i]);
+      }
+
+      replica_affinities.push_back(process_affinities);
+
+      region_affinities.emplace(region_name, replica_affinities);
+    }
+    // Parallel regions
+    auto par_region_node = mapping_node["par_regions"];
+    for (const auto &region : par_region_node) {
+      ReplicaAffinities<std::string> replica_affinities;
+      auto region_name = region.first.as<std::string>();
+      auto processes_in_region = template_par_regions[region_name];
       for (const auto &replica : region.second) {
         ProcessAffinities<std::string> process_affinities;
 
         auto cores_for_replica = replica.as<std::vector<std::string>>();
 
         if (processes_in_region.size() != cores_for_replica.size()) {
-          LOGGER->error(
-              "Mismatch between number of processes and cores in replica (%s)",
-              file_path);
+          LOGGER->error("Mismatch between number of processes and cores in "
+                        "replica (%s)\n",
+                        region_name.c_str());
           return std::vector<Mapping>{};
         }
 
@@ -277,7 +311,7 @@ YamlMappingReader::parse_mappings_omp(const Platform &platform,
 
     auto core_list = mapping_node["cores"].as<std::vector<std::string>>();
     for (const auto &c : core_list) {
-        threads.push_back(std::make_pair(std::string{"thread"}+c, c));
+      threads.push_back(std::make_pair(std::string{"thread"} + c, c));
     }
 
     // Metadata
@@ -297,7 +331,8 @@ YamlMappingReader::parse_mappings_omp(const Platform &platform,
     }
 
     // Create the mapping object and add it to the vector
-    mappings.emplace_back(platform, mapping_name, threads, RegionAffinities<std::string>{}, characteristics);
+    mappings.emplace_back(platform, mapping_name, threads,
+                          RegionAffinities<std::string>{}, characteristics);
   }
 
   return mappings;

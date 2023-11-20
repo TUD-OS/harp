@@ -3,24 +3,32 @@ platform: odroid
 type: dpm
 mapping_template:
   processes: [gen, write]
+  regions:
+    region1: [process3, process4]
   par_regions:
     pr1: [calc]
   metadata: [execution_time, energy]
 mappings:
   - name: mapping1
     processes: [ARM00, ARM00]
+    regions:
+      region1: [ARM00, ARM00]
     par_regions:
       pr1:
         - [ARM00]
     metadata: [100, 250]
   - name: mapping2
     processes: [ARM04, ARM04]
+    regions:
+      region1: [ARM04, ARM04]
     par_regions:
       pr1:
         - [ARM04]
     metadata: [70, 350]
   - name: mapping3
     processes: [ARM00, ARM00]
+    regions:
+      region1: [ARM00, ARM00]
     par_regions:
       pr1:
         - [ARM01]
@@ -29,6 +37,8 @@ mappings:
     metadata: [60, 260]
   - name: mapping4
     processes: [ARM00, ARM00]
+    regions:
+      region1: [ARM00, ARM00]
     par_regions:
       pr1:
         - [ARM00]
