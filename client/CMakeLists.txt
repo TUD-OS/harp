@@ -3,7 +3,7 @@
 set_source_files_properties(
         ${PROTO_OUTPUT_SOURCES} PROPERTIES GENERATED TRUE)
 
-add_library(tetrisclient STATIC
+add_library(client_internal OBJECT
         client.cc
         feature.cc
         concrete_client.cc
@@ -20,9 +20,28 @@ add_library(tetrisclient STATIC
         ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
         ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
         ${CMAKE_SOURCE_DIR}/util/mapping.cc
-        )
+)
+
+# ensure through a dependency that Protobuf message sources file are going to be generated
+add_dependencies(client_internal generated_proto)
+
+install(TARGETS client_internal
+        EXPORT client_internal-config
+        INCLUDES DESTINATION include
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+)
+export(TARGETS client_internal FILE "${CMAKE_CURRENT_BINARY_DIR}/client_internal-config.cmake")
+install(EXPORT client_internal-config DESTINATION lib/cmake/tetrisclient)
+
+# Target for the static tetris library
+add_library(tetrisclient STATIC 
+    tetris_lib.cc
+)
+
 # ensure through a dependency that Protobuf message sources file are going to be generated
 add_dependencies(tetrisclient generated_proto)
+target_link_libraries(tetrisclient client_internal ${Protobuf_LIBRARIES})
 
 target_include_directories(tetrisclient
   PUBLIC
@@ -36,7 +55,12 @@ install(TARGETS tetrisclient
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         INCLUDES DESTINATION include
-        )
+)
+
+export(TARGETS tetrisclient FILE "${CMAKE_CURRENT_BINARY_DIR}/tetrisclient-config.cmake")
+install(EXPORT tetrisclient-config DESTINATION lib/cmake/tetrisclient)
+
+# Install destinations for all the header files
 install(FILES
   ${CMAKE_SOURCE_DIR}/client/client.h
   ${CMAKE_SOURCE_DIR}/client/concrete_client.h
@@ -64,7 +88,7 @@ install(FILES
 )
 install(FILES
   ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h
+  ${CMAKE_SOURCE_DIR}/client/features/scalable_application.h
+  ${CMAKE_SOURCE_DIR}/client/features/application_progress.h
   DESTINATION include/tetris/features
 )
-export(TARGETS tetrisclient FILE "${CMAKE_CURRENT_BINARY_DIR}/tetrisclient-config.cmake")
-install(EXPORT tetrisclient-config DESTINATION lib/cmake/tetrisclient)
