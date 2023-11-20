@@ -88,7 +88,9 @@ Mapping::Mapping(const Platform& platform, const std::string& name,
 
 OperatingPoint Mapping::op() const
 {
-    return OperatingPoint{name, characteristics_map, cpus};
+  auto core_set = _platform.ToCPUCoreSet(cpus);
+  auto cores_count = _platform.GetCoreCountPerType(core_set);
+  return OperatingPoint{name, characteristics_map, cpus, cores_count};
 }
 
 } /* namespace tetris */

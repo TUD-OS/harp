@@ -18,18 +18,19 @@ namespace tetris {
  */
 class BruteforceMapper : public BaseScheduler {
 private:
-  using MappingList = std::vector<std::optional<OperatingPointAllocation>>;
+  using MappingList = std::vector<OperatingPoint *>;
   using MappingListValue = std::tuple<int, double>;
 
   /**
    * Create a schedule object with the current mapping list
    */
-  std::unique_ptr<Schedule> ToSchedule(const MappingList &ops);
+  std::unique_ptr<Schedule> ToSchedule(const MappingList &ops,
+                                       CPUCoreSet busy_cores);
 
   /**
    * Updates the best solution found so far.
    */
-  void UpdateBestSolution();
+  void UpdateBestSolution(int, double);
 
   /**
    * Recursively iterates over all clients and tries all possible mappings.
@@ -37,12 +38,15 @@ private:
    * \param n The index of the current client.
    * \param busy_cores The set of busy CPUs.
    */
-  void IterateClient(int n, CPUCoreSet busy_cores);
+  void IterateClient(int n, const std::map<std::string, int> &used_cores,
+                     int cur_apps, double cur_value);
 
 public:
   explicit BruteforceMapper(const Platform &platform,
                             std::unique_ptr<OptimizationObjective> objective)
-      : _platform{platform}, _objective{std::move(objective)} {}
+      : _platform{platform},
+        _platform_cores_count{platform.GetCoreCountPerType()},
+        _objective{std::move(objective)} {}
 
   void SetObjective(std::unique_ptr<OptimizationObjective> objective) override {
     _objective = std::move(objective);
@@ -67,7 +71,9 @@ public:
 
 private:
   const Platform &_platform;
+  std::map<std::string, int> _platform_cores_count;
   std::unique_ptr<OptimizationObjective> _objective;
+
   // temporary fields (initialized at each invokation of GenerateSchedule())
   std::vector<Client *> _clients;
   double _start_time;
@@ -75,7 +81,7 @@ private:
 
   std::vector<std::vector<OperatingPoint>> _cl_pareto; // Pareto front of ops
 
-  std::unique_ptr<Schedule> _best_schedule;
+  MappingList _best_ops;
   MappingListValue _best_value;
   MappingList _cur_ops;
 };

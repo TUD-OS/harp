@@ -24,50 +24,56 @@ protected:
     return c;
   }
 
+  OperatingPoint CreateOP(const std::string &name, double extime, double energy,
+                          const CPUThreadSet &thread_set) {
+    auto cores_count =
+        platform->GetCoreCountPerType(platform->ToCPUCoreSet(thread_set));
+    return OperatingPoint{name,
+                          {{"execution_time", extime}, {"energy", energy}},
+                          thread_set,
+                          cores_count};
+  }
+
   Client *GetClientOP0() {
-    std::string extime = "execution_time";
-    std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
-        {"1L0B", {{extime, 171}, {energy, 60}}, CPUThreadSet{0}},
-        {"1L1B", {{extime, 95}, {energy, 72}}, CPUThreadSet{0, 2}},
-        {"2L0B", {{extime, 88}, {energy, 75}}, CPUThreadSet{0, 1}},
-        {"2L2B", {{extime, 78}, {energy, 80}}, CPUThreadSet{0, 1, 2, 3}},
-        {"2L1B", {{extime, 47}, {energy, 105}}, CPUThreadSet{0, 1, 2}},
-        {"1L2B", {{extime, 35}, {energy, 120}}, CPUThreadSet{0, 2, 3}},
-        {"0L1B", {{extime, 86}, {energy, 129}}, CPUThreadSet{2}},
-        {"0L2B", {{extime, 46}, {energy, 142}}, CPUThreadSet{2, 3}}};
+        CreateOP("1L0B", 171, 60, {0}),
+        CreateOP("1L1B", 95, 72, {0, 2}),
+        CreateOP("2L0B", 88, 75, {0, 1}),
+        CreateOP("2L2B", 78, 80, {0, 1, 2, 3}),
+        CreateOP("2L1B", 47, 105, {0, 1, 2}),
+        CreateOP("1L2B", 35, 120, {0, 2, 3}),
+        CreateOP("0L1B", 86, 129, {2}),
+        CreateOP("0L2B", 46, 142, {2, 3}),
+    };
 
     return CreateClient("app1", ops);
   }
 
   Client *GetClientOP1() {
-    std::string extime = "execution_time";
-    std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
-        {"1L1B", {{extime, 45}, {energy, 60}}, CPUThreadSet{0, 2}},
-        {"2L0B", {{extime, 62}, {energy, 66}}, CPUThreadSet{0, 1}},
-        {"2L1B", {{extime, 35}, {energy, 70}}, CPUThreadSet{0, 1, 2}},
-        {"1L0B", {{extime, 114}, {energy, 73}}, CPUThreadSet{0}},
-        {"2L2B", {{extime, 32}, {energy, 75}}, CPUThreadSet{0, 1, 2, 3}},
-        {"1L2B", {{extime, 93}, {energy, 77}}, CPUThreadSet{0, 2, 3}},
-        {"0L2B", {{extime, 42}, {energy, 110}}, CPUThreadSet{2, 3}},
-        {"0L1B", {{extime, 76}, {energy, 112}}, CPUThreadSet{2}}};
+        CreateOP("1L1B", 45, 60, {0, 2}),
+        CreateOP("2L0B", 62, 66, {0, 1}),
+        CreateOP("2L1B", 35, 70, {0, 1, 2}),
+        CreateOP("1L0B", 114, 73, {0}),
+        CreateOP("2L2B", 32, 75, {0, 1, 2, 3}),
+        CreateOP("1L2B", 93, 77, {0, 2, 3}),
+        CreateOP("0L2B", 42, 110, {2, 3}),
+        CreateOP("0L1B", 76, 112, {2}),
+    };
 
     return CreateClient("app2", ops);
   }
 
   Client *GetClientOP2() {
-    std::string extime = "execution_time";
-    std::string energy = "energy";
     std::vector<OperatingPoint> ops = {
-        {"1L0B", {{extime, 92}, {energy, 40}}, CPUThreadSet{0}},
-        {"2L0B", {{extime, 53}, {energy, 45}}, CPUThreadSet{0, 1}},
-        {"1L1B", {{extime, 26}, {energy, 53}}, CPUThreadSet{0, 2}},
-        {"2L2B", {{extime, 23}, {energy, 54}}, CPUThreadSet{0, 1, 2, 3}},
-        {"2L1B", {{extime, 23}, {energy, 58}}, CPUThreadSet{0, 1, 2}},
-        {"1L2B", {{extime, 17}, {energy, 64}}, CPUThreadSet{0, 2, 3}},
-        {"0L2B", {{extime, 18}, {energy, 75}}, CPUThreadSet{2, 3}},
-        {"0L1B", {{extime, 34}, {energy, 81}}, CPUThreadSet{2}},
+        CreateOP("1L0B", 92, 40, {0}),
+        CreateOP("2L0B", 53, 45, {0, 1}),
+        CreateOP("1L1B", 26, 53, {0, 2}),
+        CreateOP("2L2B", 23, 54, {0, 1, 2, 3}),
+        CreateOP("2L1B", 23, 58, {0, 1, 2}),
+        CreateOP("1L2B", 17, 64, {0, 2, 3}),
+        CreateOP("0L2B", 18, 75, {2, 3}),
+        CreateOP("0L1B", 34, 81, {2}),
     };
 
     return CreateClient("app3", ops);

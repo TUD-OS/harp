@@ -34,7 +34,7 @@ bool Client::receive_ops(
   /* Convert the protobuf mapping representation into our internal format */
   for (int i = 0; i < ops_info.operating_points_size(); i++) {
     auto cur = ops_info.operating_points(i);
-    ops.emplace_back(cur);
+    ops.emplace_back(_manager->GetPlatform(), cur);
   }
 
   LOGGER->info(" -> Received %d operating points from client %d\n", ops.size(), pid);
