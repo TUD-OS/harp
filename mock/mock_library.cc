@@ -265,8 +265,8 @@ struct Energy
     unsigned long long core;
     unsigned long long dram;
     unsigned long long gpu;
-
-    unsigned long loops;
+    unsigned long long big;
+    unsigned long long little;
 
     Energy operator+(const Energy &o) const;
     Energy &operator+=(const Energy &o);
@@ -288,6 +288,8 @@ Energy &Energy::operator+=(const Energy &o)
     core += o.core;
     dram += o.dram;
     gpu += o.gpu;
+    big += o.big;
+    little += o.little;
 
     return *this;
 }
@@ -306,6 +308,8 @@ Energy &Energy::operator-=(const Energy &o)
     core -= o.core;
     dram -= o.dram;
     gpu -= o.gpu;
+    big -= o.big;
+    little -= o.little;
 
     return *this;
 }
@@ -565,6 +569,95 @@ Energy PowercapMeasure::energy()
     return result;
 }
 
+class OdroidMeasure : public Measure
+{
+   private:
+    bool _running;
+    std::array<float, 3> _last_values;
+
+    std::vector<std::string> sensors = {
+        "/sys/bus/i2c/devices/0-0040",
+        "/sys/bus/i2c/devices/0-0041",
+        "/sys/bus/i2c/devices/0-0045"
+    };
+
+   public:
+    OdroidMeasure();
+
+    void start();
+    void stop();
+    void reset();
+
+    Energy energy();
+};
+
+OdroidMeasure::OdroidMeasure() : _running{false}
+{}
+
+void OdroidMeasure::start()
+{
+    if (_running)
+        return;
+
+    int i = 0;
+    for (const auto &s : sensors) {
+        std::ofstream enable{s + "/enable"};
+        enable << "1";
+        std::ifstream joules{s + "/sensor_J"};
+        joules >> _last_values[i];
+        i++;
+    }
+
+    _running = true;
+}
+
+void OdroidMeasure::stop()
+{
+    if (!_running)
+        return;
+
+    for (const auto &s : sensors) {
+        std::ofstream enable{s + "/enable"};
+        enable << "0";
+    }
+
+    _running = false;
+}
+
+void OdroidMeasure::reset()
+{
+    if (!_running)
+        return;
+
+    int i = 0;
+    for (const auto &s : sensors) {
+        std::ifstream joules{s + "/sensor_J"};
+        joules >> _last_values[i];
+        i++;
+    }
+}
+
+Energy OdroidMeasure::energy()
+{
+    Energy result;
+
+    if (_running) {
+        std::array<float, 3> cur_values;
+        int i = 0;
+        for (const auto &s : sensors) {
+            std::ifstream joules{s + "/sensor_J"};
+            joules >> cur_values[i];
+            i++;
+        }
+
+        result.big = (cur_values[0] - _last_values[0]) * 1000000;
+        result.dram = (cur_values[1] - _last_values[1]) * 1000000;
+        result.little = (cur_values[2] - _last_values[2]) * 1000000;
+        result.package = result.big + result.little + result.dram;
+    }
+
+    return result;
+}
 
 } /* namespace rapl */
 
@@ -599,43 +692,48 @@ void __attribute__((constructor)) setup(void)
         logger->error("Missing TETRIS_PLATFORM definition!\n");
         tetris_possible = false;
     }
+    std::string platform_path = getenv("TETRIS_PLATFORM");
 
-    /* Check for making RAPL measurements */
-    int fd;
-    if ((fd = open("/dev/cpu/0/msr", O_RDONLY)) > 0) {     /* Try directly using the MSR */
-        close(fd);
-
-        logger->debug("Using MSR read for RAPL measurements\n");
-        energy_measure = std::make_unique<rapl::RAPLMeasure>();
+    if (platform_path.find("odroid") != std::string::npos) {
+        logger->debug("Using Odroid on-board sensors for energy measurements\n");
+        energy_measure = std::make_unique<rapl::OdroidMeasure>();
     } else {
-        logger->debug("Can't open '/dev/cpu/0/msr' for RAPL measurements!\n");
-
-        if ((fd = open("/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj", O_RDONLY)) > 0) {    /* Try using the powercap interface */
+        /* Check for making RAPL measurements */
+        int fd;
+        if ((fd = open("/dev/cpu/0/msr", O_RDONLY)) > 0) {     /* Try directly using the MSR */
             close(fd);
 
-            logger->debug("Using powercap framework for RAPL measurements\n");
-            energy_measure = std::make_unique<rapl::PowercapMeasure>();
+            logger->debug("Using RAPL-MSR read for energy measurements\n");
+            energy_measure = std::make_unique<rapl::RAPLMeasure>();
         } else {
-            logger->error("Can't use powercap framework for RAPL measurements!\n");
+            logger->debug("Can't open '/dev/cpu/0/msr' for RAPL-MSR based energy measurements!\n");
 
-            /* Check for using perf for RAPL registers */
-            std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
-            int paranoa;
-            perf_paranoa >> paranoa;
+            if ((fd = open("/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj", O_RDONLY)) > 0) {    /* Try using the powercap interface */
+                close(fd);
 
-            if (paranoa != -1 || geteuid() == 0) {
-                logger->error("No possibility found to make energy measurements!!\n");
-                tetris_possible = false;
+                logger->debug("Using powercap framework for energy measurements\n");
+                energy_measure = std::make_unique<rapl::PowercapMeasure>();
             } else {
-                logger->debug("Using perf for RAPL measurements\n");
-                energy_measure = std::make_unique<rapl::PerfMeasure>();
+                logger->error("Can't use powercap framework for energy measurements!\n");
+
+                /* Check for using perf for RAPL registers */
+                std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
+                int paranoa;
+                perf_paranoa >> paranoa;
+
+                if (paranoa != -1 || geteuid() == 0) {
+                    logger->error("Can't use perf for energy measurements!\n");
+                    logger->error("No possibility found to make energy measurements!!\n");
+                    tetris_possible = false;
+                } else {
+                    logger->debug("Using perf for RAPL measurements\n");
+                    energy_measure = std::make_unique<rapl::PerfMeasure>();
+                }
             }
         }
     }
 
     if (tetris_possible){
-        std::string platform_path = getenv("TETRIS_PLATFORM");
-
         /* Start energy measurements */
         energy_measure->start();
 
