@@ -6,7 +6,7 @@ add_library(tetrismockclient SHARED
         mock_message_listener.cc
         mock_library.cc
     )
-target_link_libraries(tetrismockclient client_internal ${Protobuf_LIBRARIES} yaml-cpp)
+target_link_libraries(tetrismockclient client_internal protobuf::libprotobuf protobuf::libprotoc yaml-cpp)
 add_dependencies(tetrismockclient generated_proto)
 add_dependencies(tetrismockclient tetrisclient)
 
@@ -22,7 +22,7 @@ add_library(tetrismockserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
     ${CMAKE_SOURCE_DIR}/util/operating_point.cc
 )
-target_link_libraries(tetrismockserverlib ${Protobuf_LIBRARIES} yaml-cpp)
+target_link_libraries(tetrismockserverlib protobuf::libprotobuf protobuf::libprotoc yaml-cpp)
 add_dependencies(tetrismockserverlib generated_proto)
 
 # Add the executable target

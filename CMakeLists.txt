@@ -23,7 +23,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_BINARY_DIR})
 
 # Find the Protobuf library
-INCLUDE(FindProtobuf)
+FIND_PACKAGE(Protobuf CONFIG)
 FIND_PACKAGE(Protobuf REQUIRED)
 
 # Generate .pb.cc and .pb.h files

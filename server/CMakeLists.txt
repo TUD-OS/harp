@@ -19,7 +19,7 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
     ${CMAKE_SOURCE_DIR}/util/operating_point.cc
 )
-target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp)
+target_link_libraries(tetrisserverlib protobuf::libprotobuf protobuf::libprotoc yaml-cpp)
 add_dependencies(tetrisserverlib generated_proto)
 
 # Add the executable target
