@@ -576,9 +576,9 @@ class OdroidMeasure : public Measure
     std::array<float, 3> _last_values;
 
     std::vector<std::string> sensors = {
-        "/sys/bus/i2c/devices/0-0040",
-        "/sys/bus/i2c/devices/0-0041",
-        "/sys/bus/i2c/devices/0-0045"
+        "/sys/bus/i2c/devices/0-0040", /* big */
+        "/sys/bus/i2c/devices/0-0041", /* dram */
+        "/sys/bus/i2c/devices/0-0045"  /* little */
     };
 
    public:
