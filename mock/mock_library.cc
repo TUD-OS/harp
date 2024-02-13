@@ -4,6 +4,8 @@
 #include "client/features/movable_threads.h"
 #include "client/features/scalable_application.h"
 
+#include <oneapi/tbb/global_control.h>
+
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -104,10 +106,18 @@ struct CheckerState
     enum Type {
         GOMP = 1,
         OMP = 2,
+        INTEL_TBB = 3,
     };
 
     bool is_scalable = false;
     Type scale_type;
+};
+
+enum ParallelLibrary {
+    NONE = 0,
+    GOMP = 1,
+    OMP = 2,
+    INTEL_TBB = 3
 };
 
 static int scalable_app_checker(struct dl_phdr_info *i, size_t size, void *data) {
@@ -123,25 +133,48 @@ static int scalable_app_checker(struct dl_phdr_info *i, size_t size, void *data)
         cstate->is_scalable = true;
         cstate->scale_type= CheckerState::GOMP;
         return 1;
+    } else if ((strstr( i->dlpi_name, "libtbb") != NULL)) {
+        logger->info(" -> Found scalable Intel TBB application (libtbb)\n");
+        cstate->is_scalable = true;
+        cstate->scale_type = CheckerState::INTEL_TBB;
+        return 1;
     }
+
     return 0;
 }
 
-static bool is_scalable_app() {
+static ParallelLibrary is_scalable_app() {
     CheckerState cstate;
     logger->info(" -> Searching for scalable app\n");
 
     dl_iterate_phdr(scalable_app_checker, &cstate);
 
-    return cstate.is_scalable;
+    if (cstate.is_scalable)
+        return static_cast<ParallelLibrary>(cstate.scale_type);
+    else
+        return ParallelLibrary::NONE;
 }
 
 std::atomic_int parallel_threads;
 
-bool scale_application_cb(int nr_threads)
+bool scale_application_cb_omp(int nr_threads)
 {
     logger->debug("Setting scaling factor to %d\n", nr_threads);
     parallel_threads = nr_threads;
+    return true;
+}
+
+bool scale_application_cb_tbb(int nr_threads)
+{
+    static oneapi::tbb::global_control *global_limit = nullptr;
+
+    logger->debug("Setting scaling factor TBB to %d\n", nr_threads);
+
+    if (global_limit) {
+        delete global_limit;
+    }
+
+    global_limit = new oneapi::tbb::global_control(oneapi::tbb::global_control::max_allowed_parallelism, nr_threads);
     return true;
 }
 
@@ -659,6 +692,16 @@ Energy OdroidMeasure::energy()
     return result;
 }
 
+class NoMeasure : public Measure
+{
+   public:
+    void start() {}
+    void stop() {}
+    void reset() {}
+
+    Energy energy() { return {}; }
+};
+
 } /* namespace rapl */
 
 
@@ -694,40 +737,44 @@ void __attribute__((constructor)) setup(void)
     }
     std::string platform_path = getenv("TETRIS_PLATFORM");
 
-    if (platform_path.find("odroid") != std::string::npos) {
-        logger->debug("Using Odroid on-board sensors for energy measurements\n");
-        energy_measure = std::make_unique<rapl::OdroidMeasure>();
+    if (getenv("TETRIS_NOMEASURE")) {
+        energy_measure = std::make_unique<rapl::NoMeasure>();
     } else {
-        /* Check for making RAPL measurements */
-        int fd;
-        if ((fd = open("/dev/cpu/0/msr", O_RDONLY)) > 0) {     /* Try directly using the MSR */
-            close(fd);
-
-            logger->debug("Using RAPL-MSR read for energy measurements\n");
-            energy_measure = std::make_unique<rapl::RAPLMeasure>();
+        if (platform_path.find("odroid") != std::string::npos) {
+            logger->debug("Using Odroid on-board sensors for energy measurements\n");
+            energy_measure = std::make_unique<rapl::OdroidMeasure>();
         } else {
-            logger->debug("Can't open '/dev/cpu/0/msr' for RAPL-MSR based energy measurements!\n");
-
-            if ((fd = open("/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj", O_RDONLY)) > 0) {    /* Try using the powercap interface */
+            /* Check for making RAPL measurements */
+            int fd;
+            if ((fd = open("/dev/cpu/0/msr", O_RDONLY)) > 0) {     /* Try directly using the MSR */
                 close(fd);
 
-                logger->debug("Using powercap framework for energy measurements\n");
-                energy_measure = std::make_unique<rapl::PowercapMeasure>();
+                logger->debug("Using RAPL-MSR read for energy measurements\n");
+                energy_measure = std::make_unique<rapl::RAPLMeasure>();
             } else {
-                logger->error("Can't use powercap framework for energy measurements!\n");
+                logger->debug("Can't open '/dev/cpu/0/msr' for RAPL-MSR based energy measurements!\n");
 
-                /* Check for using perf for RAPL registers */
-                std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
-                int paranoa;
-                perf_paranoa >> paranoa;
+                if ((fd = open("/sys/devices/virtual/powercap/intel-rapl/intel-rapl:0/energy_uj", O_RDONLY)) > 0) {    /* Try using the powercap interface */
+                    close(fd);
 
-                if (paranoa != -1 || geteuid() == 0) {
-                    logger->error("Can't use perf for energy measurements!\n");
-                    logger->error("No possibility found to make energy measurements!!\n");
-                    tetris_possible = false;
+                    logger->debug("Using powercap framework for energy measurements\n");
+                    energy_measure = std::make_unique<rapl::PowercapMeasure>();
                 } else {
-                    logger->debug("Using perf for RAPL measurements\n");
-                    energy_measure = std::make_unique<rapl::PerfMeasure>();
+                    logger->error("Can't use powercap framework for energy measurements!\n");
+
+                    /* Check for using perf for RAPL registers */
+                    std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
+                    int paranoa;
+                    perf_paranoa >> paranoa;
+
+                    if (paranoa != -1 || geteuid() == 0) {
+                        logger->error("Can't use perf for energy measurements!\n");
+                        logger->error("No possibility found to make energy measurements!!\n");
+                        tetris_possible = false;
+                    } else {
+                        logger->debug("Using perf for RAPL measurements\n");
+                        energy_measure = std::make_unique<rapl::PerfMeasure>();
+                    }
                 }
             }
         }
@@ -739,9 +786,14 @@ void __attribute__((constructor)) setup(void)
 
         /* Initialize all the features */
         movable_threads = std::make_unique<tetris::MovableThreads>();
-        if (is_scalable_app()) {
+        auto parallel_library = is_scalable_app();
+        if (parallel_library != ParallelLibrary::NONE) {
             parallel_threads = 0;
-            scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb);
+            if ((parallel_library == ParallelLibrary::GOMP) || (parallel_library == ParallelLibrary::OMP)) {
+                scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb_omp);
+            } else if (parallel_library == ParallelLibrary::INTEL_TBB) {
+                scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb_tbb);
+            }
         }
 
         tetris_client = std::make_unique<tetris::MockClient>(tetris::SERVER_SOCKET, platform_path);
