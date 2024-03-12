@@ -1,0 +1,55 @@
+core_types:
+  - type: P-core
+    threads: 2
+
+equivalence_scheme: core-type
+
+cores:
+  - type: P-core
+    threads:
+      - name: P0_0
+        affinity: 0
+      - name: P0_1
+        affinity: 1
+  - type: P-core
+    threads:
+      - name: P1_0
+        affinity: 2
+      - name: P1_1
+        affinity: 3
+  - type: P-core
+    threads:
+      - name: P2_0
+        affinity: 4
+      - name: P2_1
+        affinity: 5
+  - type: P-core
+    threads:
+      - name: P3_0
+        affinity: 6
+      - name: P3_1
+        affinity: 7
+  - type: P-core
+    threads:
+      - name: P4_0
+        affinity: 8
+      - name: P4_1
+        affinity: 9
+  - type: P-core
+    threads:
+      - name: P5_0
+        affinity: 10
+      - name: P5_1
+        affinity: 11
+  - type: P-core
+    threads:
+      - name: P6_0
+        affinity: 12
+      - name: P6_1
+        affinity: 13
+  - type: P-core
+    threads:
+      - name: P7_0
+        affinity: 14
+      - name: P7_1
+        affinity: 15

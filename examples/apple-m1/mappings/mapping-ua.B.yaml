@@ -1,0 +1,98 @@
+application: ua.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 138.60591707679998
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 73.55567522339999
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 53.788860651.01.04
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 43.77826656881.01
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 42.8526167558
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 40.77753015481.004
+  - 1.0
+  - 4
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 35.812121256199994
+  - 1.0
+  - 5
+  name: mapping6
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 25.498536895
+  - 1.0
+  - 2
+  name: mapping7
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 20.743580417
+  - 1.0
+  - 3
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 18.292153825
+  - 1.0
+  - 4
+  name: mapping9
+platform: apple-m1
+type: OMP

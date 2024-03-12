@@ -1,0 +1,107 @@
+application: lu.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 145.9387664178
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 72.455373436
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 49.2797101764
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 37.628269890199995
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 48.2277817576
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  - E1
+  metadata:
+  - 47.189903217
+  - 1.0
+  - 3
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 37.3135334154
+  - 1.0
+  - 4
+  name: mapping6
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 30.448383959599997
+  - 1.0
+  - 5
+  name: mapping7
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 26.18995214641.003
+  - 1.0
+  - 2
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 19.3416727582
+  - 1.0
+  - 3
+  name: mapping9
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 15.4989917866
+  - 1.0
+  - 4
+  name: mapping10
+platform: apple-m1
+type: OMP

@@ -1,0 +1,137 @@
+application: bt.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 225.327879634
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 115.2654685058
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 77.37017244981.01
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 59.201214609199994
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 74.1255898634
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  metadata:
+  - 63.639784453199994
+  - 1.0
+  - 2
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  metadata:
+  - 54.6269266648
+  - 1.0
+  - 3
+  name: mapping6
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 50.1725272568
+  - 1.0
+  - 4
+  name: mapping7
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 46.3190622456
+  - 1.0
+  - 5
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 39.2691855676
+  - 1.0
+  - 2
+  name: mapping9
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  metadata:
+  - 34.5190018176
+  - 1.0
+  - 4
+  name: mapping10
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 28.344545174
+  - 1.0
+  - 3
+  name: mapping11
+- cores:
+  - P0
+  - P1
+  - P2
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 27.845253963599998
+  - 1.0
+  - 6
+  name: mapping12
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 23.0561612936
+  - 1.0
+  - 4
+  name: mapping13
+platform: apple-m1
+type: OMP

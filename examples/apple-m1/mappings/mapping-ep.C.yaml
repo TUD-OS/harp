@@ -1,0 +1,198 @@
+application: ep.C
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 115.56387219
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 57.8054313118
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 38.563167901599996
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 28.98511784
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 39.72028414841.005
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  metadata:
+  - 32.8966905542
+  - 1.0
+  - 2
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  metadata:
+  - 27.6460629092
+  - 1.0
+  - 3
+  name: mapping6
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 23.5503868948
+  - 1.0
+  - 4
+  name: mapping7
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 20.326190121.01.03
+  - 1.0
+  - 5
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 20.5469200552
+  - 1.0
+  - 2
+  name: mapping9
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  metadata:
+  - 16.9079998138
+  - 1.0
+  - 4
+  name: mapping10
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 16.8225483852
+  - 1.0
+  - 5
+  name: mapping11
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 14.145993938799998
+  - 1.0
+  - 6
+  name: mapping12
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 14.1913004858
+  - 1.0
+  - 3
+  name: mapping13
+- cores:
+  - P0
+  - P1
+  - P2
+  - E0
+  - E1
+  metadata:
+  - 13.711.073272
+  - 1.0
+  - 5
+  name: mapping14
+- cores:
+  - P0
+  - P1
+  - P2
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 11.839703692799999
+  - 1.0
+  - 6
+  name: mapping15
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 10.6454414088
+  - 1.0
+  - 4
+  name: mapping16
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 9.926009571
+  - 1.0
+  - 7
+  name: mapping17
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 8.86778089521.001
+  - 1.0
+  - 8
+  name: mapping18
+platform: apple-m1
+type: OMP

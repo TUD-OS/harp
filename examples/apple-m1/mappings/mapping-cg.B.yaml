@@ -1,0 +1,138 @@
+application: cg.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 63.1935702824
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 36.3108980024
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 28.703501142599997
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 26.5876761092
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 27.0512331128
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  metadata:
+  - 25.1126519938
+  - 1.0
+  - 2
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  metadata:
+  - 22.434394234
+  - 1.0
+  - 3
+  name: mapping6
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 18.0850581076
+  - 1.0
+  - 4
+  name: mapping7
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 15.9485595638
+  - 1.0
+  - 5
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 14.8048369426
+  - 1.0
+  - 2
+  name: mapping9
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 14.522349929799999
+  - 1.0
+  - 5
+  name: mapping10
+- cores:
+  - P0
+  - P1
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 13.574799966
+  - 1.0
+  - 6
+  name: mapping11
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 10.8609452246
+  - 1.0
+  - 3
+  name: mapping12
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 9.1800474532
+  - 1.0
+  - 4
+  name: mapping13
+platform: apple-m1
+type: OMP
