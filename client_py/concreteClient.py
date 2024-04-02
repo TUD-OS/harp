@@ -4,9 +4,7 @@ import socket
 import threading
 
 from client_py.client import Client
-from client_py.utils.yamlMappingReader import YamlMappingReader
-from client_py.utils.yamlPlatformReader import YamlPlatformReader
-from mappingFeature import MappingFeature
+# from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse
 
 
@@ -18,11 +16,11 @@ class ConcreteClient(Client):
 
         try:
             # Read the platform file
-            self._platform = YamlPlatformReader.read_from_file(platform_desc_path)
+            # self._platform = YamlPlatformReader.read_from_file(platform_desc_path)
 
             # Read the mappings
-            self._mappings = YamlMappingReader.read_mappings(platform=self._platform, file_path=mapping_path)
-            self._logger.debug(f" -> Loaded {len(self._mappings)} mappings for this client")
+            # self._mappings = YamlMappingReader.read_mappings(platform=self._platform, file_path=mapping_path)
+            # self._logger.debug(f" -> Loaded {len(self._mappings)} mappings for this client")
 
             # todo: check whether there is a lock even needed in socket-lib-usage
             self._communication_mutex = threading.Lock()
@@ -65,7 +63,7 @@ class ConcreteClient(Client):
         # to implement
         pass
 
-    def bind_mapping_feature(self, mapping_feature: MappingFeature):
+    def bind_mapping_feature(self, mapping_feature):
         # to implement
         pass
 
