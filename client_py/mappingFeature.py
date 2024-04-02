@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Dict
 
-from feature import Feature
+from client_py.feature import Feature
 from client_py.utils.mapping import Mapping
 from proto.tetris_pb2 import ClientMessage, ClientResponse, ServerMessage
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from feature import Feature
-from mappingFeature import MappingFeature
+from client_py.feature import Feature
+from client_py.mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ClientResponse, ServerMessage, ServerResponse
 
 
