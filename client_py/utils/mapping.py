@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 from client_py.utils.cpuSets import CPUThreadSet
-from client_py.utils.platform import Platform
+#from client_py.utils.platform import Platform
 
 
 @dataclass
 class Mapping:
     def __init__(self,
                  name,
-                 platform: Platform,
+                 platform,
                  threads: CPUThreadSet,
                  exec_time,
                  energy,
