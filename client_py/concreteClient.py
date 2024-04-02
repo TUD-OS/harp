@@ -1,8 +1,13 @@
+import logging
+import os
+import socket
 import threading
-from client import Client
-from feature import Feature
+
+from client_py.client import Client
+from client_py.utils.yamlMappingReader import YamlMappingReader
+from client_py.utils.yamlPlatformReader import YamlPlatformReader
 from mappingFeature import MappingFeature
-from proto.tetris_pb2 import ClientMessage, ClientResponse, ServerMessage, ServerResponse
+from proto.tetris_pb2 import ClientMessage, ServerResponse
 
 
 class ConcreteClient(Client):
@@ -13,12 +18,15 @@ class ConcreteClient(Client):
 
         try:
             # Read the platform file
-            self._platform = YamlPlatformReader.ReadFromFile(platform_desc_path)
+            self._platform = YamlPlatformReader.read_from_file(platform_desc_path)
 
             # Read the mappings
-            self._mappings = YamlMappingReader.read_mappings(self._platform, mapping_path)
+            self._mappings = YamlMappingReader.read_mappings(platform=self._platform, file_path=mapping_path)
             self._logger.debug(f" -> Loaded {len(self._mappings)} mappings for this client")
+
+            # todo: check whether there is a lock even needed in socket-lib-usage
             self._communication_mutex = threading.Lock()
+
             self._tetris_server_connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._tetris_server_connection.connect(server_socket_path)
             self._managed = self.register_client()
@@ -27,6 +35,8 @@ class ConcreteClient(Client):
                 # Send over the mappings to the server
                 msg = ClientMessage()
                 msg.set_type(ClientMessage.OPERATING_POINTS)
+
+                '''
                 ops_info = msg.mutable_ops_info()
 
                 for m in self._mappings:
@@ -37,6 +47,7 @@ class ConcreteClient(Client):
                         op_data['characteristics'].append(c)
 
                     ops_info['operating_points'].append(op_data)
+                '''
 
                 response = ServerResponse()
                 self._communication_mutex.acquire()
@@ -58,48 +69,19 @@ class ConcreteClient(Client):
         # to implement
         pass
 
-
     def send(self, message):
-        response = ServerResponse()
-        self._communication_mutex.acquire()
-        self._tetris_server_connection.sendall(message)
-        response_data = self._tetris_server_connection.recv(1024)
-        self._communication_mutex.release()
-        return response
+        pass
 
     def handle(self, msg):
-        response = {'type': 'ERROR'}
-
-        if 'activated_op_info' in msg:
-            active_op = msg['activated_op_info']
-
-            map_id = active_op['identifier']
-            self._logger.info(f" * Got mapping update from server: {map_id}")
-
-            conv_map = {conv['cpu_id_from']: conv['cpu_id_to'] for conv in active_op['cpu_convs']}
-
-            mapping = next((m for m in self._mappings if m['name'] == map_id), None)
-
-            if mapping:
-                self._active_mapping = {'name': map_id, 'characteristics_map': mapping['characteristics_map'],
-                                        'cpus': mapping['cpus']}
-                self._logger.debug(f" -> Active mapping {self._active_mapping['name']}")
-
-                for feature in self._mapping_features:
-                    feature.mapping_update(self._active_mapping, conv_map)
-
-                response['type'] = 'ACKNOWLEDGE'
-
-        return response
+        pass
 
     def register_client(self):
-        request = {'pid': os.getpid(), 'exec': subprocess.check_output(["readlink", "/proc/self/exe"]).decode().strip()}
+        request = {'pid': os.getpid(), 'exec': "application-placeholder-name"}
 
         try:
             response = ServerResponse()
-            self._socket.connect(server_socket_path)
-            self._socket.sendall(request)
-            response_data = self._communication_mutex.recv(1024)
+            self._tetris_server_connection.sendall(request)
+            response_data = self._tetris_server_connection.recv(1024)
 
             self._logger.info(f"TETRIS-ID: {response_data['id']}")
             return True
@@ -107,4 +89,4 @@ class ConcreteClient(Client):
             return False
 
     def close(self):
-        self._communication_mutex.close()
+        self._tetris_server_connection.close()

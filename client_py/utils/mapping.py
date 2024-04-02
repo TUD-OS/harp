@@ -1,23 +1,31 @@
-from typing import Dict, List
+from dataclasses import dataclass
 
 from client_py.utils.cpuSets import CPUThreadSet
-from client_py.utils.operatingPoint import OperatingPoint
 from client_py.utils.platform import Platform
 
-namespace = "tetris"
 
-
-# Define the Mapping class
+@dataclass
 class Mapping:
-    def __init__(self, platform: Platform, name: str = "",
-                 threads: List[tuple[str, str]] = [],
-                 regions: Dict[str, List[Dict[str, str]]] = {},
-                 characteristics: List[tuple[str, str]] = []):
-        self._platform = platform
+    def __init__(self,
+                 name,
+                 platform: Platform,
+                 threads: CPUThreadSet,
+                 exec_time,
+                 energy,
+                 nr_threads,
+                 ):
+        self.platform = platform
         self.name = name
+        self.characteristics = {
+            "threads": threads,
+            "exec_time": exec_time,
+            "energy": energy,
+            "nr_threads": nr_threads
+        }
+
+    '''
         self.thread_map = {k: int(v) for k, v in threads}
         self.region_map = {k: [{k2: int(v2)} for k2, v2 in v] for k, v in regions.items()}
-        self.characteristics_map = {k: float(v) for k, v in characteristics}
         self.cpus = CPUThreadSet()  # Placeholder for CPUThreadSet instantiation
 
     def cpu(self, thread: str) -> CPUThreadSet:
@@ -53,3 +61,4 @@ class Mapping:
 
     def __repr__(self) -> str:
         return self.__str__()
+    '''

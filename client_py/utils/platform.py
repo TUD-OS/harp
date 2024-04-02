@@ -28,6 +28,11 @@ class CPUCore:
     id: int
     threads: List[CPUThread] = field(default_factory=list)
 
+    def add_thread(self, name: str, affinity: int) -> None:
+        cpu_thread = CPUThread(self, name, affinity)
+        self.threads.append(cpu_thread)
+        self.platform.register_thread(affinity, cpu_thread)
+
 
 # Define the Platform class
 @dataclass
