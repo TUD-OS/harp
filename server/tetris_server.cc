@@ -1,6 +1,8 @@
 #include <signal.h>
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <filesystem>
 
@@ -81,6 +83,7 @@ int setup_signal_handling() {
   sigaddset(&sigmask, SIGTERM);
   sigaddset(&sigmask, SIGUSR1);
   sigaddset(&sigmask, SIGUSR2);
+  sigaddset(&sigmask, SIGALRM);
 
   /* First block the signals. */
   sigprocmask(SIG_BLOCK, &sigmask, nullptr);
@@ -88,6 +91,43 @@ int setup_signal_handling() {
   /* And create a signal fd where these signals are managed. */
   int sig_fd = signalfd(-1, &sigmask, SFD_NONBLOCK);
   return sig_fd;
+}
+
+/**
+ * \brief Setup the repeating timer for reading out the perf updates for the clients
+ **/
+bool setup_perf_timer() {
+  timer_t timerid;
+  struct sigevent sev;
+  struct itimerspec its;
+
+  /* Prepare and create the timer signal */
+  sev.sigev_notify = SIGEV_SIGNAL;
+  sev.sigev_signo = SIGALRM;
+  sev.sigev_value.sival_ptr = &timerid;
+
+  int ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
+  if (ret == -1) {
+      std::cerr << "Failed to create timer" << std::endl
+                << strerror(errno) << std::endl;
+      return false;
+  }
+
+  /* Arm the timer */
+  its.it_value.tv_sec = 0;
+  its.it_value.tv_nsec = 500000000; /* 500 ms */
+  its.it_interval.tv_sec = its.it_value.tv_sec;
+  its.it_interval.tv_nsec = its.it_value.tv_nsec;
+
+  ret = timer_settime(timerid, 0, &its, NULL);
+  if (ret == -1) {
+      std::cerr << "Failed to arm timer" << std::endl
+                << strerror(errno) << std::endl;
+
+      return false;
+  }
+
+  return true;
 }
 
 /**
@@ -233,6 +273,9 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
             break;
           case SIGUSR2:
             manager.print_mappings();
+            break;
+          case SIGALRM:
+            manager.update_perf_data();
             break;
           default:
             done = 1;
@@ -390,6 +433,10 @@ int main(int argc, char *argv[]) {
   /* Setup the epoll event loop. */
   int epoll_fd = setup_epoll({server_fd, control_fd, sig_fd});
   if (epoll_fd == -1) {
+    return 1;
+  }
+
+  if (!setup_perf_timer()) {
     return 1;
   }
 

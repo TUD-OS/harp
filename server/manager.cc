@@ -53,6 +53,7 @@ bool Manager::client_message(int fd) try {
 
         LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(), c->pid);
         _tracelog->RegisterClient(c.get());
+        c->start_perf();
 
         /* Construct and send the server's registration response */
         RegistrationResponse response{};
@@ -160,4 +161,13 @@ void Manager::RunMapper() {
   auto sched_dur_s = sched_dur.count();
   LOGGER->info("Activated the mapper: duration = %lfs [mapping time: %lfs ]\n",
       full_dur_s, sched_dur_s);
+}
+
+void Manager::update_perf_data() {
+  LOGGER->debug("Update perf data based on timer update\n");
+  auto now = std::chrono::high_resolution_clock::now();
+
+  for (auto& [cid, c]: _clients) {
+      c->update_perf_data(now);
+  }
 }

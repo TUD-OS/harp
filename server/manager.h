@@ -115,6 +115,11 @@ public:
   }
 
   bool IsMapperMarkedForRun() const { return _run_mapper_flag; }
+
+  /**
+   * \brief Update the perf data of all connected clients
+   **/
+  void update_perf_data();
 };
 
 #endif /* __MANAGER_H__ */

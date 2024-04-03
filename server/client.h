@@ -1,9 +1,8 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
+#include <chrono>
 #pragma once
-
-#include <optional>
 
 #include "proto/tetris.pb.h"
 
@@ -14,9 +13,20 @@
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
 
+#include <optional>
+#include <vector>
+#include <map>
+#include <cstdint>
+
 using ConnectionPtr = std::shared_ptr<Connection>;
 
 class Manager;
+
+struct PerfData {
+  std::chrono::high_resolution_clock::time_point time;
+  std::map<uint64_t, uint64_t> data;
+  std::map<uint64_t, uint64_t> diff;
+};
 
 /**
  * \class Client
@@ -51,6 +61,11 @@ public:
 
   int type;
 
+ private:
+  int perf_fd;
+  std::map<uint64_t, uint64_t> perf_event_ids;
+  std::vector<PerfData> perf_data;
+
 private:
   Manager &_manager;
 
@@ -61,10 +76,7 @@ public:
 
   Client(const ConnectionPtr &conn, Manager &manager);
 
-  ~Client() {
-    if (pid != -1)
-      LOGGER->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
-  }
+  ~Client();
 
   std::string push_path() const;
 
@@ -82,6 +94,10 @@ public:
   void activate_op(const tetris::OperatingPointAllocation &new_op);
 
   tetris::ServerResponse handle_message(const tetris::ClientMessage &msg);
+
+  bool start_perf();
+
+  void update_perf_data(std::chrono::high_resolution_clock::time_point tp);
 };
 
 #endif /* __CLIENT_H__ */
