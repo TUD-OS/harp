@@ -5,7 +5,7 @@ import threading
 
 from client_py.client import Client
 # from mappingFeature import MappingFeature
-from proto.tetris_pb2 import ClientMessage, ServerResponse
+from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest
 
 
 class ConcreteClient(Client):
@@ -74,7 +74,9 @@ class ConcreteClient(Client):
         pass
 
     def register_client(self):
-        request = {'pid': os.getpid(), 'exec': "application-placeholder-name"}
+        request = RegistrationRequest()
+        request.pid = os.getpid()
+        request.exec = "application-placeholder-name"
 
         try:
             response = ServerResponse()
