@@ -34,11 +34,38 @@ class ConcreteClient(Client):
             print(self._managed)
             if self._managed:
                 print("should be printed")
+
+                # Create a ClientMessage object
+                client_message = ClientMessage()
+
+                # Set the message type to OPERATING_POINTS
+                client_message.type = ClientMessage.OPERATING_POINTS
+
+                # Add OperatingPointsInfo data
+                op_data = client_message.ops_info.operating_points.add()
+                op_data.identifier = "OP1"
+
+                # Add Characteristic data
+                char1 = op_data.characteristics.add()
+                char1.name = "Characteristic1"
+                char1.value = 1.0
+
+                char2 = op_data.characteristics.add()
+                char2.name = "Characteristic2"
+                char2.value = 2.0
+
+                # Add CPU IDs
+                op_data.cpu_ids.extend([0, 1, 2])
+
+                # Print the created ClientMessage
+                print(client_message)
+
+                '''
                 # Send over the mappings to the server
                 msg = ClientMessage()
                 msg.type = ClientMessage.OPERATING_POINTS
 
-                '''
+
                 ops_info = msg.mutable_ops_info()
 
                 for m in self._mappings:
@@ -56,7 +83,7 @@ class ConcreteClient(Client):
                 #self._communication_mutex.acquire()
                 #print("lock aquired")
                 time.sleep(20)
-                self._tetris_server_connection.sendall(msg.SerializeToString())
+                self._tetris_server_connection.sendall(client_message.SerializeToString())
                 print("msg send")
                 response_data = self._tetris_server_connection.recv(1024)
                 #self._communication_mutex.release()
