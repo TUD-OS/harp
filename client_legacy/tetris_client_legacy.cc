@@ -183,7 +183,7 @@ bool scale_application_cb_omp(int nr_threads)
 
 bool scale_application_cb_tbb(int nr_threads)
 {
-    static oneapi::tbb::global_control *global_limit = nullptr;
+/*    static oneapi::tbb::global_control *global_limit = nullptr;
 
     logger->debug("Setting scaling factor TBB to %d\n", nr_threads);
 
@@ -192,6 +192,7 @@ bool scale_application_cb_tbb(int nr_threads)
     }
 
     global_limit = new oneapi::tbb::global_control(oneapi::tbb::global_control::max_allowed_parallelism, nr_threads);
+*/
     return true;
 }
 
