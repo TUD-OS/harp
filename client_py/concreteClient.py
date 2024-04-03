@@ -111,18 +111,40 @@ class ConcreteClient(Client):
 
     def register_client(self):
         request = RegistrationRequest()
+
+        # Set the uint32 field 'pid'
         request.pid = os.getpid()
-        request.exec = "application-placeholder-name"
+
+        # Get the executable path and pad it to 512 bytes
+        exec_path = os.path.realpath(__file__).encode('utf-8')
+        exec_padded = exec_path.ljust(512, b'\0')
+
+        # Set the padded 'exec' string
+        request.exec = exec_padded.decode('utf-8')
+
+        print(request)
+        time.sleep(20)
 
         try:
-            response = ServerResponse()
-            s = request.SerializeToString()
-            self._tetris_server_connection.sendall(s)
+            # Serialize the request message
+            serialized_request = request.SerializeToString()
+            print("serialized checked!")
 
+            # Send the serialized request message to the server
+            self._tetris_server_connection.sendall(serialized_request)
             print("send checked")
+
+            # Receive the response from the server
             response_data = self._tetris_server_connection.recv(1024)
             print("recv checked")
-            #self._logger.info(f"TETRIS-ID: {response_data['id']}")
+
+            # Parse the received response data
+            response = ServerResponse()
+            response.ParseFromString(response_data)
+
+            # Print the TETRIS-ID from the response
+            print(f"TETRIS-ID: {response.id}")
+
             return True
         except Exception as e:
             print("error", e)
