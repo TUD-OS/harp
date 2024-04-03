@@ -224,6 +224,41 @@ public:
     return res;
   }
 
+  std::map<std::string, int> GetThreadCapacityPerCoreType() const {
+    std::map<std::string, int> res;
+    for (const auto &[name, cpu_type] : _cpu_types) {
+      res.emplace(name, cpu_type->GetNumThreads());
+    }
+
+    return res;
+  }
+
+  std::map<std::string, std::vector<int>>
+  GetThreadUsagePerCoreType(const CPUThreadSet &thread_set) const {
+    std::map<std::string, std::vector<int>> res;
+    for (const auto &[name, cpu_type] : _cpu_types) {
+      res.emplace(name, std::vector<int>(cpu_type->GetNumThreads()));
+    }
+
+    for (auto &c : GetCPUCores()) {
+      auto name = c->GetType().GetName();
+
+      auto threads = c->GetCPUThreads();
+      int n = 0;
+      for (auto &t : threads) {
+        auto id = t->GetID();
+        if (thread_set.At(id)) {
+          n++;
+        }
+      }
+
+      if (n > 0) {
+        res[name][n - 1] += 1;
+      }
+    }
+    return res;
+  }
+
 private:
   void AddCPUType(const std::string &name, int num_threads) {
     auto cpu_type = std::make_unique<CPUType>(name, num_threads);

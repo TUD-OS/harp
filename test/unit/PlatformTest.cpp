@@ -118,6 +118,84 @@ TEST_F(RaptorLakeTest, GetCPUThreads) {
   EXPECT_EQ(threads[3]->GetCPUCore().GetID(), 12);
 }
 
+TEST_F(OdroidTest, GetThreadCapacityPerCoreType) {
+  auto capacity_map = platform->GetThreadCapacityPerCoreType();
+
+  EXPECT_EQ(capacity_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, cap] : capacity_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "A15");
+      EXPECT_EQ(cap, 1);
+    } else {
+      EXPECT_EQ(name, "A7");
+      EXPECT_EQ(cap, 1);
+    }
+    ++i;
+  }
+}
+
+TEST_F(RaptorLakeTest, GetThreadCapacityPerCoreType) {
+  auto capacity_map = platform->GetThreadCapacityPerCoreType();
+
+  EXPECT_EQ(capacity_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, cap] : capacity_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "E-core");
+      EXPECT_EQ(cap, 1);
+    } else {
+      EXPECT_EQ(name, "P-core");
+      EXPECT_EQ(cap, 2);
+    }
+    ++i;
+  }
+}
+
+TEST_F(OdroidTest, GetThreadUsagePerCoreType) {
+  auto usage_map = platform->GetThreadUsagePerCoreType(CPUThreadSet{0, 1, 6});
+
+  EXPECT_EQ(usage_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, usage_vec] : usage_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "A15");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 1);
+    } else {
+      EXPECT_EQ(name, "A7");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 2);
+    }
+    ++i;
+  }
+}
+
+TEST_F(RaptorLakeTest, GetThreadUsagePerCoreType) {
+  auto usage_map =
+      platform->GetThreadUsagePerCoreType(CPUThreadSet{0, 1, 2, 4, 16, 20});
+
+  EXPECT_EQ(usage_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, usage_vec] : usage_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "E-core");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 2);
+    } else {
+      EXPECT_EQ(name, "P-core");
+      EXPECT_EQ(usage_vec.size(), 2);
+      EXPECT_EQ(usage_vec[0], 2);
+      EXPECT_EQ(usage_vec[1], 1);
+    }
+    ++i;
+  }
+}
+
 TEST_F(OdroidTest, ConvertCPUSets) {
   auto threads1 = CPUThreadSet{0, 2, 5, 7};
   auto cores1 = CPUCoreSet{0, 2, 5, 7};
