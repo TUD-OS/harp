@@ -2,6 +2,7 @@ import logging
 import os
 import socket
 import threading
+import time
 
 from client_py.client import Client
 # from mappingFeature import MappingFeature
@@ -29,10 +30,13 @@ class ConcreteClient(Client):
             self._tetris_server_connection.connect(server_socket_path)
             self._managed = self.register_client()
 
+            print("reached registered client")
+            print(self._managed)
             if self._managed:
+                print("should be printed")
                 # Send over the mappings to the server
                 msg = ClientMessage()
-                msg.set_type(ClientMessage.OPERATING_POINTS)
+                msg.type = ClientMessage.OPERATING_POINTS
 
                 '''
                 ops_info = msg.mutable_ops_info()
@@ -46,16 +50,21 @@ class ConcreteClient(Client):
 
                     ops_info['operating_points'].append(op_data)
                 '''
-
+                
                 response = ServerResponse()
-                self._communication_mutex.acquire()
-                self._tetris_server_connection.sendall(msg)
+                print("self_managed_reched")
+                #self._communication_mutex.acquire()
+                #print("lock aquired")
+                time.sleep(20)
+                self._tetris_server_connection.sendall(msg.SerializeToString())
+                print("msg send")
                 response_data = self._tetris_server_connection.recv(1024)
-                self._communication_mutex.release()
+                #self._communication_mutex.release()
 
                 if response_data != ServerResponse.ACKNOWLEDGE:
                     self._logger.warning("The server failed to parse our mappings!")
         except Exception as e:
+            print("exception thrown: ", e)
             self._logger.info("No TETRiS server, TETRiS is unused.")
             self._managed = False
 
@@ -80,12 +89,16 @@ class ConcreteClient(Client):
 
         try:
             response = ServerResponse()
-            self._tetris_server_connection.sendall(request)
-            response_data = self._tetris_server_connection.recv(1024)
+            s = request.SerializeToString()
+            self._tetris_server_connection.sendall(s)
 
-            self._logger.info(f"TETRIS-ID: {response_data['id']}")
+            print("send checked")
+            response_data = self._tetris_server_connection.recv(1024)
+            print("recv checked")
+            #self._logger.info(f"TETRIS-ID: {response_data['id']}")
             return True
         except Exception as e:
+            print("error", e)
             return False
 
     def close(self):
