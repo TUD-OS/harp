@@ -19,18 +19,31 @@ ConcreteClient::ConcreteClient(const std::string &server_socket_path,
           _managed(false), _communication_mutex()
 {
     _logger = debug::Logger::get();
+    _managed = true;
     try {
         /* Read the platform file */
         YamlPlatformReader platform_reader;
         _platform = std::move(platform_reader.ReadFromFile(platform_desc_path));
-
-        /* Read the mappings */
-        YamlMappingReader mapping_reader;
-        _mappings = std::move(mapping_reader.read_mappings(*_platform, mapping_path));
-        _logger->debug(" -> Loaded %d mappings for this client\n", _mappings.size());
-
-        _tetris_server_connection.connect(server_socket_path);
-        _managed = register_client();
+    } catch (std::exception &e) {
+        _logger->info("Failed to parse platform description with: %s.\n", e.what());
+        _managed = false;
+    }
+    try {
+        if (_managed) {
+            /* Read the mappings */
+            YamlMappingReader mapping_reader;
+            _mappings = std::move(mapping_reader.read_mappings(*_platform, mapping_path));
+            _logger->debug(" -> Loaded %d mappings for this client\n", _mappings.size());
+        }
+    } catch (std::exception &e) {
+        _logger->info("Failed to parse Mappings with: %s.\n", e.what());
+        _managed = false;
+    }
+    try {
+        if (_managed) {
+            _tetris_server_connection.connect(server_socket_path);
+            _managed = register_client();
+        }
 
         if (_managed) {
             /* Send over the mappings to the server, so that we can get scheduled */
@@ -66,6 +79,10 @@ ConcreteClient::ConcreteClient(const std::string &server_socket_path,
     } catch (std::exception &e) {
         _logger->info("No TETRiS server, TETRiS is unused.\n");
         _managed = false;
+    }
+
+    if (!_managed) {
+        _logger->info("TETRiS Setup failed!\n");
     }
 }
 
