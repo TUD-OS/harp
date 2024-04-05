@@ -5,6 +5,7 @@ import threading
 import time
 
 from client_py.client import Client
+from client_py.utils.protobufUtil import ProtobufUtil
 # from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest
 
@@ -77,16 +78,16 @@ class ConcreteClient(Client):
 
                     ops_info['operating_points'].append(op_data)
                 '''
-                
+
                 response = ServerResponse()
                 print("self_managed_reched")
-                #self._communication_mutex.acquire()
-                #print("lock aquired")
+                # self._communication_mutex.acquire()
+                # print("lock aquired")
                 time.sleep(20)
                 self._tetris_server_connection.sendall(client_message.SerializeToString())
                 print("msg send")
                 response_data = self._tetris_server_connection.recv(1024)
-                #self._communication_mutex.release()
+                # self._communication_mutex.release()
 
                 if response_data != ServerResponse.ACKNOWLEDGE:
                     self._logger.warning("The server failed to parse our mappings!")
@@ -115,15 +116,8 @@ class ConcreteClient(Client):
         # Set the uint32 field 'pid'
         request.pid = os.getpid()
 
-        # Get the executable path and pad it to 512 bytes
-        exec_path = os.path.realpath(__file__).encode('utf-8')
-        exec_padded = exec_path.ljust(512, b'\0')
-
-        # Set the padded 'exec' string
-        request.exec = exec_padded.decode('utf-8')
-
-        print(request)
-        time.sleep(20)
+        # Set the 'exec' string
+        request.exec = os.path.realpath(__file__)
 
         try:
             # Serialize the request message
@@ -131,16 +125,13 @@ class ConcreteClient(Client):
             print("serialized checked!")
 
             # Send the serialized request message to the server
-            self._tetris_server_connection.sendall(serialized_request)
+            ProtobufUtil.send(self._tetris_server_connection, serialized_request)
             print("send checked")
 
             # Receive the response from the server
-            response_data = self._tetris_server_connection.recv(1024)
-            print("recv checked")
-
-            # Parse the received response data
             response = ServerResponse()
-            response.ParseFromString(response_data)
+            ProtobufUtil.receive(self._tetris_server_connection, response)
+            print("recv checked")
 
             # Print the TETRIS-ID from the response
             print(f"TETRIS-ID: {response.id}")
