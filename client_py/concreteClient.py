@@ -8,6 +8,7 @@ from client_py.utils.protobufUtil import ProtobufUtil
 from client_py.utils.yamlMappingReader import YamlMappingReader
 # from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse
+from proto.tetris_pb2 import Op
 
 
 class ConcreteClient(Client):
@@ -36,7 +37,7 @@ class ConcreteClient(Client):
                 # Send available mappings to the server
                 msg = ClientMessage()
                 msg.type = ClientMessage.OPERATING_POINTS
-                self.__add_mappings_to_client_message(self._mappings, msg.mutable_ops_info())
+                self.__add_mappings_to_client_message(self._mappings, msg)
 
                 ProtobufUtil.send(self._tetris_server_connection, msg)
                 response = ServerResponse()
@@ -51,17 +52,15 @@ class ConcreteClient(Client):
             self._managed = False
 
     @staticmethod
-    def __add_mappings_to_client_message(mappings, ops_info):
+    def __add_mappings_to_client_message(mappings, msg):
         for mapping in mappings:
-            ops_info.operating_points.append(
-                {
-                    "identifier": mapping.name,
-                    "cpu_ids": mapping.cpu_ids,
-                    "characteristics": [
-                        {"name": name, "value": value} for name, value in mapping.characteristics.items()
-                    ]
-                }
-            )
+            op = msg.ops_info.operating_points.add()
+            op.identifier = mapping.name
+            op.cpu_ids = mapping.cpu_ids
+            for name, value in mapping.characteristics.items():
+                characteristic = op.characteristics.add()
+                characteristic.name = name
+                characteristic.value = value
 
     def bind(self, feature):
         # to implement
