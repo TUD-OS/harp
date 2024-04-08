@@ -10,16 +10,17 @@ add_library(tetrisserverlib STATIC
     sched/lr.cc
     sched/objective.cc
     ${PROTO_OUTPUT_SOURCES}
-    ${CMAKE_SOURCE_DIR}/util/path_util.cc
-    ${CMAKE_SOURCE_DIR}/util/util.cc
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
-    ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
-    ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
     ${CMAKE_SOURCE_DIR}/util/operating_point.cc
+    ${CMAKE_SOURCE_DIR}/util/path_util.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
+    ${CMAKE_SOURCE_DIR}/util/regression.cc
+    ${CMAKE_SOURCE_DIR}/util/util.cc
 )
-target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp)
+target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp Eigen3::Eigen)
 add_dependencies(tetrisserverlib generated_proto)
 
 # Add the executable target
