@@ -53,17 +53,15 @@ class ConcreteClient(Client):
     @staticmethod
     def __add_mappings_to_client_message(mappings, ops_info):
         for mapping in mappings:
-            op_data = ops_info.OPData
-            op_data.identifier = mapping.name
-            op_data.cpu_ids.extend(mapping.cpu_ids)
-
-            for characteristic_name, value in mapping.characteristics.items():
-                op_data.characteristic.append({
-                    "name": characteristic_name,
-                    "value": value
-                })
-
-            ops_info.operating_points.append(op_data)
+            ops_info.operating_points.append(
+                {
+                    "identifier": mapping.name,
+                    "cpu_ids": mapping.cpu_ids,
+                    "characteristics": [
+                        {"name": name, "value": value} for name, value in mapping.characteristics.items()
+                    ]
+                }
+            )
 
     def bind(self, feature):
         # to implement
