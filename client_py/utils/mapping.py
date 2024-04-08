@@ -1,27 +1,20 @@
 from dataclasses import dataclass
 
-from client_py.utils.cpuSets import CPUThreadSet
-#from client_py.utils.platform import Platform
-
 
 @dataclass
 class Mapping:
     def __init__(self,
                  name,
-                 platform,
-                 threads: CPUThreadSet,
+                 thread_affinities,
                  exec_time,
                  energy,
-                 nr_threads,
                  ):
-        self.platform = platform
         self.name = name
         self.characteristics = {
-            "threads": threads,
             "exec_time": exec_time,
             "energy": energy,
-            "nr_threads": nr_threads
         }
+        self.cpu_ids = thread_affinities
 
     '''
         self.thread_map = {k: int(v) for k, v in threads}

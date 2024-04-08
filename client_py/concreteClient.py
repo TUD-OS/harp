@@ -2,12 +2,12 @@ import logging
 import os
 import socket
 import threading
-import time
 
 from client_py.client import Client
 from client_py.utils.protobufUtil import ProtobufUtil
+from client_py.utils.yamlMappingReader import YamlMappingReader
 # from mappingFeature import MappingFeature
-from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest
+from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse
 
 
 class ConcreteClient(Client):
@@ -21,7 +21,7 @@ class ConcreteClient(Client):
             # self._platform = YamlPlatformReader.read_from_file(platform_desc_path)
 
             # Read the mappings
-            # self._mappings = YamlMappingReader.read_mappings(platform=self._platform, file_path=mapping_path)
+            self._mappings = YamlMappingReader.read_mappings(file_path=mapping_path)
             # self._logger.debug(f" -> Loaded {len(self._mappings)} mappings for this client")
 
             # todo: check whether there is a lock even needed in socket-lib-usage
@@ -31,70 +31,39 @@ class ConcreteClient(Client):
             self._tetris_server_connection.connect(server_socket_path)
             self._managed = self.register_client()
 
-            print("reached registered client")
-            print(self._managed)
+            # print(self._managed)
             if self._managed:
-                print("should be printed")
-
-                # Create a ClientMessage object
-                client_message = ClientMessage()
-
-                # Set the message type to OPERATING_POINTS
-                client_message.type = ClientMessage.OPERATING_POINTS
-
-                # Add OperatingPointsInfo data
-                op_data = client_message.ops_info.operating_points.add()
-                op_data.identifier = "OP1"
-
-                # Add Characteristic data
-                char1 = op_data.characteristics.add()
-                char1.name = "Characteristic1"
-                char1.value = 1.0
-
-                char2 = op_data.characteristics.add()
-                char2.name = "Characteristic2"
-                char2.value = 2.0
-
-                # Add CPU IDs
-                op_data.cpu_ids.extend([0, 1, 2])
-
-                # Print the created ClientMessage
-                print(client_message)
-
-                '''
-                # Send over the mappings to the server
+                # Send available mappings to the server
                 msg = ClientMessage()
                 msg.type = ClientMessage.OPERATING_POINTS
+                self.__add_mappings_to_client_message(self._mappings, msg.mutable_ops_info())
 
-
-                ops_info = msg.mutable_ops_info()
-
-                for m in self._mappings:
-                    op_data = {'identifier': m['name'], 'characteristics': [], 'cpu_ids': m['cpus']}
-
-                    for cn, cv in m['characteristics_map'].items():
-                        c = {'name': cn, 'value': cv}
-                        op_data['characteristics'].append(c)
-
-                    ops_info['operating_points'].append(op_data)
-                '''
-
+                ProtobufUtil.send(self._tetris_server_connection, msg)
                 response = ServerResponse()
-                print("self_managed_reched")
-                # self._communication_mutex.acquire()
-                # print("lock aquired")
-                time.sleep(20)
-                self._tetris_server_connection.sendall(client_message.SerializeToString())
-                print("msg send")
-                response_data = self._tetris_server_connection.recv(1024)
-                # self._communication_mutex.release()
+                ProtobufUtil.receive(self._tetris_server_connection, response)
 
-                if response_data != ServerResponse.ACKNOWLEDGE:
+                if response.type != ServerResponse.ACKNOWLEDGE:
                     self._logger.warning("The server failed to parse our mappings!")
+                # self._logger.info("Server connection established. Operating points were sent successfully")
         except Exception as e:
             print("exception thrown: ", e)
             self._logger.info("No TETRiS server, TETRiS is unused.")
             self._managed = False
+
+    @staticmethod
+    def __add_mappings_to_client_message(mappings, ops_info):
+        for mapping in mappings:
+            op_data = ops_info.OPData
+            op_data.identifier = mapping.name
+            op_data.cpu_ids.extend(mapping.cpu_ids)
+
+            for characteristic_name, value in mapping.characteristics.items():
+                op_data.characteristic.append({
+                    "name": characteristic_name,
+                    "value": value
+                })
+
+            ops_info.operating_points.append(op_data)
 
     def bind(self, feature):
         # to implement
@@ -113,29 +82,14 @@ class ConcreteClient(Client):
     def register_client(self):
         request = RegistrationRequest()
 
-        # Set the uint32 field 'pid'
         request.pid = os.getpid()
-
-        # Set the 'exec' string
         request.exec = os.path.realpath(__file__)
 
         try:
-            # Serialize the request message
-            serialized_request = request.SerializeToString()
-            print("serialized checked!")
-
-            # Send the serialized request message to the server
-            ProtobufUtil.send(self._tetris_server_connection, serialized_request)
-            print("send checked")
-
-            # Receive the response from the server
-            response = ServerResponse()
+            ProtobufUtil.send(self._tetris_server_connection, request)
+            response = RegistrationResponse()
             ProtobufUtil.receive(self._tetris_server_connection, response)
-            print("recv checked")
-
-            # Print the TETRIS-ID from the response
             print(f"TETRIS-ID: {response.id}")
-
             return True
         except Exception as e:
             print("error", e)
