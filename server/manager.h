@@ -52,18 +52,6 @@ private:
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
 
-  /**
-   * \brief Selects the best mapping for a given client.
-   */
-  tetris::OperatingPointAllocation select_best_mapping(Client &c);
-
-  /**
-   * \brief Uses the client's preferred mapping if available, otherwise selects
-   * the best one.
-   */
-  tetris::OperatingPointAllocation use_preferred_mapping(Client &,
-                                                         const std::string &);
-
   void update_client_progresses(
       std::chrono::high_resolution_clock::time_point new_tp) {
     for (auto &[cid, c] : _clients) {
