@@ -40,7 +40,7 @@ class PushMessageListener:
             msg = ServerMessage()
             ProtobufUtil.receive(conn, msg)
             response = self.forward(msg)
-            ProtobufUtil.send(self._client.get_tetris_server_connection(), response)
+            ProtobufUtil.send(conn, response)
 
     def __del__(self):
         self._listening_socket.close()
