@@ -15,8 +15,6 @@
 
 namespace tetris {
 
-template <typename T> class TD;
-
 class CPUCore;
 class EquivResAllocator;
 class Platform;
@@ -28,8 +26,8 @@ class Platform;
  */
 class CPUType {
 public:
-  CPUType(const std::string &name, int num_threads)
-      : _name(name), _num_threads(num_threads) {}
+  CPUType(const std::string &name, int num_threads, int power_coefficient)
+      : _name(name), _num_threads(num_threads), _power_coefficient{power_coefficient} {}
 
   CPUType(const CPUType &) = delete;
   CPUType &operator=(const CPUType &) = delete;
@@ -42,9 +40,12 @@ public:
 
   int GetNumThreads() const { return _num_threads; }
 
+  int GetPowerCoefficient() const { return _power_coefficient; }
+
 private:
   std::string _name;
   int _num_threads;
+  int _power_coefficient;
 };
 
 /**
@@ -66,6 +67,8 @@ public:
   CPUCore &GetCPUCore() const { return _core; }
 
   std::string GetName() const { return _name; }
+
+  int GetPowerCoefficient() const;
 
   int GetID() { return _id; }
 
@@ -309,10 +312,14 @@ public:
     }
     return res;
   }
+  
+  uint64_t GetStaticPower() const {
+    return _static_power_mw;
+  }
 
 private:
-  void AddCPUType(const std::string &name, int num_threads) {
-    auto cpu_type = std::make_unique<CPUType>(name, num_threads);
+  void AddCPUType(const std::string &name, int num_threads, int power_coefficient) {
+    auto cpu_type = std::make_unique<CPUType>(name, num_threads, power_coefficient);
     _cpu_types.insert({name, std::move(cpu_type)});
   }
 
@@ -347,6 +354,10 @@ private:
     }
   }
 
+  void SetStaticPower(uint64_t static_power) {
+    _static_power_mw = static_power;
+  }
+
   friend class CPUCore;
   friend class YamlPlatformReader;
 
@@ -357,6 +368,8 @@ private:
   std::map<int, CPUThread *> _cpu_threads;
 
   std::map<std::string, std::vector<std::vector<int>>> _indices_per_type;
+
+  uint64_t _static_power_mw;
 };
 
 } /* namespace tetris */

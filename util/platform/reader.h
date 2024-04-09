@@ -21,7 +21,8 @@ public:
     for (const auto &node : platformNode["core_types"]) {
       std::string name = node["type"].as<std::string>();
       int threads = node["threads"].as<int>();
-      platform->AddCPUType(name, threads);
+      int power_coefficient = node["power_coefficient"].as<int>();
+      platform->AddCPUType(name, threads, power_coefficient);
     }
 
     // Read Cores
@@ -48,8 +49,13 @@ public:
       }
     }
 
-    platform->FinishConstruction();
+    if (platformNode["static_power_mw"]) {
+      platform->SetStaticPower(platformNode["static_power_mw"].as<int>());
+    } else {
+      platform->SetStaticPower(0);
+    }
 
+    platform->FinishConstruction();
     return platform;
   }
 };
