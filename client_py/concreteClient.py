@@ -4,11 +4,13 @@ import socket
 import threading
 
 from client_py.client import Client
+from client_py.mappingFeature import MappingFeature
 from client_py.push_message_listener import PushMessageListener
 from client_py.utils.protobufUtil import ProtobufUtil
 from client_py.utils.yamlMappingReader import YamlMappingReader
 # from mappingFeature import MappingFeature
-from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse, ClientResponse
+from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse, ClientResponse, \
+    ServerMessage
 
 
 class ConcreteClient(Client):
@@ -24,6 +26,9 @@ class ConcreteClient(Client):
 
             # Read the mappings
             self._mappings = YamlMappingReader.read_mappings(file_path=mapping_path)
+            self._active_mapping = None
+
+            self._mapping_features = []
             # self._logger.debug(f" -> Loaded {len(self._mappings)} mappings for this client")
 
             # todo: check whether there is a lock even needed in socket-lib-usage
@@ -68,19 +73,51 @@ class ConcreteClient(Client):
         return f"/tmp/tetris_push_listener_{os.getpid()}"
 
     def bind(self, feature):
-        # to implement
-        pass
+        # to implement if needed
+        # but not in use atm.
+        raise NotImplementedError("Implement method if needed!")
 
-    def bind_mapping_feature(self, mapping_feature):
-        # to implement
-        pass
+    def bind_mapping_feature(self, feature: MappingFeature):
+        if not self._managed:
+            return
 
-    def send(self, message):
-        pass
+        feature.accept(self)
 
-    def handle(self, msg) -> ClientResponse:
-        response = ClientResponse()
-        response.type = ClientResponse.Type.ACKNOWLEDGE
+        if feature.need_handshake():
+            feature_id = feature.handshake()
+            self._push_message_listener.add_subscriber(feature_id, feature)
+
+        self._mapping_features.append(feature)
+
+        if self._active_mapping:
+            # todo: implement
+            raise NotImplementedError("implement mapping update with conv-map")
+            feature.mapping_update(self._active_mapping, {})
+
+    def handle(self, msg: ServerMessage) -> ClientResponse:
+        response = ClientResponse
+        response.type = ClientResponse.Type.ERROR
+
+        if hasattr(msg, 'activated_op_info'):
+            active_op = msg.activated_op_info
+            map_id = active_op.identifier
+            print(f" * Got mapping update from server: {map_id}")
+
+            conv_map = {conv.cpu_id_from(): conv.cpu_id_to() for conv in active_op.cpu_convs}
+
+            # Search for the mapping with the given map_id
+            mapping = next((m for m in self._mappings if m.name == map_id), None)
+
+            if mapping:
+                self._active_mapping = mapping
+                print(f" -> Active mapping {self._active_mapping.name}")
+
+                # Tell the features to react to the new mapping
+                for feature in self._mapping_features:
+                    feature.mapping_update(self._active_mapping, conv_map)
+
+                response.type = ClientResponse.Type.ACKNOWDGE
+
         return response
 
     def register_client(self):
