@@ -109,7 +109,7 @@ class ConcreteClient(Client):
             map_id = active_op.identifier
             print(f" * Got mapping update from server: {map_id}")
 
-            conv_map = {conv.cpu_id_from(): conv.cpu_id_to() for conv in active_op.cpu_convs}
+            conv_map = {conv.cpu_id_from: conv.cpu_id_to for conv in active_op.cpu_convs}
 
             # Search for the mapping with the given map_id
             mapping = next((m for m in self._mappings if m.name == map_id), None)
