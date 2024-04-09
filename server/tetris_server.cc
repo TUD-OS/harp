@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <filesystem>
+#include <fstream>
 
 #include "manager.h"
 #include "mapper/factory.h"
@@ -380,6 +381,17 @@ int main(int argc, char *argv[]) {
     std::cerr << "Platform not specified.\n";
     usage();
     return 1;
+  }
+
+  /* We need to run as root or have a proper perf_event_paranoid set to get the
+   * power and performance traces of the other applications */
+  if (getuid() != 0 && geteuid() != 0) {
+    std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
+    int value;
+    perf_paranoa >> value;
+    if (value != -1) {
+      std::cerr << "You need to run this program as root or change /proc/sys/kernel/perf_event_paranoid to -1!" << std::endl;
+    }
   }
 
   if (config.mapper_name.empty()) {
