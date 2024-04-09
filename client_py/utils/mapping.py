@@ -11,7 +11,7 @@ class Mapping:
                  ):
         self.name = name
         self.characteristics = {
-            "exec_time": exec_time,
+            "execution_time": exec_time,
             "energy": energy,
         }
         self.cpu_ids = thread_affinities

@@ -4,11 +4,11 @@ import socket
 import threading
 
 from client_py.client import Client
+from client_py.push_message_listener import PushMessageListener
 from client_py.utils.protobufUtil import ProtobufUtil
 from client_py.utils.yamlMappingReader import YamlMappingReader
 # from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse
-from proto.tetris_pb2 import Op
 
 
 class ConcreteClient(Client):
@@ -16,6 +16,7 @@ class ConcreteClient(Client):
         super().__init__()
         self._managed = False
         self._logger = logging.getLogger('ConcreteClient')
+        self._push_message_listener = PushMessageListener(self.__get_push_listener_socket_path(), self)
 
         try:
             # Read the platform file
@@ -56,11 +57,15 @@ class ConcreteClient(Client):
         for mapping in mappings:
             op = msg.ops_info.operating_points.add()
             op.identifier = mapping.name
-            op.cpu_ids = mapping.cpu_ids
+            op.cpu_ids.extend(mapping.cpu_ids)
             for name, value in mapping.characteristics.items():
                 characteristic = op.characteristics.add()
                 characteristic.name = name
                 characteristic.value = value
+
+    @staticmethod
+    def __get_push_listener_socket_path():
+        return f"/tmp/tetris_push_listener_{os.getpid()}"
 
     def bind(self, feature):
         # to implement
