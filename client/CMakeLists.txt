@@ -18,6 +18,7 @@ add_library(client_internal OBJECT
         ${CMAKE_SOURCE_DIR}/util/pthread_direct.cc
         ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
         ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
+        ${CMAKE_SOURCE_DIR}/util/platform/energy.cc
         ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
         ${CMAKE_SOURCE_DIR}/util/mapping.cc
 )
@@ -81,6 +82,7 @@ install(FILES
 )
 install(FILES
   ${CMAKE_SOURCE_DIR}/util/platform/cpu_sets.h
+  ${CMAKE_SOURCE_DIR}/util/platform/energy.h
   DESTINATION include/tetris/util/platform
 )
 install(FILES

@@ -5,6 +5,7 @@
 
 #include "util/platform/cpu_sets.h"
 #include "util/platform/equiv_res_alloc.h"
+#include "util/platform/energy.h"
 
 #include "util/debug_util.h"
 
@@ -312,7 +313,16 @@ public:
     }
     return res;
   }
-  
+
+  std::unique_ptr<Measure> GetEnergyMeasureMethod() const {
+    if (_measure_method == "perf")
+        return std::make_unique<PerfMeasure>();
+    else if (_measure_method == "none")
+        return std::make_unique<NoMeasure>();
+    else
+        throw std::runtime_error("Unknown energy measurement method!");
+  }
+
   uint64_t GetStaticPower() const {
     return _static_power_mw;
   }
@@ -358,6 +368,10 @@ private:
     _static_power_mw = static_power;
   }
 
+  void SetEnergyMeasureMethod(const std::string &measure_method) {
+    _measure_method = measure_method;
+  }
+
   friend class CPUCore;
   friend class YamlPlatformReader;
 
@@ -370,6 +384,7 @@ private:
   std::map<std::string, std::vector<std::vector<int>>> _indices_per_type;
 
   uint64_t _static_power_mw;
+  std::string _measure_method;
 };
 
 } /* namespace tetris */

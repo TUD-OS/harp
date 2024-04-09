@@ -49,6 +49,13 @@ public:
       }
     }
 
+    // Read energy related values (measure method and static power)
+    if (platformNode["energy_measure_method"]) {
+      platform->SetEnergyMeasureMethod(platformNode["energy_measure_method"].as<std::string>());
+    } else {
+      platform->SetEnergyMeasureMethod("none");
+    }
+
     if (platformNode["static_power_mw"]) {
       platform->SetStaticPower(platformNode["static_power_mw"].as<int>());
     } else {

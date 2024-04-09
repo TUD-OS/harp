@@ -18,6 +18,7 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
     ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
     ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/energy.cc
     ${CMAKE_SOURCE_DIR}/util/regression.cc
     ${CMAKE_SOURCE_DIR}/util/util.cc
 )
