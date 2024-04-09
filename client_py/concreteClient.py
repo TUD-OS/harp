@@ -142,5 +142,8 @@ class ConcreteClient(Client):
             print("error", e)
             return False
 
+    def get_tetris_server_connection(self):
+        return self._tetris_server_connection
+
     def close(self):
         self._tetris_server_connection.close()
