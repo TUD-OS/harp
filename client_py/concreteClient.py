@@ -122,7 +122,7 @@ class ConcreteClient(Client):
                 for feature in self._mapping_features:
                     feature.mapping_update(self._active_mapping, conv_map)
 
-                response.type = ClientResponse.Type.ACKNOWDGE
+                response.type = ClientResponse.Type.ACKNOWLEDGE
 
         return response
 
