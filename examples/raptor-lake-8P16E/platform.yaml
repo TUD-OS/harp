@@ -1,10 +1,14 @@
 core_types:
   - type: P-core
     threads: 2
+    power_coefficient: 10
   - type: E-core
     threads: 1
+    power_coefficient: 1
 
 equivalence_scheme: core-type
+energy_measure_method: perf
+static_power_mw: 5000
 
 cores:
   - type: P-core

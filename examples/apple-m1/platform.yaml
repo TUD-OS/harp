@@ -1,10 +1,14 @@
 core_types:
   - type: E
     threads: 1
+    power_coefficient: 1
   - type: P
     threads: 1
+    power_coefficient: 5
 
 equivalence_scheme: core-type
+energy_measure_method: none
+static_power_mw: 0
 
 cores:
   - type: E
