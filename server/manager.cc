@@ -174,7 +174,7 @@ void Manager::RunMapper() {
 }
 
 void Manager::update_perf_data() {
-  LOGGER->debug("Update perf data based on timer update\n");
+  LOGGER->debug("Updating perf data based on timer update\n");
   auto now = std::chrono::high_resolution_clock::now();
 
   for (auto& [cid, c]: _clients) {
