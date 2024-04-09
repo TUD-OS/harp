@@ -13,7 +13,7 @@ class PushMessageListener:
         self._client = client
 
         self._listening_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._listening_socket.connect(socket_path)
+        self._listening_socket.bind(socket_path)
         self._listening_socket.listen()
 
         self._listener_thread.start()

@@ -54,7 +54,7 @@ class ConcreteClient(Client):
 
     @staticmethod
     def __add_mappings_to_client_message(mappings, msg):
-        for mapping in mappings:
+        for mapping in mappings[:3]:
             op = msg.ops_info.operating_points.add()
             op.identifier = mapping.name
             op.cpu_ids.extend(mapping.cpu_ids)
