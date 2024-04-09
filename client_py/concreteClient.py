@@ -8,7 +8,7 @@ from client_py.push_message_listener import PushMessageListener
 from client_py.utils.protobufUtil import ProtobufUtil
 from client_py.utils.yamlMappingReader import YamlMappingReader
 # from mappingFeature import MappingFeature
-from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse
+from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse, ClientResponse
 
 
 class ConcreteClient(Client):
@@ -78,8 +78,10 @@ class ConcreteClient(Client):
     def send(self, message):
         pass
 
-    def handle(self, msg):
-        pass
+    def handle(self, msg) -> ClientResponse:
+        response = ClientResponse()
+        response.type = ClientResponse.Type.ACKNOWLEDGE
+        return response
 
     def register_client(self):
         request = RegistrationRequest()
