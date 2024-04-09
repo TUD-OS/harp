@@ -28,6 +28,45 @@ struct PerfData {
   std::map<uint64_t, uint64_t> diff;
 };
 
+struct CpuTimes {
+  uint64_t all;
+  std::vector<uint64_t> cores;
+};
+
+struct ProzessTimes {
+  uint64_t all;
+  std::map<pid_t, uint64_t> threads;
+};
+
+struct CpuEnergy {
+  uint64_t all;
+  std::vector<uint64_t> cores;
+};
+
+struct ProzessEnergy {
+  uint64_t all;
+  std::map<pid_t, uint64_t> threads;
+};
+
+struct EnergyData {
+  std::chrono::high_resolution_clock::time_point time;
+  uint64_t total_energy_uj;
+  CpuTimes raw_ctimes;
+
+  CpuTimes ctimes;
+  CpuEnergy energy;
+};
+
+struct ProcessEnergyData {
+  std::chrono::high_resolution_clock::time_point time;
+  ProzessTimes raw_ctimes;
+
+  std::map<pid_t, int> thread_core_assignment;
+
+  ProzessTimes ctimes;
+  ProzessEnergy energy;
+};
+
 /**
  * \class Client
  * \brief Represents an application client in the manager.
@@ -65,6 +104,7 @@ public:
   int perf_fd;
   std::map<uint64_t, uint64_t> perf_event_ids;
   std::vector<PerfData> perf_data;
+  std::vector<ProcessEnergyData> energy_data;
 
 private:
   Manager &_manager;
@@ -98,6 +138,8 @@ public:
   bool start_perf();
 
   void update_perf_data(std::chrono::high_resolution_clock::time_point tp);
+
+  void update_energy_data(EnergyData &systemwide, uint64_t duration_ms);
 };
 
 #endif /* __CLIENT_H__ */

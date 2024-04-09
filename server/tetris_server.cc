@@ -276,6 +276,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
             break;
           case SIGALRM:
             manager.update_perf_data();
+            manager.update_energy_data();
             break;
           default:
             done = 1;

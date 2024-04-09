@@ -1,6 +1,16 @@
 #include "manager.h"
 
+#include <time.h>
+
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
+
 #include "util/platform/platform.h"
+#include "util/string_util.h"
+#include "util/util.h"
 
 using namespace tetris;
 
@@ -170,4 +180,95 @@ void Manager::update_perf_data() {
   for (auto& [cid, c]: _clients) {
       c->update_perf_data(now);
   }
+}
+
+void Manager::update_energy_data() {
+  LOGGER->debug("Updating energy data based on timer update\n");
+  auto now = std::chrono::high_resolution_clock::now();
+
+  EnergyData energy;
+  energy.time = now;
+  energy.total_energy_uj= _energy_measure->read();
+
+  /* Ok we got the total energy consumption. Now it is time to attribute it to the individual tasks.
+   * In order to achieve this, we follow the approach given by the EnergAt paper. We basically calculate
+   * the individual influence of the tasks at the overall system energy by comparing their cputime with
+   * the overall system wide cputime */
+
+  /* 1: Read the overall cputime statistics from /proc/stat for all CPUs as well as total*/
+  std::ifstream stat("/proc/stat");
+  if (!stat.is_open()) {
+    LOGGER->warning("Can't open /proc/stat for global cputime statistics");
+  }
+
+  /* The first line contains the total CPU time */
+  std::string stat_line;
+  std::getline(stat, stat_line);
+
+  /* Since the line looks as follows:
+   * cpu  <user> <niced> <system> …
+   * Hence we are interested in element 2 and 4 (when split at every ' ').
+   */
+  {
+    auto elements = string_util::split(stat_line, ' ');
+    energy.raw_ctimes.all = std::stoull(elements[2]) + std::stoull(elements[4]);
+  }
+
+  /* Now read the remaining lines to get the CPU time per cores */
+  while (true) {
+    std::getline(stat, stat_line);
+    if (string_util::starts_with(stat_line, "cpu")) {
+      /* Since the line looks as follows:
+       * cpuN <user> <niced> <system> …
+       * Hence we are interested in element 1 and 3 (when split at every ' ').
+       */
+      auto elements = string_util::split(stat_line, ' ');
+      energy.raw_ctimes.cores.push_back(std::stoull(elements[1]) + std::stoull(elements[3]));
+    } else {
+      break;
+    }
+  }
+
+  if (_energy_data.size() == 0) {
+    /* If we don't have any prior data, the remaining measurements are not meaningful. Bail early in this case. */
+    _energy_data.push_back(energy);
+    return;
+  }
+
+  auto &last = _energy_data.back();
+  /* 2a: Calculate how much the cores were active over the last period */
+  energy.ctimes.all = util::ctime_to_ms(energy.raw_ctimes.all - last.raw_ctimes.all);
+  for (int i = 0; i < energy.raw_ctimes.cores.size(); ++i) {
+    energy.ctimes.cores.push_back(util::ctime_to_ms(energy.raw_ctimes.cores[i] - last.raw_ctimes.cores[i]));
+  }
+
+  /* 2b: Attribute the measured energy to the individual CPUs respecting their power coefficient */
+  auto all_energy_uj = energy.total_energy_uj - last.total_energy_uj;
+  auto duration_ms =  std::chrono::duration_cast<std::chrono::milliseconds>(energy.time - last.time).count();
+
+  energy.energy.all = all_energy_uj - (_platform->GetStaticPower() * duration_ms);
+
+  double time_coefficient_sum = 0.0;
+  for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
+      time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
+  }
+  for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
+      energy.energy.cores.push_back((energy.energy.all * energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient()) / time_coefficient_sum);
+  }
+
+  LOGGER->debug("Current energy consumption: Total: %llu uJ --> %llu uJ (%llu mW) since last update\n",
+          energy.total_energy_uj, energy.energy.all, energy.energy.all / duration_ms);
+  /*
+  LOGGER->debug("Per Core values:\n");
+  for (int i = 0; i < energy.ctimes.cores.size(); ++i)
+      LOGGER->debug("Core %d: %llu uJ  with %llu ms active --> %llu mW\n", i,
+              energy.energy.cores[i], energy.ctimes.cores[i],
+              energy.ctimes.cores[i] != 0 ? energy.energy.cores[i] / energy.ctimes.cores[i] : 0);
+  */
+  /* 2: Now do local attribution at the individual clients */
+  for (auto& [cid, c]: _clients) {
+      c->update_energy_data(energy, duration_ms);
+  }
+
+  _energy_data.push_back(energy);
 }

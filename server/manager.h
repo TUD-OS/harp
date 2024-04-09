@@ -5,6 +5,8 @@
 
 #include <chrono>
 #include <memory>
+#include <chrono>
+#include <vector>
 
 #include "client.h"
 #include "mapper/base.h"
@@ -42,6 +44,9 @@ private:
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
 
+  std::unique_ptr<tetris::Measure> _energy_measure;
+  std::vector<EnergyData> _energy_data;
+
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
                    std::unique_ptr<tetris::BaseClientMapper> mapper)
@@ -50,6 +55,7 @@ public:
         _tracelog{std::make_unique<tetris::TraceLogger>(
             std::chrono::high_resolution_clock::now())} {
     _tracelog->RegisterPlatform(*_platform);
+    _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
   }
 
   const tetris::Platform &GetPlatform() const { return *_platform; }
@@ -120,6 +126,11 @@ public:
    * \brief Update the perf data of all connected clients
    **/
   void update_perf_data();
+
+  /**
+   * \brief Update energy data and attribute it to the connected clients
+   **/
+  void update_energy_data();
 };
 
 #endif /* __MANAGER_H__ */

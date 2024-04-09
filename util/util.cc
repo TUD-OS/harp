@@ -7,6 +7,8 @@
 #include <stdexcept>
 
 #include <fcntl.h>
+#include <unistd.h>
+
 
 void util::make_fd_non_blocking(int fd)
 {
@@ -21,4 +23,12 @@ void util::make_fd_non_blocking(int fd)
             throw std::runtime_error{"Failed to set flags on socket."};
         }
     }
+}
+
+
+uint64_t util::ctime_to_ms(uint64_t ctime)
+{
+    static auto clk_tck = sysconf(_SC_CLK_TCK);
+
+    return (ctime * 1000) / clk_tck;
 }
