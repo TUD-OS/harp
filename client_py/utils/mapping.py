@@ -16,6 +16,14 @@ class Mapping:
         }
         self.cpu_ids = thread_affinities
 
+    def __str__(self) -> str:
+        return (
+            f"Mapping(name={self.name}, "
+            f"thread_affinities={self.cpu_ids}, "
+            f"exec_time={self.characteristics['execution_time']}, "
+            f"energy={self.characteristics['energy']})"
+        )
+
     '''
         self.thread_map = {k: int(v) for k, v in threads}
         self.region_map = {k: [{k2: int(v2)} for k2, v2 in v] for k, v in regions.items()}
