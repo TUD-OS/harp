@@ -14,6 +14,7 @@ from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest,
 
 
 class ConcreteClient(Client):
+
     def __init__(self, server_socket_path, platform_desc_path, mapping_path):
         super().__init__()
         self._managed = False
@@ -73,6 +74,11 @@ class ConcreteClient(Client):
         return f"/tmp/tetris_push_listener_{os.getpid()}"
 
     def bind(self, feature):
+        # to implement if needed
+        # but not in use atm.
+        raise NotImplementedError("Implement method if needed!")
+
+    def send(self, msg: ClientMessage) -> ServerResponse:
         # to implement if needed
         # but not in use atm.
         raise NotImplementedError("Implement method if needed!")
