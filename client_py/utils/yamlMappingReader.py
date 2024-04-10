@@ -6,7 +6,7 @@ from client_py.utils.mapping import Mapping
 class YamlMappingReader:
 
     @staticmethod
-    def read_yaml_to_mappings(yaml_file):
+    def read_mapping(yaml_file):
         mappings_list = []
 
         with open(yaml_file, 'r') as file:
