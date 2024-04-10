@@ -1,8 +1,8 @@
-import os
-import signal
 import socket
 import threading
 from typing import Dict
+
+import select
 
 from client_py.feature import Feature
 from client_py.utils.protobufUtil import ProtobufUtil
@@ -17,6 +17,7 @@ class PushMessageListener:
         self._listening_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._listening_socket.bind(socket_path)
         self._listening_socket.listen()
+        self._listening = True
 
         self._listener_thread.start()
 
@@ -37,15 +38,21 @@ class PushMessageListener:
                 raise ValueError(f"No subscriber found for feature ID: {feature_id}")
 
     def listening(self):
-        while True:
-            conn, _ = self._listening_socket.accept()
+        while self._listening:
+            readable, _, _ = select.select([self._listening_socket.accept()], [], [], 5)
+            print(readable)
+            conn, _ = readable[0]
             msg = ServerMessage()
             ProtobufUtil.receive(conn, msg)
+
             response = self.forward(msg)
+
+            _, writeable, _ = select.select([], [self._listening_socket.accept()], [], 5)
+            print(writeable)
+            conn, _ = writeable[0]
             ProtobufUtil.send(conn, response)
 
     def close(self):
+        self._listening = False
         self._listening_socket.close()
-        thread_pid = self._listener_thread.native_id
-        os.kill(thread_pid, __signal=signal.SIGSTOP)
         self._listener_thread.join()
