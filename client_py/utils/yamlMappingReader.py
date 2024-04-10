@@ -1,5 +1,3 @@
-from typing import List
-
 import yaml
 
 from client_py.utils.mapping import Mapping
@@ -8,18 +6,19 @@ from client_py.utils.mapping import Mapping
 class YamlMappingReader:
 
     @staticmethod
-    def read_mappings(file_path: str) -> List[Mapping]:
-        with open(file_path, 'r') as file:
+    def read_yaml_to_mappings(yaml_file):
+        mappings_list = []
+
+        with open(yaml_file, 'r') as file:
             data = yaml.safe_load(file)
 
-        mappings = []
-        for item in data:
-            name = item['identifier']
-            thread_affinities = item['cpu_ids']
-            exec_time = item['exec-time']
-            energy = item['energy']
+            for mapping_data in data['mappings']:
+                name = mapping_data['name']
+                cpu_ids = mapping_data['cores']
+                execution_time = mapping_data['metadata'][0]
+                energy = mapping_data['metadata'][1]
 
-            mapping = Mapping(name, thread_affinities, exec_time, energy)
-            mappings.append(mapping)
+                mapping = Mapping(name=name, thread_affinities=cpu_ids, exec_time=execution_time, energy=energy)
+                mappings_list.append(mapping)
 
-        return mappings
+        return mappings_list
