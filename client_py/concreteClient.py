@@ -60,7 +60,7 @@ class ConcreteClient(Client):
 
     @staticmethod
     def __add_mappings_to_client_message(mappings, msg):
-        for mapping in mappings[:3]:
+        for mapping in mappings:
             op = msg.ops_info.operating_points.add()
             op.identifier = mapping.name
             op.cpu_ids.extend(mapping.cpu_ids)
@@ -101,7 +101,7 @@ class ConcreteClient(Client):
             feature.mapping_update(self._active_mapping, {})
 
     def handle(self, msg: ServerMessage) -> ClientResponse:
-        response = ClientResponse
+        response = ClientResponse()
         response.type = ClientResponse.Type.ERROR
 
         if hasattr(msg, 'activated_op_info'):
