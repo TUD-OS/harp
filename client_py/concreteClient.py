@@ -144,3 +144,4 @@ class ConcreteClient(Client):
 
     def close(self):
         self._tetris_server_connection.close()
+        del self._push_message_listener
