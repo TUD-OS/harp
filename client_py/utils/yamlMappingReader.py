@@ -6,10 +6,10 @@ from client_py.utils.mapping import Mapping
 class YamlMappingReader:
 
     @staticmethod
-    def read_mapping(yaml_file):
+    def read_mappings(file_path):
         mappings_list = []
 
-        with open(yaml_file, 'r') as file:
+        with open(file_path, 'r') as file:
             data = yaml.safe_load(file)
 
             for mapping_data in data['mappings']:
