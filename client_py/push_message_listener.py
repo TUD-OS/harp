@@ -2,8 +2,6 @@ import socket
 import threading
 from typing import Dict
 
-import select
-
 from client_py.feature import Feature
 from client_py.utils.protobufUtil import ProtobufUtil
 from proto.tetris_pb2 import ServerMessage, ClientResponse
@@ -39,17 +37,10 @@ class PushMessageListener:
 
     def listening(self):
         while self._listening:
-            readable, _, _ = select.select([self._listening_socket.accept()], [], [], 5)
-            print(readable)
-            conn, _ = readable[0]
+            conn, _ = self._listening_socket.accept()
             msg = ServerMessage()
             ProtobufUtil.receive(conn, msg)
-
             response = self.forward(msg)
-
-            _, writeable, _ = select.select([], [self._listening_socket.accept()], [], 5)
-            print(writeable)
-            conn, _ = writeable[0]
             ProtobufUtil.send(conn, response)
 
     def close(self):
