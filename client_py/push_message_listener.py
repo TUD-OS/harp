@@ -1,3 +1,5 @@
+import os
+import signal
 import socket
 import threading
 from typing import Dict
@@ -42,6 +44,8 @@ class PushMessageListener:
             response = self.forward(msg)
             ProtobufUtil.send(conn, response)
 
-    def __del__(self):
+    def close(self):
         self._listening_socket.close()
+        thread_pid = self._listener_thread.native_id
+        os.kill(thread_pid, __signal=signal.SIGSTOP)
         self._listener_thread.join()
