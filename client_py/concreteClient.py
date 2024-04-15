@@ -8,6 +8,7 @@ from client_py.mappingFeature import MappingFeature
 from client_py.push_message_listener import PushMessageListener
 from client_py.utils.protobufUtil import ProtobufUtil
 from client_py.utils.yamlMappingReader import YamlMappingReader
+from client_py.utils.yamlPlatformReader import YamlPlatformReader
 # from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse, ClientResponse, \
     ServerMessage
@@ -23,10 +24,10 @@ class ConcreteClient(Client):
 
         try:
             # Read the platform file
-            # self._platform = YamlPlatformReader.read_from_file(platform_desc_path)
+            self._platform = YamlPlatformReader.read_platform(platform_desc_path)
 
             # Read the mappings
-            self._mappings = YamlMappingReader.read_mappings(file_path=mapping_path)
+            self._mappings = YamlMappingReader.read_mappings(file_path=mapping_path, platform=self._platform)
             self._active_mapping = None
 
             self._mapping_features = []

@@ -6,7 +6,7 @@ from client_py.utils.mapping import Mapping
 class YamlMappingReader:
 
     @staticmethod
-    def read_mappings(file_path):
+    def read_mappings(file_path, platform):
         mappings_list = []
 
         with open(file_path, 'r') as file:
@@ -14,7 +14,8 @@ class YamlMappingReader:
 
             for mapping_data in data['mappings']:
                 name = mapping_data['name']
-                cpu_ids = mapping_data['cores']
+                threads = mapping_data['cores']
+                cpu_ids = platform.get_affinities_of_threads(threads)
                 execution_time = mapping_data['metadata'][0]
                 energy = mapping_data['metadata'][1]
 

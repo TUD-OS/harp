@@ -1,42 +1,18 @@
 import yaml
 
-from client_py.utils.equivResAllocator import CoreTypeBasedEquivResAllocator
-from platform import Platform
+from client_py.utils.platform import Platform
 
 
 class YamlPlatformReader:
     @staticmethod
-    def read_from_file(filename: str) -> Platform:
-        with open(filename, 'r') as file:
-            platform_data = yaml.safe_load(file)
-
+    def read_platform(file_path):
         platform = Platform()
 
-        # Read CPU Types
-        if "core_types" in platform_data:
-            for node in platform_data["core_types"]:
-                name = node["type"]
-                threads = node["threads"]
-                platform.add_cpu_type(name, threads)
+        with open(file_path, 'r') as file:
+            data = yaml.safe_load(file)
 
-        # Read Cores
-        if "cores" in platform_data:
-            for node in platform_data["cores"]:
-                type_ = node["type"]
-                core = platform.add_core(type_)
-
-                for thread_node in node["threads"]:
-                    name = thread_node["name"]
-                    affinity = node["affinity"]
-                    core.add_thread(name, affinity)
-
-        # Read equivalence scheme
-        if "equivalence_scheme" in platform_data:
-            scheme = platform_data["equivalence_scheme"]
-
-            if scheme == "core-type":
-                platform.set_equiv_res_allocator(CoreTypeBasedEquivResAllocator())
-            else:
-                raise RuntimeError("Unknown Equivalent Resource Allocator")
+            for core_data in data['cores']:
+                for thread in core_data["threads"]:
+                    platform.add_thread_affinity_mapping(thread["name"], thread["affinity"])
 
         return platform
