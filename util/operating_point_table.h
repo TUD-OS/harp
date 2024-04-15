@@ -76,7 +76,7 @@ public:
                                         bool approximation = true,
                                         double ema_alpha = 0.1)
       : OperatingPointTable(platform, measurement, approximation),
-        _ema_alpha(ema_alpha) {
+        _ema_alpha(ema_alpha), _update_approximated(false) {
 
     // Initialize core thread levels
     _core_threads_count = _platform.GetThreadCapacityInfo();
@@ -127,6 +127,10 @@ public:
       approximated = false;
     }
 
+    if (approximated) {
+      GenerateApproximatedOperatingPoints();
+    }
+
     for (const auto &config : _all_configurations) {
       if (_ops.count(config) > 0) {
         auto &opres = _ops.at(config);
@@ -134,7 +138,9 @@ public:
         res.push_back(op);
       } else {
         if (approximated) {
-          throw std::runtime_error("NYI");
+          auto &opres = _approx_ops.at(config);
+          auto op = ConstructOperatingPoint(config, opres);
+          res.push_back(op);
         }
       }
     }
@@ -165,6 +171,7 @@ public:
 
     _ops.emplace(config, res);
     _sample_counts.emplace(config, 1);
+    _update_approximated = true;
   }
 
   void
@@ -189,11 +196,14 @@ public:
         alpha_eff * result.utility + (1 - alpha_eff) * opres.utility;
     opres.power = alpha_eff * result.power + (1 - alpha_eff) * opres.power;
     sample_count += 1;
+
+    _update_approximated = true;
   }
 
   void Clear() override {
     _ops.clear();
     _sample_counts.clear();
+    _update_approximated = true;
   }
 
 private:
@@ -316,6 +326,41 @@ private:
     return OperatingPoint(name, characteristics, thread_set, core_count);
   }
 
+  void GenerateApproximatedOperatingPoints() {
+    if (!_update_approximated) {
+      return;
+    }
+
+    // Collect operating points for training the model
+    std::vector<Configuration> X_train;
+    std::vector<std::vector<double>> Y_train;
+    for (const auto &[config, res] : _ops) {
+      X_train.push_back(config);
+      Y_train.push_back({res.utility, res.power});
+    }
+
+    // Train Model
+    _regression->FitModel(X_train, Y_train);
+
+    // Collect configs to approximate
+    std::vector<Configuration> X_test;
+    for (const auto &config : _all_configurations) {
+      if (!_ops.contains(config)) {
+        X_test.push_back(config);
+      }
+    }
+
+    // Approximate points and store results
+    auto Y_test = _regression->Predict(X_test);
+    _approx_ops.clear();
+    for (int i = 0; i < X_test.size(); ++i) {
+      OperatingPointResult res{Y_test[i][0], Y_test[i][1]};
+      _approx_ops.emplace(X_test[i], res);
+    }
+
+    _update_approximated = false;
+  }
+
   // Exponential Moving Average parameter
   double _ema_alpha;
 
@@ -336,6 +381,7 @@ private:
   // Approximation model
   std::unique_ptr<Regression> _regression;
   std::map<Configuration, OperatingPointResult> _approx_ops;
+  bool _update_approximated; // Flag to update approximated OP
 };
 
 /**
