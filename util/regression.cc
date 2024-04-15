@@ -12,7 +12,7 @@ OperatingPointRegression::OperatingPointRegression(
 
   // Calculate num input features, and their correspondence of their indices
   // to the cores
-  _thread_capacity = _platform.GetThreadCapacityPerCoreType();
+  _thread_capacity = _platform.GetThreadCapacityInfo();
   _num_input_features = 0;
   for (const auto &[key, v] : _thread_capacity) {
     _core_usage_start_idxs[key] = _num_input_features;
@@ -107,7 +107,7 @@ void OperatingPointRegression::ComputeFeatureCombinations(
 std::vector<double>
 OperatingPointRegression::ExtractOPData(const OperatingPoint &op) const {
   auto thread_set = op.cpus;
-  auto thread_usage = _platform.GetThreadUsagePerCoreType(thread_set);
+  auto thread_usage = _platform.GetThreadUsageInfo(thread_set);
 
   std::vector<double> res(_num_input_features + _dependent_features.size(),
                           0.0);
@@ -130,7 +130,6 @@ OperatingPointRegression::ExtractOPData(const OperatingPoint &op) const {
 Eigen::MatrixXd
 OperatingPointRegression::ExtendPolynomial(const Eigen::MatrixXd &input) const {
   int num_samples = static_cast<int>(input.rows());
-  ; // how to get number of input rows?
   int num_output_features = _combinations.size();
   Eigen::MatrixXd X(num_samples, num_output_features);
 

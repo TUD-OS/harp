@@ -224,7 +224,7 @@ public:
     return res;
   }
 
-  std::map<std::string, int> GetThreadCapacityPerCoreType() const {
+  std::map<std::string, int> GetThreadCapacityInfo() const {
     std::map<std::string, int> res;
     for (const auto &[name, cpu_type] : _cpu_types) {
       res.emplace(name, cpu_type->GetNumThreads());
@@ -234,7 +234,7 @@ public:
   }
 
   std::map<std::string, std::vector<int>>
-  GetThreadUsagePerCoreType(const CPUThreadSet &thread_set) const {
+  GetThreadUsageInfo(const CPUThreadSet &thread_set) const {
     std::map<std::string, std::vector<int>> res;
     for (const auto &[name, cpu_type] : _cpu_types) {
       res.emplace(name, std::vector<int>(cpu_type->GetNumThreads()));
@@ -254,6 +254,29 @@ public:
 
       if (n > 0) {
         res[name][n - 1] += 1;
+      }
+    }
+    return res;
+  }
+
+  CPUThreadSet GetCPUThreadSetFromThreadUsageInfo(
+      const std::map<std::string, std::vector<int>> &thread_usage) const {
+    CPUThreadSet res;
+    for (const auto &[type, vdata] : thread_usage) {
+      auto cpu_type = GetCPUType(type);
+      assert(vdata.size() == cpu_type->GetNumThreads());
+      const auto &indices_per_core = _indices_per_type.at(type);
+      int core_idx = 0;
+      for (int w = vdata.size() - 1; w >= 0; --w) {
+        int n = vdata[w];
+        while (n > 0) {
+          const auto &indices = indices_per_core.at(core_idx);
+          for (int i = 0; i <= w; ++i) {
+            res.Set(indices.at(i));
+          }
+          --n;
+          core_idx++;
+        }
       }
     }
     return res;
@@ -284,6 +307,18 @@ private:
     _cpu_threads.insert({index, thread_ptr});
   }
 
+  void FinishConstruction() {
+    for (const auto c : GetCPUCores()) {
+      auto type = c->GetType().GetName();
+      auto threads = c->GetCPUThreads();
+      std::vector<int> core_indices{};
+      for (const auto t : threads) {
+        core_indices.push_back(t->GetID());
+      }
+      _indices_per_type[type].push_back(core_indices);
+    }
+  }
+
   friend class CPUCore;
   friend class YamlPlatformReader;
 
@@ -292,6 +327,8 @@ private:
   std::map<std::string, std::unique_ptr<CPUType>> _cpu_types;
   std::vector<std::unique_ptr<CPUCore>> _cpu_cores;
   std::map<int, CPUThread *> _cpu_threads;
+
+  std::map<std::string, std::vector<std::vector<int>>> _indices_per_type;
 };
 
 } /* namespace tetris */
