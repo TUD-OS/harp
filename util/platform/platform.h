@@ -21,6 +21,11 @@ class CPUCore;
 class EquivResAllocator;
 class Platform;
 
+/**
+ * \class CPUType
+ * \brief Represents a specific CPU type and the number of hardware threads it
+ * supports.
+ */
 class CPUType {
 public:
   CPUType(const std::string &name, int num_threads)
@@ -42,6 +47,10 @@ private:
   int _num_threads;
 };
 
+/**
+ * \class CPUThread
+ * \brief Represents an individual hardware thread within a CPU core.
+ */
 class CPUThread {
 public:
   CPUThread(CPUCore &core, const std::string &name, int thread_id)
@@ -66,6 +75,11 @@ private:
   int _id;
 };
 
+/**
+ * \class CPUCore
+ * \brief Represents a CPU core, which is part of a platform and has a specific
+ * type. It contains multiple hardware threads.
+ */
 class CPUCore {
 public:
   CPUCore(Platform &platform, CPUType &type, int core_id)
@@ -103,6 +117,12 @@ private:
   std::vector<std::unique_ptr<CPUThread>> _threads;
 };
 
+/**
+ * \class Platform
+ * \brief A platform that manages various CPU cores and threads, along with
+ * their configurations. Provides methods to find and manage CPU threads and
+ * cores based on different criteria.
+ */
 class Platform {
 public:
   Platform() = default;

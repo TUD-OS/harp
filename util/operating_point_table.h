@@ -13,11 +13,23 @@
 
 namespace tetris {
 
+/**
+ * \struct OperaringPointResult
+ * \brief Struct to hold results for an operating point, including utility and
+ * power consumption metrics.
+ */
 struct OperatingPointResult {
   double utility; // Instructions per second
   double power;   // Average power consumption
 };
 
+/**
+ * \class OperatingPointTable
+ * \brief Abstract base class for managing operating points on a platform.
+ *
+ * Supports operations like adding and retrieving operating points, and
+ * potentially measuring or approximating them.
+ */
 class OperatingPointTable {
 public:
   explicit OperatingPointTable(const Platform &platform, bool measurement,
@@ -49,6 +61,14 @@ protected:
   bool _approximation;
 };
 
+/**
+ * \class ThreadSetOperatingPointTable
+ * \brief An implementation of OperatingPointTable that manages thread-based
+ * operating points.
+ *
+ * Utilizes exponential moving averages (EMA) for dynamic data handling and
+ * regression for approximations.
+ */
 class ThreadSetOperatingPointTable : public OperatingPointTable {
 public:
   explicit ThreadSetOperatingPointTable(const Platform &platform,
@@ -317,6 +337,12 @@ private:
   std::map<Configuration, OperatingPointResult> _approx_ops;
 };
 
+/**
+ * \class CustomOperaringPointTable
+ * \brief OperatingPointTable which supports custom mappings.
+ *
+ * Does not support measurement or approximation functionalities.
+ */
 class CustomOperatingPointTable : public OperatingPointTable {
 public:
   explicit CustomOperatingPointTable(const Platform &platform,
