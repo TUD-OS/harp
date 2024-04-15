@@ -31,13 +31,42 @@ public:
 
   /**
    * \brief Fits the polynomial regression model to the provided input and
-   * output data.
+   *        output data after converting them into Eigen matrix format.
    *
-   * \param X The input data, each inner vector represents a single data point.
-   * \param Y The output data corresponding to the input data points.
+   * \tparam T1 The data type of the elements in the input dataset X.
+   * \tparam T2 The data type of the elements in the output dataset Y.
+   *
+   * \param X The input data, where each inner vector represents a single data
+   *          point. Each data point can consist of one or more features.
+   * \param Y The output data corresponding to the input data points. Each
+   * output data point can consist of one or more outcome variables.
+   *
+   * \note The input and output vectors X and Y must be of compatible sizes,
+   * where each data point in X has a corresponding output in Y.
    */
-  void FitModel(const std::vector<std::vector<double>> &X,
-                const std::vector<std::vector<double>> &Y);
+  template <typename T1, typename T2>
+  void FitModel(const std::vector<std::vector<T1>> &X,
+                const std::vector<std::vector<T2>> &Y) {
+    Eigen::MatrixXd Xm = ConvertToMatrixXd(X);
+    Eigen::MatrixXd Ym = ConvertToMatrixXd(Y);
+    FitModel(Xm, Ym);
+  }
+
+  /**
+   * \brief Fits the polynomial regression model using Eigen::MatrixXd inputs
+   * for both predictors (X) and responses (Y).
+   *
+   * \param X An Eigen::MatrixXd where each row represents a single data point
+   *          and each column corresponds to a feature.
+   * \param Y An Eigen::MatrixXd where each row corresponds to the output data
+   * point and each column represents an outcome variable. The number of rows in
+   * Y must match the number of rows in X.
+   *
+   * \note This method assumes that the matrices X and Y are already
+   * appropriately preprocessed and that their sizes are compatible for
+   * regression analysis.
+   */
+  void FitModel(const Eigen::MatrixXd &X, const Eigen::MatrixXd &Y);
 
   /**
    * \brief Returns the coefficient matrix (beta) of the fitted model.
@@ -53,8 +82,15 @@ public:
    * \param X The input data to predict the output for.
    * \return A 2D vector containing the predicted outputs for each input vector.
    */
+  template <typename T>
   std::vector<std::vector<double>>
-  Predict(const std::vector<std::vector<double>> &X) const;
+  Predict(const std::vector<std::vector<T>> &X) const {
+    Eigen::MatrixXd Xm = ConvertToMatrixXd(X);
+    auto Y = Predict(Xm);
+    return ConvertFromMatrixXd(Y);
+  }
+
+  Eigen::MatrixXd Predict(const Eigen::MatrixXd &X) const;
 
 private:
   /**
@@ -70,19 +106,21 @@ private:
                                   int k);
 
   /**
-   * \brief Converts a std::vector<std::vector<double>> to an Eigen::MatrixXd.
+   * \brief Converts a std::vector<std::vector<T>> to an Eigen::MatrixXd.
    *
    * \param vec A 2D vector of doubles.
    * \return Eigen::MatrixXd containing the data from the input vector.
    */
-  Eigen::MatrixXd
-  ConvertToMatrixXd(const std::vector<std::vector<double>> &V) const;
+  template <typename T>
+  Eigen::MatrixXd ConvertToMatrixXd(const std::vector<std::vector<T>> &V) const;
 
   /**
    * \brief Converts an Eigen::MatrixXd to a std::vector<std::vector<double>>.
    *
-   * \param matrix The Eigen::MatrixXd to be converted.
-   * \return A 2D vector of doubles representing the matrix.
+   * \tparam T The data type of the elements in the input 2D vector. Must be a
+   * type that is convertible to double. \param V A 2D vector of elements of
+   * type T. \return Eigen::MatrixXd containing the data from the input vector,
+   * with each element converted to double.
    */
   std::vector<std::vector<double>>
   ConvertFromMatrixXd(const Eigen::MatrixXd &M) const;
@@ -105,6 +143,33 @@ private:
 
   Eigen::MatrixXd _beta; // Coefficient matrix of the regression model
 };
+
+template <typename T>
+Eigen::MatrixXd
+Regression::ConvertToMatrixXd(const std::vector<std::vector<T>> &V) const {
+  if (V.empty() || V[0].empty()) {
+    return Eigen::MatrixXd(); // Return an empty matrix if input is empty
+  }
+
+  // Determine the size of the matrix
+  std::size_t rows = V.size();
+  std::size_t cols = V[0].size();
+
+  // Initialize an Eigen::MatrixXd with the dimensions of the vector of vectors
+  Eigen::MatrixXd M(rows, cols);
+
+  // Copy data from the 2D vector to the Eigen matrix
+  for (std::size_t i = 0; i < rows; ++i) {
+    if (V[i].size() != cols) {
+      throw std::runtime_error("All rows must have the same number of columns");
+    }
+    for (std::size_t j = 0; j < cols; ++j) {
+      M(i, j) = static_cast<double>(V[i][j]);
+    }
+  }
+
+  return M;
+}
 
 } // namespace tetris
 

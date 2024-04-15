@@ -12,57 +12,23 @@ Regression::Regression(int num_input, int num_output, int degree)
   }
 }
 
-void Regression::FitModel(const std::vector<std::vector<double>> &X,
-                          const std::vector<std::vector<double>> &Y) {
-  if (X.size() != Y.size()) {
+void Regression::FitModel(const Eigen::MatrixXd &X, const Eigen::MatrixXd &Y) {
+  if (X.rows() != Y.rows()) {
     std::string msg =
-        "Sizes of input and output training tables mismatch. X.size() = " +
-        std::to_string(X.size()) + ", Y.size() = " + std::to_string(Y.size()) +
+        "Number of rows in input and output matrices mismatch. X.rows() = " +
+        std::to_string(X.size()) + ", Y.rows() = " + std::to_string(Y.size()) +
         ".";
     throw std::runtime_error(msg);
   }
 
-  Eigen::MatrixXd Xm = ConvertToMatrixXd(X);
-  Eigen::MatrixXd Ym = ConvertToMatrixXd(Y);
+  auto X_ext = ExtendPolynomial(X);
 
-  auto Xm_ext = ExtendPolynomial(Xm);
-
-  _beta = (Xm_ext.transpose() * Xm_ext).ldlt().solve(Xm_ext.transpose() * Ym);
+  _beta = (X_ext.transpose() * X_ext).ldlt().solve(X_ext.transpose() * Y);
 }
 
-std::vector<std::vector<double>>
-Regression::Predict(const std::vector<std::vector<double>> &X) const {
-  Eigen::MatrixXd Xm = ConvertToMatrixXd(X);
-  auto Xm_ext = ExtendPolynomial(Xm);
-  auto Y = Xm_ext * _beta;
-
-  return ConvertFromMatrixXd(Y);
-}
-
-Eigen::MatrixXd
-Regression::ConvertToMatrixXd(const std::vector<std::vector<double>> &V) const {
-  if (V.empty() || V[0].empty()) {
-    return Eigen::MatrixXd(); // Return an empty matrix if input is empty
-  }
-
-  // Determine the size of the matrix
-  std::size_t rows = V.size();
-  std::size_t cols = V[0].size();
-
-  // Initialize an Eigen::MatrixXd with the dimensions of the vector of vectors
-  Eigen::MatrixXd M(rows, cols);
-
-  // Copy data from the 2D vector to the Eigen matrix
-  for (std::size_t i = 0; i < rows; ++i) {
-    if (V[i].size() != cols) {
-      throw std::runtime_error("All rows must have the same number of columns");
-    }
-    for (std::size_t j = 0; j < cols; ++j) {
-      M(i, j) = V[i][j];
-    }
-  }
-
-  return M;
+Eigen::MatrixXd Regression::Predict(const Eigen::MatrixXd &X) const {
+  auto X_ext = ExtendPolynomial(X);
+  return X_ext * _beta;
 }
 
 std::vector<std::vector<double>>
