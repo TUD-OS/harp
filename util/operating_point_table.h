@@ -114,7 +114,9 @@ public:
     }
   }
 
-  virtual std::vector<OperatingPoint> GetParetoFront() = 0;
+  std::vector<OperatingPoint> GetParetoFront() override {
+    throw std::runtime_error("NYI");
+  }
 
   std::vector<OperatingPoint>
   GetOperatingPoints(bool approximated = true) override {
@@ -133,7 +135,7 @@ public:
         res.push_back(op);
       } else {
         if (approximated) {
-          std::runtime_error("NYI");
+          throw std::runtime_error("NYI");
         }
       }
     }
@@ -281,7 +283,7 @@ private:
     }
 
     // Iterate over the current level values
-    for (int i = 0; i < remaining; ++i) {
+    for (int i = 0; i <= remaining; ++i) {
       current.push_back(i);
       GenerateAllConfigurationsLevel(all, current);
       current.pop_back();
