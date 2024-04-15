@@ -109,8 +109,7 @@ public:
 
     if (EnabledApproximation()) {
       std::vector<std::string> features{"utility", "power"};
-      _regression =
-          std::make_unique<OperatingPointRegression>(platform, features, 2);
+      _regression = std::make_unique<Regression>(_num_core_thread_levels, 2, 2);
     }
   }
 
@@ -335,7 +334,7 @@ private:
   std::map<Configuration, int> _sample_counts;        // Sample counts
 
   // Approximation model
-  std::unique_ptr<OperatingPointRegression> _regression;
+  std::unique_ptr<Regression> _regression;
   std::map<Configuration, OperatingPointResult> _approx_ops;
 };
 

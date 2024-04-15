@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "util/operating_point.h"
-
 #include <Eigen/Dense>
 
 #include <string>
@@ -12,42 +10,50 @@
 
 namespace tetris {
 
-class OperatingPointRegression {
+class Regression {
 public:
-  OperatingPointRegression(const Platform &platform,
-                           const std::vector<std::string> &dependent_features,
-                           int degree = 2);
+  Regression(int num_input, int num_output, int degree = 2);
 
-  void FitModel(const std::vector<OperatingPoint> &ops);
+  void FitModel(const std::vector<std::vector<double>> &X,
+                const std::vector<std::vector<double>> &Y);
 
   Eigen::MatrixXd GetBeta() const { return _beta; }
 
-  std::vector<std::map<std::string, double>>
-  Predict(const std::vector<OperatingPoint> &ops) const;
-
-  void PredictAndUpdate(std::vector<OperatingPoint> &ops) const;
+  std::vector<std::vector<double>>
+  Predict(const std::vector<std::vector<double>> &X) const;
 
 private:
   void ComputeFeatureCombinations(std::vector<int> &current, int start, int n,
                                   int k);
 
-  std::vector<double> ExtractOPData(const OperatingPoint &op) const;
+  /**
+   * \brief Converts a std::vector<std::vector<double>> to an Eigen::MatrixXd.
+   *
+   * \param vec A 2D vector of doubles.
+   * \return Eigen::MatrixXd containing the data from the input vector.
+   */
+  Eigen::MatrixXd
+  ConvertToMatrixXd(const std::vector<std::vector<double>> &V) const;
+
+  /**
+   * \brief Converts an Eigen::MatrixXd to a std::vector<std::vector<double>>.
+   *
+   * \param matrix The Eigen::MatrixXd to be converted.
+   * \return A 2D vector of doubles representing the matrix.
+   */
+  std::vector<std::vector<double>>
+  ConvertFromMatrixXd(const Eigen::MatrixXd &M) const;
 
   Eigen::MatrixXd ExtendPolynomial(const Eigen::MatrixXd &input) const;
 
-  Eigen::MatrixXd PredictInternal(const std::vector<OperatingPoint> &ops) const;
-
-  const Platform &_platform;
-  std::vector<std::string> _dependent_features;
+  int _num_input;
+  int _num_output;
   int _degree;
 
-  Eigen::MatrixXd _beta;
-
-  int _num_input_features;
-  std::map<std::string, int> _thread_capacity;
-  std::map<std::string, int> _core_usage_start_idxs;
-
+  // Input feature combinations for polynomial of higher degrees
   std::vector<std::vector<int>> _combinations;
+
+  Eigen::MatrixXd _beta;
 };
 
 } // namespace tetris
