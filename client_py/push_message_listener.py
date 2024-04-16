@@ -11,10 +11,12 @@ class PushMessageListener:
     def __init__(self, socket_path: str, client):
         self._listener_thread = threading.Thread(target=self.listening)
         self._client = client
+        self._socket_path = socket_path
 
         self._listening_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._listening_socket.bind(socket_path)
+        self._listening_socket.bind(self._socket_path)
         self._listening_socket.listen()
+        self._listening_socket.connect()
         self._listening = True
 
         self._listener_thread.start()
@@ -47,6 +49,11 @@ class PushMessageListener:
 
     def close(self):
         self._listening = False
-        self._listening_socket.send(str.encode("placeholder_string_to_abort"))
+
+        closing_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        closing_socket.connect(self._socket_path)
+        closing_socket.sendall(str.encode("placeholder_string_to_abort"))
+        closing_socket.close()
+
         self._listening_socket.close()
         self._listener_thread.join()
