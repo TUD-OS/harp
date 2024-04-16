@@ -36,8 +36,10 @@ class PushMessageListener:
                 raise ValueError(f"No subscriber found for feature ID: {feature_id}")
 
     def listening(self):
-        while self._listening:
+        while True:
             conn, _ = self._listening_socket.accept()
+            if not self._listening:
+                break
             msg = ServerMessage()
             ProtobufUtil.receive(conn, msg)
             response = self.forward(msg)
@@ -45,5 +47,6 @@ class PushMessageListener:
 
     def close(self):
         self._listening = False
+        self._listening_socket.send(str.encode("placeholder_string_to_abort"))
         self._listening_socket.close()
         self._listener_thread.join()
