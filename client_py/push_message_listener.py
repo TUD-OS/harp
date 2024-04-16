@@ -16,7 +16,6 @@ class PushMessageListener:
         self._listening_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._listening_socket.bind(self._socket_path)
         self._listening_socket.listen()
-        self._listening_socket.connect()
         self._listening = True
 
         self._listener_thread.start()
