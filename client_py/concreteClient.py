@@ -27,7 +27,7 @@ class ConcreteClient(Client):
             self._platform = YamlPlatformReader.read_platform(platform_desc_path)
 
             # Read the mappings
-            self._mappings = YamlMappingReader.read_mappings(file_path=mapping_path, platform=self._platform)
+            self._mappings, app_name = YamlMappingReader.read_mappings(file_path=mapping_path, platform=self._platform)
             self._active_mapping = None
 
             self._mapping_features = []
@@ -38,7 +38,7 @@ class ConcreteClient(Client):
 
             self._tetris_server_connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._tetris_server_connection.connect(server_socket_path)
-            self._managed = self.register_client()
+            self._managed = self.register_client(app_name)
 
             # print(self._managed)
             if self._managed:
@@ -127,11 +127,11 @@ class ConcreteClient(Client):
 
         return response
 
-    def register_client(self):
+    def register_client(self, app_name):
         request = RegistrationRequest()
 
         request.pid = os.getpid()
-        request.exec = os.path.realpath(__file__)
+        request.exec = app_name
 
         try:
             ProtobufUtil.send(self._tetris_server_connection, request)

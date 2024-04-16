@@ -11,6 +11,7 @@ class YamlMappingReader:
 
         with open(file_path, 'r') as file:
             data = yaml.safe_load(file)
+            app_name = data["application"]
 
             for mapping_data in data['mappings']:
                 name = mapping_data['name']
@@ -22,4 +23,4 @@ class YamlMappingReader:
                 mapping = Mapping(name=name, thread_affinities=cpu_ids, exec_time=execution_time, energy=energy)
                 mappings_list.append(mapping)
 
-        return mappings_list
+        return mappings_list, app_name
