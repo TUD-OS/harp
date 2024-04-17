@@ -10,6 +10,7 @@ add_library(tetrisserverlib STATIC
     mapper/bruteforce.cc
     mapper/lr.cc
     trace_logger.cc
+    perf.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc

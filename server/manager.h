@@ -11,6 +11,7 @@
 #include "client.h"
 #include "mapper/base.h"
 #include "trace_logger.h"
+#include "perf.h"
 
 #include "util/debug_util.h"
 #include "util/platform/cpu_sets.h"
@@ -44,6 +45,7 @@ private:
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
 
+  tetris::perf::PerfManager _perf_manager;
   std::unique_ptr<tetris::Measure> _energy_measure;
   std::vector<EnergyData> _energy_data;
 
@@ -53,7 +55,8 @@ public:
       : _platform{std::move(platform)}, _mapper{std::move(mapper)}, _clients{},
         _run_mapper_flag{false},
         _tracelog{std::make_unique<tetris::TraceLogger>(
-            std::chrono::high_resolution_clock::now())} {
+            std::chrono::high_resolution_clock::now())},
+        _perf_manager{} {
     _tracelog->RegisterPlatform(*_platform);
     _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
   }

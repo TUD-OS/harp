@@ -1,8 +1,9 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
-#include <chrono>
 #pragma once
+
+#include "perf.h"
 
 #include "proto/tetris.pb.h"
 
@@ -14,6 +15,7 @@
 #include "util/protobuf_util.h"
 
 #include <optional>
+#include <chrono>
 #include <vector>
 #include <map>
 #include <cstdint>
@@ -24,8 +26,8 @@ class Manager;
 
 struct PerfData {
   std::chrono::high_resolution_clock::time_point time;
-  std::map<uint64_t, uint64_t> data;
-  std::map<uint64_t, uint64_t> diff;
+  std::map<std::string, uint64_t> data;
+  std::map<std::string, uint64_t> diff;
 };
 
 struct CpuTimes {
@@ -101,8 +103,7 @@ public:
   int type;
 
  private:
-  int perf_fd;
-  std::map<uint64_t, uint64_t> perf_event_ids;
+  tetris::perf::HandlePtr perf_handle;
   std::vector<PerfData> perf_data;
   std::vector<ProcessEnergyData> energy_data;
 
@@ -135,7 +136,7 @@ public:
 
   tetris::ServerResponse handle_message(const tetris::ClientMessage &msg);
 
-  bool start_perf();
+  void enable_perf(tetris::perf::HandlePtr handle);
 
   void update_perf_data(std::chrono::high_resolution_clock::time_point tp);
 

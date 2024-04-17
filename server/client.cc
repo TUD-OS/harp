@@ -2,6 +2,7 @@
 
 #include "proto/tetris.pb.h"
 #include "manager.h"
+#include "server/perf.h"
 #include "util/operating_point.h"
 #include "util/string_util.h"
 #include "util/util.h"
@@ -26,7 +27,7 @@ using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn, Manager &manager)
     : connection{conn}, exec{}, pid{-1}, op_table{},
-      active_op{}, type{Type::PASSIV}, perf_fd{-1}, perf_event_ids{}, perf_data{},
+      active_op{}, type{Type::PASSIV}, perf_handle{}, perf_data{},
       _manager{manager}
 {
   // TODO: choose the type of operating point table based on the client info
@@ -37,14 +38,10 @@ Client::~Client()
 {
   if (pid != -1)
     LOGGER->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
-  if (perf_fd != -1) {
-    ioctl(perf_fd, PERF_EVENT_IOC_DISABLE, 0);
+  if (perf_handle) {
     update_perf_data(std::chrono::high_resolution_clock::now());
-    close(perf_fd);
   }
 }
-
-
 
 std::string Client::push_path() const
 {
@@ -74,123 +71,33 @@ bool Client::receive_ops(
   return true;
 }
 
-struct perf_format {
-  uint64_t nr;
-  struct {
-    uint64_t value;
-    u_int64_t id;
-  } values[];
-};
-
-enum PerfEvents : uint64_t {
-  Instructions = PERF_COUNT_HW_INSTRUCTIONS,
-  CacheMisses = PERF_COUNT_HW_CACHE_MISSES
-};
-
-bool Client::start_perf() {
-  if (perf_fd != -1)
-      /* perf events are already initialized */
-      return true;
-  if (pid == -1)
-      /* Can't start/initialize perf when the client is not properly registered! */
-      return false;
-
-  struct perf_event_attr pea;
-  memset(&pea, 0, sizeof(pea));
-
-  pea.size = sizeof(pea);
-  pea.disabled = 1;
-  pea.exclude_kernel = 1;
-  pea.exclude_hv = 1;
-  pea.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
-
-  pea.type = PERF_TYPE_HARDWARE;
-  pea.config = PERF_COUNT_HW_INSTRUCTIONS;
-
-  /* Start the perf sampling */
-  LOGGER->debug("Initializing perf support for client '%s' [%i]\n", exec.c_str(), pid);
-  perf_fd = syscall(SYS_perf_event_open, &pea, pid, -1, -1, 0);
-  if (perf_fd == -1) {
-    /* Something went wrong when opening the performance monitoring! */
-    LOGGER->error(" -> Failed to enable perf tracing for client '%s' [%i]\n", exec.c_str(), pid);
-    return false;
-  }
-
-  uint64_t id;
-  if (ioctl(perf_fd, PERF_EVENT_IOC_ID, &id))
-    LOGGER->warning(" -> Failed to get id for event\n");
-  perf_event_ids[pea.config] = id;
-  LOGGER->debug("Registered perf event %llu with id %llu\n", PERF_COUNT_HW_INSTRUCTIONS, id);
-
-  /* Add all the other performance counter that we want to monitor */
-  for (auto &event : {PERF_COUNT_HW_CACHE_REFERENCES}) {
-    pea.config = event;
-    int efd = syscall(SYS_perf_event_open, &pea, pid, -1, perf_fd, 0);
-    if (efd == -1)
-      LOGGER->warning(" -> Failed to register further perf events\n");
-    uint64_t eid;
-    if (ioctl(efd, PERF_EVENT_IOC_ID, &eid))
-      LOGGER->warning(" -> Failed to get id for event\n");
-    perf_event_ids[pea.config] = eid;
-    LOGGER->debug("Registered perf event %llu id %llu\n", event, eid);
-  }
-
-  /* Start the perf monitoring for all the grouped events */
-  if (ioctl(perf_fd, PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP))
-    LOGGER->warning(" -> Failed to reset perf counters\n");
-  if (ioctl(perf_fd, PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP))
-    LOGGER->warning(" -> Failed to enable perf counters\n");
-
-  return true;
+void Client::enable_perf(tetris::perf::HandlePtr handle) {
+  perf_handle = std::move(handle);
 }
 
 void Client::update_perf_data(std::chrono::high_resolution_clock::time_point tp) {
-  if (perf_fd == -1) {
+  if (!perf_handle) {
     LOGGER->debug("Perf not properly initialized for client '%s' [%i]\n", exec.c_str(), pid);
     return;
   }
 
-  char buf[4096];
-  struct perf_format *formatted_buf = reinterpret_cast<struct perf_format*>(buf);
-
-  if (read(perf_fd, buf, sizeof(buf)) == -1) {
-    LOGGER->warning("Failed to read values from perf.\n");
-    return;
-  }
-
-  /* Extract the data from perf */
   PerfData cur;
-
-  cur.time = tp;
-  for (uint64_t i = 0; i < formatted_buf->nr; ++i) {
-      bool event_found = false;
-      for (auto &it : perf_event_ids) {
-        if (it.second == formatted_buf->values[i].id) {
-          cur.data[it.first] = formatted_buf->values[i].value;
-          event_found = true;
-          break;
-        }
-      }
-
-      if (!event_found) {
-          LOGGER->warning("Received unexpected perf event %llu with %llu\n", formatted_buf->values[i].id, formatted_buf->values[i].value);
-      }
-  }
+  cur.data = perf_handle->read();
 
   if (perf_data.size() != 0) {
     auto prev = perf_data.back();
-    for (auto &it : cur.data) {
-        cur.diff[it.first] = it.second - prev.data[it.first];
+    for (auto &[name, val] : cur.data) {
+        cur.diff[name] = val - prev.data[name];
     }
   } else {
-    for (auto &it : cur.data) {
-        cur.diff[it.first] = it.second;
+    for (auto &[name, val] : cur.data) {
+        cur.diff[name] = val;
     }
   }
 
   LOGGER->debug("Perf data update for client '%s' [%i]:\n", exec.c_str(), pid);
-  for (auto &it : cur.diff) {
-      LOGGER->debug(" %llu --> %llu\n", it.first, it.second);
+  for (auto &[name, val] : cur.diff) {
+      LOGGER->debug(" %s --> %llu\n", name.c_str(), val);
   }
 
   perf_data.push_back(cur);

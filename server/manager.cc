@@ -63,7 +63,11 @@ bool Manager::client_message(int fd) try {
 
         LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(), c->pid);
         _tracelog->RegisterClient(c.get());
-        c->start_perf();
+
+        /* Get the perf handle for this client */
+        if (auto handle = _perf_manager.open(c->pid)) {
+          c->enable_perf(std::move(handle.value()));
+        }
 
         /* Construct and send the server's registration response */
         RegistrationResponse response{};
