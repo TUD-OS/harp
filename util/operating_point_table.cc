@@ -2,10 +2,42 @@
 
 namespace tetris {
 
+void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
+  // Intialize _pareto_filter
+  std::vector<ObjectiveBetterFunc> objectives;
+  auto types = _platform.GetCPUTypes();
+  for (const auto &t : types) {
+    objectives.push_back([t](const OperatingPoint &a, const OperatingPoint &b) {
+      return a.cores_count.at(t) < b.cores_count.at(t);
+    });
+  }
+
+  if (new_objective) {
+    objectives.push_back(
+        [new_objective](const OperatingPoint &a, const OperatingPoint &b) {
+          return new_objective(a) < new_objective(b);
+        });
+  }
+  _pareto_filter->Reset(objectives);
+
+  // Mark to regenerate Pareto Front
+  _update_pareto = true;
+}
+
+std::vector<OperatingPoint> OperatingPointTable::GetParetoFront() {
+  if (_update_pareto) {
+    auto ops = GetOperatingPoints(EnabledApproximation());
+    _pareto = _pareto_filter->Filter(ops);
+    _update_pareto = false;
+  }
+  return _pareto;
+}
+
 ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
-    const Platform &platform, bool measurement, bool approximation,
-    double ema_alpha)
-    : OperatingPointTable(platform, measurement, approximation),
+    const Platform &platform, ObjectiveValueFunc value_objective,
+    bool measurement, bool approximation, double ema_alpha)
+    : OperatingPointTable(platform, value_objective, measurement,
+                          approximation),
       _ema_alpha(ema_alpha), _update_approximated(false) {
 
   // Initialize core thread levels
@@ -98,6 +130,7 @@ void ThreadSetOperatingPointTable::AddOperatingPoint(const OperatingPoint &op) {
   _ops.emplace(config, res);
   _sample_counts.emplace(config, 1);
   _update_approximated = true;
+  _update_pareto = true;
 }
 
 void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
@@ -108,6 +141,9 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   }
 
   auto config = GetConfiguration(op);
+
+  _update_approximated = true;
+  _update_pareto = true;
 
   if (_ops.count(config) == 0) {
     _ops.emplace(config, result);
@@ -120,8 +156,6 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   opres.utility = alpha_eff * result.utility + (1 - alpha_eff) * opres.utility;
   opres.power = alpha_eff * result.power + (1 - alpha_eff) * opres.power;
   sample_count += 1;
-
-  _update_approximated = true;
 }
 
 ThreadSetOperatingPointTable::Configuration

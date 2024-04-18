@@ -5,6 +5,7 @@
 
 #include "util/debug_util.h"
 #include "util/operating_point.h"
+#include "util/pareto.h"
 #include "util/platform/platform.h"
 #include "util/regression.h"
 #include "util/string_util.h"
@@ -32,16 +33,25 @@ struct OperatingPointResult {
  */
 class OperatingPointTable {
 public:
+  using ObjectiveValueFunc = std::function<double(const OperatingPoint &)>;
+  using ObjectiveBetterFunc =
+      ParetoFrontFilter<OperatingPoint>::ObjectiveBetterFunc;
+
   /**
    * Constructs an operating point table.
    * \param platform The platform associated with the operating points.
    * \param measurement Indicates if measurement capabilities are enabled.
    * \param approximation Indicates if approximation capabilities are enabled.
    */
-  explicit OperatingPointTable(const Platform &platform, bool measurement,
-                               bool approximation)
+  explicit OperatingPointTable(const Platform &platform,
+                               ObjectiveValueFunc value_objective,
+                               bool measurement, bool approximation)
       : _platform(platform), _measurement(measurement),
-        _approximation(approximation) {}
+        _approximation(approximation), _pareto_filter{nullptr} {
+    _pareto_filter = std::make_unique<ParetoFrontFilter<OperatingPoint>>(
+        std::vector<ObjectiveBetterFunc>());
+    SetValueObjective(value_objective);
+  }
 
   virtual ~OperatingPointTable() = default;
 
@@ -55,8 +65,6 @@ public:
    */
   bool EnabledApproximation() const { return _approximation; }
 
-  virtual std::vector<OperatingPoint> GetParetoFront() = 0;
-
   virtual std::vector<OperatingPoint> GetOperatingPoints(bool approximated) = 0;
 
   virtual void AddOperatingPoint(const OperatingPoint &op) = 0;
@@ -67,10 +75,19 @@ public:
 
   virtual void Clear() = 0;
 
+  void SetValueObjective(ObjectiveValueFunc new_objective);
+
+  std::vector<OperatingPoint> GetParetoFront();
+
 protected:
   const Platform &_platform;
   bool _measurement;
   bool _approximation;
+
+  // Manage Pareto-Front Filtering
+  std::unique_ptr<ParetoFrontFilter<OperatingPoint>> _pareto_filter;
+  std::vector<OperatingPoint> _pareto; // Store the current Pareto front
+  bool _update_pareto;                 // Flag to update
 };
 
 /**
@@ -83,14 +100,16 @@ protected:
  */
 class ThreadSetOperatingPointTable : public OperatingPointTable {
 public:
-  explicit ThreadSetOperatingPointTable(const Platform &platform,
-                                        bool measurement = true,
-                                        bool approximation = true,
-                                        double ema_alpha = 0.1);
-
-  std::vector<OperatingPoint> GetParetoFront() override {
-    throw std::runtime_error("NYI");
-  }
+  explicit ThreadSetOperatingPointTable(
+      const Platform &platform,
+      ObjectiveValueFunc value_objective =
+          [](const OperatingPoint &a) {
+            double power = a.characteristic("power");
+            double utility = a.characteristic("utility");
+            return power / utility / utility;
+          },
+      bool measurement = true, bool approximation = true,
+      double ema_alpha = 0.1);
 
   std::vector<OperatingPoint>
   GetOperatingPoints(bool approximated = true) override;
@@ -163,8 +182,9 @@ private:
 class CustomOperatingPointTable : public OperatingPointTable {
 public:
   explicit CustomOperatingPointTable(const Platform &platform,
+                                     const ObjectiveValueFunc &value_objective,
                                      bool measurement = false)
-      : OperatingPointTable(platform, measurement, false) {}
+      : OperatingPointTable(platform, value_objective, measurement, false) {}
 
   virtual std::vector<OperatingPoint> GetParetoFront() = 0;
 
@@ -179,6 +199,7 @@ public:
 
   void AddOperatingPoint(const OperatingPoint &op) override {
     _ops.emplace_back(op);
+    _update_pareto = true;
   }
 
   void
