@@ -160,6 +160,14 @@ public:
     return _cpu_cores[index].get();
   }
 
+  std::vector<std::string> GetCPUTypes() const {
+    std::vector<std::string> types;
+    for (auto &[type, _] : _cpu_types) {
+      types.push_back(type);
+    }
+    return types;
+  }
+
   std::vector<CPUCore *> GetCPUCores() const {
     std::vector<CPUCore *> cpu_list;
     for (auto &core : _cpu_cores) {
