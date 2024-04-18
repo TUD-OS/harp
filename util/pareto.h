@@ -22,7 +22,7 @@ template <typename T> class ParetoFrontFilter {
 public:
   /// Type definition for a function that compares two items based on a single
   /// objective
-  using ObjectiveFunction = std::function<bool(const T &, const T &)>;
+  using ObjectiveBetterFunc = std::function<bool(const T &, const T &)>;
 
   /**
    * \brief Constructs a Pareto front filter with a set of objective functions.
@@ -30,7 +30,7 @@ public:
    * \param objectives A vector of objective functions, each representing a
    * criterion for comparison.
    */
-  explicit ParetoFrontFilter(std::vector<ObjectiveFunction> objectives)
+  explicit ParetoFrontFilter(std::vector<ObjectiveBetterFunc> objectives)
       : _objectives(std::move(objectives)) {}
 
   /**
@@ -39,7 +39,7 @@ public:
    * \param new_objectives A vector of new objective functions to replace the
    * existing ones.
    */
-  void Reset(std::vector<ObjectiveFunction> new_objectives) {
+  void Reset(std::vector<ObjectiveBetterFunc> new_objectives) {
     _objectives = std::move(new_objectives);
   }
 
@@ -52,7 +52,7 @@ public:
   std::vector<T> Filter(const std::vector<T> &items) const;
 
 private:
-  std::vector<ObjectiveFunction> _objectives;
+  std::vector<ObjectiveBetterFunc> _objectives;
 
   /**
    * \brief Determines if one item dominates another based on the set

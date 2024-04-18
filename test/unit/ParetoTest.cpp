@@ -18,7 +18,7 @@ protected:
   std::unique_ptr<ParetoFrontFilter<Point>> pareto_filter;
 
   void SetUp() override {
-    std::vector<ParetoFrontFilter<Point>::ObjectiveFunction> objectives{
+    std::vector<ParetoFrontFilter<Point>::ObjectiveBetterFunc> objectives{
         [](const Point &a, const Point &b) { return a.x < b.x; },
         [](const Point &a, const Point &b) { return a.y < b.y; }};
     pareto_filter = std::make_unique<ParetoFrontFilter<Point>>(objectives);
