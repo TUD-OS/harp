@@ -209,7 +209,10 @@ public:
                              "adding measured Operating Point");
   }
 
-  void Clear() override { _ops.clear(); }
+  void Clear() override {
+    _ops.clear();
+    _update_pareto = true;
+  }
 
 private:
   std::vector<OperatingPoint> _ops;
