@@ -26,7 +26,7 @@ std::unique_ptr<Schedule> LagrangianRelaxationMapper::ToSchedule(
       assert(opt_opa.has_value());
       auto opa = *opt_opa;
       schedule->SetOperatingPoint(0, _clients[i], opa);
-      busy_cores |= _platform.ToCPUCoreSet(opa.GetThreadSet());
+      busy_cores |= _platform.ToCPUCoreSet(opa.threads());
     }
   }
   return schedule;
@@ -36,7 +36,7 @@ double LagrangianRelaxationMapper::EvaluateOPDual(
     double rem_cratio) const {
   double value = _objective->EvaluateOP(op, rem_cratio);
 
-  for (auto &[core_type, core_count] : op.cores_count) {
+  for (auto &[core_type, core_count] : op.core_counts()) {
     value += lambda.at(core_type) * core_count;
   }
   return value;
@@ -91,7 +91,7 @@ LagrangianRelaxationMapper::SolveDualOptimizationProblem() {
       delta_res.emplace(core_type, -core_count);
     }
     for (const auto &op_ptr : min_ops) {
-      for (auto &[core_type, core_count] : op_ptr->cores_count) {
+      for (auto &[core_type, core_count] : op_ptr->core_counts()) {
         delta_res[core_type] += core_count;
       }
     }
@@ -166,7 +166,7 @@ const OperatingPoint *LagrangianRelaxationMapper::SelectClientOP(
   // Find the first fitting operating point
   for (auto i : order) {
     bool fit = true;
-    for (auto &[core_type, core_count] : _cl_pareto[c][i].cores_count) {
+    for (auto &[core_type, core_count] : _cl_pareto[c][i].core_counts()) {
       if (core_count > cores_count.at(core_type)) {
         fit = false;
         break;
@@ -191,7 +191,7 @@ std::vector<const OperatingPoint *> LagrangianRelaxationMapper::SelectOPs(
   for (auto i : order) {
     const OperatingPoint *op = SelectClientOP(cores_count, lambda, i);
     res[i] = op;
-    for (auto &[core_type, core_count] : op->cores_count) {
+    for (auto &[core_type, core_count] : op->core_counts()) {
       cores_count[core_type] -= core_count;
     }
   }

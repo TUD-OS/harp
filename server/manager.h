@@ -11,7 +11,6 @@
 #include "trace_logger.h"
 
 #include "util/debug_util.h"
-#include "util/operating_point.h"
 #include "util/platform/cpu_sets.h"
 #include "util/platform/platform.h"
 

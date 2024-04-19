@@ -8,7 +8,7 @@ std::vector<OperatingPoint> OptimizationObjective::FilterParetoFront(
     const Platform &platform, const std::vector<OperatingPoint> &ops) const {
   std::vector<OPParetoState> op_states;
   for (const auto &op : ops) {
-    CPUCoreSet core_set = platform.ToCPUCoreSet(op.cpus);
+    CPUCoreSet core_set = platform.ToCPUCoreSet(op.threads());
     auto cores = platform.GetCoreCountPerType(core_set);
     auto value = EvaluateOP(op);
     op_states.emplace_back(cores, value, true);

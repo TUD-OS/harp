@@ -70,9 +70,9 @@ public:
 
   std::string push_path() const;
 
-  tetris::CPUThreadSet cpus() const {
+  tetris::CPUThreadSet threads() const {
     if (active_op.has_value()) {
-      return active_op->base.cpus;
+      return active_op->threads();
     }
     return tetris::CPUThreadSet{};
   }
@@ -87,6 +87,8 @@ public:
 
   void update_progress(std::chrono::high_resolution_clock::time_point new_tp,
                        bool reset = false) {
+    throw std::runtime_error("NYI");
+#if 0
     if (active_op.has_value()) {
       std::chrono::duration<double, std::milli> diff = new_tp - progress_tp;
       auto diff_ms = diff.count();
@@ -102,6 +104,7 @@ public:
       }
     }
     progress_tp = new_tp;
+#endif
   }
 };
 

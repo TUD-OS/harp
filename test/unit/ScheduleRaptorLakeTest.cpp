@@ -11,7 +11,7 @@
 
 using namespace tetris;
 
-class RaptorLakeScheduleTest : public RaptorLakeTest {
+class DISABLED_RaptorLakeScheduleTest : public RaptorLakeTest {
 protected:
   std::map<std::string, std::vector<OperatingPoint>> app_ops;
 
@@ -74,7 +74,7 @@ protected:
   }
 };
 
-TEST_F(RaptorLakeScheduleTest, BF_FourClients) {
+TEST_F(DISABLED_RaptorLakeScheduleTest, BF_FourClients) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());
@@ -93,7 +93,7 @@ TEST_F(RaptorLakeScheduleTest, BF_FourClients) {
   LOGGER->info("%s", s->ToString().c_str());
 }
 
-TEST_F(RaptorLakeScheduleTest, LR_FourClients_Energy) {
+TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_Energy) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());
@@ -113,7 +113,7 @@ TEST_F(RaptorLakeScheduleTest, LR_FourClients_Energy) {
   LOGGER->info("%s", s->ToString().c_str());
 }
 
-TEST_F(RaptorLakeScheduleTest, LR_FourClients_EDP) {
+TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_EDP) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());

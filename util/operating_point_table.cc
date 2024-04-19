@@ -1,5 +1,7 @@
 #include "util/operating_point_table.h"
 
+#include "util/platform/platform.h"
+
 namespace tetris {
 
 void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
@@ -8,7 +10,7 @@ void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
   auto types = _platform.GetCPUTypes();
   for (const auto &t : types) {
     objectives.push_back([t](const OperatingPoint &a, const OperatingPoint &b) {
-      return a.cores_count.at(t) < b.cores_count.at(t);
+      return a.core_counts().at(t) < b.core_counts().at(t);
     });
   }
 
@@ -107,45 +109,39 @@ ThreadSetOperatingPointTable::GetOperatingPoints(bool approximated) {
 }
 
 void ThreadSetOperatingPointTable::AddOperatingPoint(const OperatingPoint &op) {
-  auto config = GetConfiguration(op);
-  if (_ops.count(config) > 0) {
+  AddOperatingPoint(op.config, op.metrics);
+}
+
+void ThreadSetOperatingPointTable::AddOperatingPoint(
+    const OperatingPoint::Configuration &op_config,
+    const OperatingPoint::Metrics &metrics) {
+  auto config = GetConfiguration(op_config);
+  if (_ops.contains(config)) {
     LOGGER->warning("The operating point with the same configuration (%s) "
                     "was already added. Rewriting the old operating point.\n",
                     GetConfigurationString(config).c_str());
   }
 
-  OperatingPointResult res{};
-  if (op.characteristics.count("utility") == 0) {
-    LOGGER->warning("Missing utility information for the configutation %s.\n",
-                    GetConfigurationString(config).c_str());
-  }
-  res.utility = op.characteristic("utility");
-
-  if (op.characteristics.count("power") == 0) {
-    LOGGER->warning("Missing power information for the configutation %s.\n",
-                    GetConfigurationString(config).c_str());
-  }
-  res.power = op.characteristic("power");
-
-  _ops.emplace(config, res);
+  _ops.emplace(config, metrics);
   _sample_counts.emplace(config, 1);
   _update_approximated = true;
   _update_pareto = true;
 }
 
 void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
-    const OperatingPoint &op, const OperatingPointResult &result) {
+    const OperatingPoint::Configuration &op_config,
+    const OperatingPoint::Metrics &result) {
   if (!EnabledMeasurement()) {
     throw std::runtime_error(
         "OperatingPointTable does not support adding measured data");
   }
 
-  auto config = GetConfiguration(op);
+  auto config = GetConfiguration(op_config);
 
   _update_approximated = true;
   _update_pareto = true;
 
-  if (_ops.count(config) == 0) {
+  if (!_ops.contains(config)) {
     _ops.emplace(config, result);
     _sample_counts.emplace(config, 1);
     return;
@@ -159,8 +155,9 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
 }
 
 ThreadSetOperatingPointTable::Configuration
-ThreadSetOperatingPointTable::GetConfiguration(const OperatingPoint &op) const {
-  auto &threads = op.cpus;
+ThreadSetOperatingPointTable::GetConfiguration(
+    const OperatingPoint::Configuration &op_config) const {
+  auto &threads = op_config.threads;
   auto thread_usage = _platform.GetThreadUsageInfo(threads);
 
   Configuration config(_num_core_thread_levels);
@@ -259,15 +256,15 @@ CPUThreadSet ThreadSetOperatingPointTable::ConstructCPUThreadSet(
 }
 
 OperatingPoint ThreadSetOperatingPointTable::ConstructOperatingPoint(
-    const Configuration &config, const OperatingPointResult &res) const {
+    const Configuration &config, const OperatingPoint::Metrics &res) const {
   auto name = GetConfigurationString(config);
-  std::map<std::string, double> characteristics{{"utility", res.utility},
-                                                {"power", res.power}};
   auto thread_set = ConstructCPUThreadSet(config);
   auto core_set = _platform.ToCPUCoreSet(thread_set);
-  auto core_count = _platform.GetCoreCountPerType(core_set);
+  auto core_counts = _platform.GetCoreCountPerType(core_set);
+  OperatingPoint::Configuration op_config{name, thread_set, core_counts};
+  OperatingPoint::Metrics op_metrics = res;
 
-  return OperatingPoint(name, characteristics, thread_set, core_count);
+  return OperatingPoint(op_config, op_metrics);
 }
 
 void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
@@ -298,7 +295,7 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
   auto Y_test = _regression->Predict(X_test);
   _approx_ops.clear();
   for (int i = 0; i < X_test.size(); ++i) {
-    OperatingPointResult res{Y_test[i][0], Y_test[i][1]};
+    OperatingPoint::Metrics res{Y_test[i][0], Y_test[i][1]};
     _approx_ops.emplace(X_test[i], res);
   }
 

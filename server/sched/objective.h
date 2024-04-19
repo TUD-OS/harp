@@ -88,10 +88,9 @@ class GEDPObjective : public OptimizationObjective {
 private:
   double _alpha;
 
-  double EvaluateGEDP(double energy, double exec_time,
-                      double rem_cratio) const {
-    return pow(energy * rem_cratio, _alpha) *
-           pow(exec_time * rem_cratio, 1 - _alpha);
+  double EvaluateGEDP(double power, double utility, double rem_cratio) const {
+    return pow(power / utility * rem_cratio, _alpha) *
+           pow(1.0 / utility * rem_cratio, 1 - _alpha);
   }
 
 public:
@@ -103,8 +102,7 @@ public:
 
   double EvaluateOP(const OperatingPoint &op,
                     double rem_cratio = 1.0) const override {
-    return EvaluateGEDP(op.characteristic("energy"),
-                        op.characteristic("execution_time"), rem_cratio);
+    return EvaluateGEDP(op.power(), op.utility(), rem_cratio);
   }
 
   std::tuple<int, double> EvaluateClient(const Schedule &schedule,

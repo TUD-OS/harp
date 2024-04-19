@@ -13,7 +13,6 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
-    ${CMAKE_SOURCE_DIR}/util/operating_point.cc
     ${CMAKE_SOURCE_DIR}/util/operating_point_table.cc
     ${CMAKE_SOURCE_DIR}/util/path_util.cc
     ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc

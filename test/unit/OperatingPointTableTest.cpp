@@ -4,30 +4,19 @@
 
 using namespace tetris;
 
-inline const std::string kIPS = "utility";
-inline const std::string kPower = "power";
-
-class OdroidOperatingPointTableTest : public OdroidTest {
-protected:
-  OperatingPoint CreateOperatingPoint(const CPUThreadSet &threads, double ips,
-                                      double power) {
-    std::map<std::string, double> characteristics{{kIPS, ips}, {kPower, power}};
-    auto cores = platform->ToCPUCoreSet(threads);
-    auto cores_count = platform->GetCoreCountPerType(cores);
-    OperatingPoint op{"default", characteristics, threads, cores_count};
-    return op;
-  }
-};
-
 class RaptorLakeOperatingPointTableTest : public RaptorLakeTest {
 protected:
+  OperatingPoint::Configuration
+  CreateConfiguration(const CPUThreadSet &threads) {
+    auto cores = platform->ToCPUCoreSet(threads);
+    auto core_counts = platform->GetCoreCountPerType(cores);
+    return OperatingPoint::Configuration{"default", threads, core_counts};
+  }
   OperatingPoint CreateOperatingPoint(const CPUThreadSet &threads, double ips,
                                       double power) {
-    std::map<std::string, double> characteristics{{kIPS, ips}, {kPower, power}};
-    auto cores = platform->ToCPUCoreSet(threads);
-    auto cores_count = platform->GetCoreCountPerType(cores);
-    OperatingPoint op{"default", characteristics, threads, cores_count};
-    return op;
+    auto config = CreateConfiguration(threads);
+    OperatingPoint::Metrics metrics{ips, power};
+    return OperatingPoint{config, metrics};
   }
 };
 
@@ -108,24 +97,24 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
   int flag = 0;
 
   for (const auto &op : ops_approx) {
-    const auto &utility = op.characteristics.at("utility");
-    const auto &power = op.characteristics.at("power");
-    if (op.cpus == CPUThreadSet{0, 1}) {
+    const auto &utility = op.utility();
+    const auto &power = op.power();
+    if (op.threads() == CPUThreadSet{0, 1}) {
       flag |= 1 << 0;
       EXPECT_NEAR(utility, 4056, 1);
       EXPECT_NEAR(power, -1.054, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0}) {
+    if (op.threads() == CPUThreadSet{0}) {
       flag |= 1 << 1;
       EXPECT_NEAR(utility, 3626, 1);
       EXPECT_NEAR(power, 2.257, 0.001);
     }
-    if (op.cpus == CPUThreadSet{16}) {
+    if (op.threads() == CPUThreadSet{16}) {
       flag |= 1 << 2;
       EXPECT_NEAR(utility, 3937, 1);
       EXPECT_NEAR(power, 3.492, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
+    if (op.threads() == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
       flag |= 1 << 3;
       EXPECT_NEAR(utility, 7311, 1);
       EXPECT_NEAR(power, 29.770, 0.001);
@@ -139,8 +128,8 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
 
   // Check updating operating point table
   // P-HT=1 P-ST=0 E=0
-  op_table.AddOperatingPointMeasurement(CreateOperatingPoint({2, 3}, 0, 0),
-                                        OperatingPointResult{4481, 26.2});
+  op_table.AddOperatingPointMeasurement(CreateConfiguration({2, 3}),
+                                        OperatingPoint::Metrics{4481, 26.2});
 
   ops_ema = op_table.GetOperatingPoints(false);
   EXPECT_EQ(ops_ema.size(), 16);
@@ -149,23 +138,23 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
 
   // P-HT=5 P-ST=1 E=2
   op_table.AddOperatingPointMeasurement(
-      CreateOperatingPoint({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 20}, 12020,
-                           77.1),
-      OperatingPointResult{25000, 50});
+      CreateConfiguration({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 20}),
+      OperatingPoint::Metrics{25000, 50});
 
   ops_ema = op_table.GetOperatingPoints(false);
   EXPECT_EQ(ops_ema.size(), 16);
 
   int flag2 = 0;
   for (const auto &op : ops_ema) {
-    const auto &utility = op.characteristics.at("utility");
-    const auto &power = op.characteristics.at("power");
-    if (op.cpus == CPUThreadSet{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 17}) {
+    const auto &utility = op.utility();
+    const auto &power = op.power();
+    if (op.threads() ==
+        CPUThreadSet{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 17}) {
       flag2 |= 1 << 0;
       EXPECT_NEAR(utility, 18510, 1);
       EXPECT_NEAR(power, 63.55, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0, 1}) {
+    if (op.threads() == CPUThreadSet{0, 1}) {
       flag2 |= 1 << 1;
       EXPECT_NEAR(utility, 4481, 1);
       EXPECT_NEAR(power, 26.2, 0.001);
@@ -179,29 +168,29 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
   int flag3 = 0;
 
   for (const auto &op : ops_approx) {
-    const auto &utility = op.characteristics.at("utility");
-    const auto &power = op.characteristics.at("power");
-    if (op.cpus == CPUThreadSet{0, 1}) {
+    const auto &utility = op.utility();
+    const auto &power = op.power();
+    if (op.threads() == CPUThreadSet{0, 1}) {
       flag3 |= 1 << 0;
       EXPECT_NEAR(utility, 4481, 1);
       EXPECT_NEAR(power, 26.2, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0}) {
+    if (op.threads() == CPUThreadSet{0}) {
       flag3 |= 1 << 1;
       EXPECT_NEAR(utility, 3982, 1);
       EXPECT_NEAR(power, 24.227, 0.001);
     }
-    if (op.cpus == CPUThreadSet{16}) {
+    if (op.threads() == CPUThreadSet{16}) {
       flag3 |= 1 << 2;
       EXPECT_NEAR(utility, 4293, 1);
       EXPECT_NEAR(power, 23.778, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0, 1, 2}) {
+    if (op.threads() == CPUThreadSet{0, 1, 2}) {
       flag3 |= 1 << 3;
       EXPECT_NEAR(utility, 4702, 1);
       EXPECT_NEAR(power, 30.200, 0.001);
     }
-    if (op.cpus == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
+    if (op.threads() == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
       flag3 |= 1 << 4;
       EXPECT_NEAR(utility, 7235, 1);
       EXPECT_NEAR(power, 45.999, 0.001);

@@ -90,7 +90,11 @@ OperatingPoint Mapping::op() const
 {
   auto core_set = _platform.ToCPUCoreSet(cpus);
   auto cores_count = _platform.GetCoreCountPerType(core_set);
-  return OperatingPoint{name, characteristics_map, cpus, cores_count};
+  OperatingPoint::Configuration config{name, cpus, cores_count};
+  double utility = characteristics_map.at("utility");
+  double power = characteristics_map.at("power");
+  OperatingPoint::Metrics metrics{utility, power};
+  return OperatingPoint{config, metrics};
 }
 
 } /* namespace tetris */

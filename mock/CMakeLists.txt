@@ -20,7 +20,6 @@ add_library(tetrismockserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
-    ${CMAKE_SOURCE_DIR}/util/operating_point.cc
 )
 target_link_libraries(tetrismockserverlib ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrismockserverlib generated_proto)

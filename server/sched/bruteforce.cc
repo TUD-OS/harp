@@ -18,7 +18,7 @@ std::unique_ptr<Schedule> BruteforceMapper::ToSchedule(const MappingList &ops,
       assert(opt_opa.has_value());
       auto opa = *opt_opa;
       schedule->SetOperatingPoint(0, _clients[i], opa);
-      busy_cores |= _platform.ToCPUCoreSet(opa.GetThreadSet());
+      busy_cores |= _platform.ToCPUCoreSet(opa.threads());
     }
   }
   return schedule;
@@ -73,7 +73,7 @@ void BruteforceMapper::IterateClient(
     // Check the operating point can be added
     std::map<std::string, int> added_cores{used_cores};
     bool all_fit = true;
-    for (auto &[core_type, op_core_count] : op.cores_count) {
+    for (auto &[core_type, op_core_count] : op.core_counts()) {
       added_cores[core_type] += op_core_count;
       if (added_cores[core_type] > _platform_cores_count[core_type])
         all_fit = false;

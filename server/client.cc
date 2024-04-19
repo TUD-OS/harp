@@ -2,7 +2,6 @@
 #include "manager.h"
 
 #include "proto/tetris.pb.h"
-#include "util/operating_point.h"
 
 #include <sstream>
 
@@ -34,7 +33,8 @@ bool Client::receive_ops(
   /* Convert the protobuf mapping representation into our internal format */
   for (int i = 0; i < ops_info.operating_points_size(); i++) {
     auto cur = ops_info.operating_points(i);
-    ops.emplace_back(_manager->GetPlatform(), cur);
+    throw std::runtime_error("NYI");
+    //ops.emplace_back(_manager->GetPlatform(), cur);
   }
 
   LOGGER->info(" -> Received %d operating points from client %d\n", ops.size(), pid);
@@ -45,7 +45,7 @@ bool Client::receive_ops(
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
   LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
-               new_op.base.name.c_str());
+               new_op.name().c_str());
   active_op = new_op;
 
   /* Send the new mapping information to the client so that client library knows
@@ -54,9 +54,9 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
   msg.set_feature_id(0);
   msg.set_type(ServerMessage::ACTIVATE_OP);
   auto op_info = msg.mutable_activated_op_info();
-  op_info->set_identifier(new_op.base.name);
+  op_info->set_identifier(new_op.name());
 
-  for (const auto& [fc, tc] : new_op.cpu_allocation) {
+  for (const auto& [fc, tc] : new_op.permutation) {
     auto conv = op_info->add_cpu_convs();
     conv->set_cpu_id_from(fc);
     conv->set_cpu_id_to(tc);

@@ -11,10 +11,7 @@
 namespace tetris {
 
 /**
- * Bruteforce mapper.
- *
- * This scheduler generates a single-segment schedule (that's why called
- * "mapper") using a bruteforce algorithm.
+ * LagrangianRelaxation mapper.
  */
 class LagrangianRelaxationMapper : public BaseScheduler {
 private:

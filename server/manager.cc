@@ -1,6 +1,5 @@
 #include "manager.h"
 
-#include "util/operating_point.h"
 #include "util/platform/platform.h"
 #include <memory>
 #include <chrono>
@@ -102,7 +101,7 @@ void Manager::print_mappings() {
     std::cout << "Client '" << client->exec << "' [" << client->pid
               << "] (ID: " << name << ")" << std::endl;
     if (client->active_op.has_value()) {
-      std::cout << "-> mapping: " << client->active_op->base.name << " ["
+      std::cout << "-> mapping: " << client->active_op->name() << " ["
                 << allocator.GetEquivClassName(*(client->active_op)) << "]"
                 << std::endl;
     } else {

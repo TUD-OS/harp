@@ -37,10 +37,9 @@ void TraceLogger::LogClientMappingBegin(
 
   assert(_active_segments.count(client_id) == 0);
 
-  _active_segments.try_emplace(
-      client_id, client_id, FromStart(now), -1, op.base.name,
-      op.characteristic("execution_time"), op.characteristic("energy"),
-      client->progress, -1, op.GetThreadSet());
+  _active_segments.try_emplace(client_id, client_id, FromStart(now), -1,
+                               op.name(), op.utility(), op.power(),
+                               op.threads());
 }
 
 void TraceLogger::LogClientMappingEnd(
@@ -51,7 +50,6 @@ void TraceLogger::LogClientMappingEnd(
 
   auto segment = _active_segments.at(client_id);
   segment.end_ts = FromStart(now);
-  segment.end_progress = client->progress;
   _segments.push_back(segment);
 
   _active_segments.erase(client_id);
@@ -117,23 +115,19 @@ void TraceLogger::ExportSegment(nlohmann::json &trace,
                    {"tid", client_id},
                    {"ts", segment.begin_ts},
                    {"args",
-                    {{"begin_progress", segment.begin_progress},
-                     {"end_progress", segment.end_progress},
-                     {"mapping_exec_time", segment.exec_time},
-                     {"mapping_energy", segment.energy}}}});
+                    {{"mapping_utility", segment.utility},
+                     {"mapping_power", segment.power}}}});
   trace.push_back({{"name", mapping_name},
                    {"ph", "E"},
                    {"pid", 0},
                    {"tid", client_id},
                    {"ts", segment.end_ts},
                    {"args",
-                    {{"begin_progress", segment.begin_progress},
-                     {"end_progress", segment.end_progress},
-                     {"mapping_exec_time", segment.exec_time},
-                     {"mapping_energy", segment.energy}}}});
+                    {{"mapping_utility", segment.utility},
+                     {"mapping_power", segment.power}}}});
 
   // Show in CPUs frame
-  for (const auto &cpu_id : segment.cpus.GetList()) {
+  for (const auto &cpu_id : segment.threads.GetList()) {
     trace.push_back({{"name", full_client_name},
                      {"ph", "B"},
                      {"pid", 1},

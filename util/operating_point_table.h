@@ -6,7 +6,6 @@
 #include "util/debug_util.h"
 #include "util/operating_point.h"
 #include "util/pareto.h"
-#include "util/platform/platform.h"
 #include "util/regression.h"
 #include "util/string_util.h"
 
@@ -14,15 +13,7 @@
 
 namespace tetris {
 
-/**
- * \struct OperaringPointResult
- * \brief Struct to hold results for an operating point, including utility and
- * power consumption metrics.
- */
-struct OperatingPointResult {
-  double utility; // Instructions per second
-  double power;   // Average power consumption
-};
+class Platform;
 
 /**
  * \class OperatingPointTable
@@ -69,9 +60,12 @@ public:
 
   virtual void AddOperatingPoint(const OperatingPoint &op) = 0;
 
+  virtual void AddOperatingPoint(const OperatingPoint::Configuration &config,
+                                 const OperatingPoint::Metrics &metrics) = 0;
+
   virtual void
-  AddOperatingPointMeasurement(const OperatingPoint &op,
-                               const OperatingPointResult &result) = 0;
+  AddOperatingPointMeasurement(const OperatingPoint::Configuration &config,
+                               const OperatingPoint::Metrics &result) = 0;
 
   virtual void Clear() = 0;
 
@@ -104,8 +98,8 @@ public:
       const Platform &platform,
       ObjectiveValueFunc value_objective =
           [](const OperatingPoint &a) {
-            double power = a.characteristic("power");
-            double utility = a.characteristic("utility");
+            const double &power = a.power();
+            const double &utility = a.utility();
             return power / utility / utility;
           },
       bool measurement = true, bool approximation = true,
@@ -116,9 +110,12 @@ public:
 
   void AddOperatingPoint(const OperatingPoint &op) override;
 
+  void AddOperatingPoint(const OperatingPoint::Configuration &config,
+                         const OperatingPoint::Metrics &metrics) override;
+
   void
-  AddOperatingPointMeasurement(const OperatingPoint &op,
-                               const OperatingPointResult &result) override;
+  AddOperatingPointMeasurement(const OperatingPoint::Configuration &op,
+                               const OperatingPoint::Metrics &result) override;
 
   void Clear() override {
     _ops.clear();
@@ -129,7 +126,7 @@ public:
 private:
   using Configuration = std::vector<int>;
 
-  Configuration GetConfiguration(const OperatingPoint &op) const;
+  Configuration GetConfiguration(const OperatingPoint::Configuration &op) const;
 
   std::string GetConfigurationString(const Configuration &config) const;
 
@@ -145,8 +142,9 @@ private:
 
   CPUThreadSet ConstructCPUThreadSet(const Configuration &config) const;
 
-  OperatingPoint ConstructOperatingPoint(const Configuration &config,
-                                         const OperatingPointResult &res) const;
+  OperatingPoint
+  ConstructOperatingPoint(const Configuration &config,
+                          const OperatingPoint::Metrics &res) const;
 
   void GenerateApproximatedOperatingPoints();
 
@@ -164,12 +162,12 @@ private:
   std::vector<Configuration> _all_configurations;
 
   // Store primary operating points
-  std::map<Configuration, OperatingPointResult> _ops; // EMA results
-  std::map<Configuration, int> _sample_counts;        // Sample counts
+  std::map<Configuration, OperatingPoint::Metrics> _ops; // EMA results
+  std::map<Configuration, int> _sample_counts;           // Sample counts
 
   // Approximation model
   std::unique_ptr<Regression> _regression;
-  std::map<Configuration, OperatingPointResult> _approx_ops;
+  std::map<Configuration, OperatingPoint::Metrics> _approx_ops;
   bool _update_approximated; // Flag to update approximated OP
 };
 
@@ -194,17 +192,30 @@ public:
       LOGGER->warning(
           "CustomOperatingPointTable does not support approximation.");
     }
-    return _ops;
+    std::vector<OperatingPoint> res;
+    for (const auto &[_, op] : _ops) {
+      res.push_back(op);
+    }
+    return res;
   }
 
   void AddOperatingPoint(const OperatingPoint &op) override {
-    _ops.emplace_back(op);
+    if (_ops.contains(op.name())) {
+      LOGGER->warning("Operating Point \"%s\" was already added. Overriding.",
+                      op.name().c_str());
+    }
+    _ops.emplace(op.name(), op);
     _update_pareto = true;
   }
 
+  void AddOperatingPoint(const OperatingPoint::Configuration &config,
+                         const OperatingPoint::Metrics &metrics) override {
+    AddOperatingPoint(OperatingPoint(config, metrics));
+  }
+
   void
-  AddOperatingPointMeasurement(const OperatingPoint &op,
-                               const OperatingPointResult &result) override {
+  AddOperatingPointMeasurement(const OperatingPoint::Configuration &config,
+                               const OperatingPoint::Metrics &result) override {
     throw std::runtime_error("CustomOperatingPointTable does not support "
                              "adding measured Operating Point");
   }
@@ -215,7 +226,7 @@ public:
   }
 
 private:
-  std::vector<OperatingPoint> _ops;
+  std::map<std::string, OperatingPoint> _ops;
 };
 
 } // namespace tetris

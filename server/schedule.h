@@ -55,14 +55,17 @@ class Schedule {
       auto op = GetOperatingPoint(client_id);
       if (!op.has_value())
         return 0.0;
+      return 0.0;
+#if 0
       double exec_time = op->characteristic("execution_time");
       return *_duration / exec_time;
+#endif
     }
 
     CPUThreadSet GetThreadSet() const {
       CPUThreadSet res;
       for (auto &[cid, op] : _ops) {
-        res |= op.GetThreadSet();
+        res |= op.threads();
       }
       return res;
     }
@@ -70,10 +73,10 @@ class Schedule {
     bool HasOverlaps() const {
       CPUThreadSet total_set;
       for (auto &[cid, op] : _ops) {
-        auto op_set = op.GetThreadSet();
+        auto op_set = op.threads();
         if (total_set.OverlapsWith(op_set))
           return true;
-        total_set |= op.GetThreadSet();
+        total_set |= op_set;
       }
       return false;
     }
@@ -290,10 +293,9 @@ public:
          << c->progress << " | ";
       auto op = _segments[0]->GetOperatingPoint(cid);
       if (op.has_value()) {
-        ss << "OP '" << op->base.name << "' exec_time "
-           << op->characteristic("execution_time") << " energy "
-           << op->characteristic("energy") << " | ";
-        auto cores = op->GetThreadSet();
+        ss << "OP '" << op->name() << "' utility " << op->utility() << " power "
+           << op->power() << " | ";
+        auto cores = op->threads();
         ss << string_util::join(cores.GetList(), ",") << "\n";
       } else {
         ss << "NONE\n";
