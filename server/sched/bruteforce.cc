@@ -69,7 +69,7 @@ void BruteforceMapper::IterateClient(
     }
   }
 
-  for (auto &op : _cl_pareto[n]) {
+  for (auto &op : _client_ops[n]) {
     // Check the operating point can be added
     std::map<std::string, int> added_cores{used_cores};
     bool all_fit = true;
@@ -110,17 +110,19 @@ BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
   _clients = clients;
   _start_time = start_time;
   _blocked = blocked_cores;
-  _cl_pareto.clear();
+  _client_ops.clear();
   _best_value = std::make_tuple(0, 0.0);
   _cur_ops.clear();
   _cur_ops.resize(clients.size());
 
+  LOGGER->debug("Allocating clients to the resource using BruteforceMapper\n");
+  LOGGER->debug("Current clients:\n");
+
   // Filter Pareto-front for each client
   for (const auto &c : _clients) {
-    _cl_pareto.push_back(_objective->FilterParetoFront(_platform, c->ops));
-    LOGGER->debug("Filtering operating points for '%s' [%d] from %d to %d.\n",
-                  c->exec.c_str(), c->pid, c->ops.size(),
-                  _cl_pareto.back().size());
+    _client_ops.push_back(c->op_table->GetParetoFront());
+    LOGGER->debug("  - '%s' [%d]: %d operating points.\n", c->exec.c_str(),
+                  c->pid, _client_ops.back().size());
   }
 
   // Start bruteforce

@@ -179,12 +179,16 @@ private:
  */
 class CustomOperatingPointTable : public OperatingPointTable {
 public:
-  explicit CustomOperatingPointTable(const Platform &platform,
-                                     const ObjectiveValueFunc &value_objective,
-                                     bool measurement = false)
+  explicit CustomOperatingPointTable(
+      const Platform &platform,
+      ObjectiveValueFunc value_objective =
+          [](const OperatingPoint &a) {
+            const double &power = a.power();
+            const double &utility = a.utility();
+            return power / utility / utility;
+          },
+      bool measurement = false)
       : OperatingPointTable(platform, value_objective, measurement, false) {}
-
-  virtual std::vector<OperatingPoint> GetParetoFront() = 0;
 
   std::vector<OperatingPoint>
   GetOperatingPoints(bool approximated = false) override {

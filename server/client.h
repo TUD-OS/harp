@@ -7,6 +7,7 @@
 #include "util/connection.h"
 #include "util/debug_util.h"
 #include "util/operating_point.h"
+#include "util/operating_point_table.h"
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
 
@@ -44,7 +45,7 @@ public:
   std::string exec;
   int pid;
 
-  std::vector<tetris::OperatingPoint> ops;
+  std::unique_ptr<tetris::OperatingPointTable> op_table;
   std::optional<tetris::OperatingPointAllocation> active_op;
 
   double progress; // current progress (0.0...1.0)
@@ -54,14 +55,14 @@ public:
   int type;
 
 private:
-  Manager *_manager;
+  Manager& _manager;
 
   bool receive_ops(const tetris::ClientMessage::OperatingPointsInfo &);
 
 public:
   Client(const Client &) = delete;
 
-  Client(const ConnectionPtr &conn, Manager *manager);
+  Client(const ConnectionPtr &conn, Manager& manager);
 
   ~Client() {
     if (pid != -1)

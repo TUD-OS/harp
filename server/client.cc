@@ -8,11 +8,15 @@
 
 using namespace tetris;
 
-Client::Client(const ConnectionPtr &conn, Manager *manager)
-    : connection{conn}, exec{}, pid{-1}, ops{},
+Client::Client(const ConnectionPtr &conn, Manager& manager)
+    : connection{conn}, exec{}, pid{-1}, op_table{},
       active_op{}, progress{0.0}, type{Type::PASSIV}, _manager{manager}
 {
   progress_tp = std::chrono::high_resolution_clock::now();
+
+  // TODO: choose the type of operating point table based on the client info
+  // TODO: Pass the objective function
+  op_table = std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
 }
 
 std::string Client::push_path() const
@@ -28,17 +32,18 @@ bool Client::receive_ops(
   /* Mark the client active since we now have operating points */
   type = Type::ACTIVE;
 
-  ops.clear();
+  op_table->Clear();
 
   /* Convert the protobuf mapping representation into our internal format */
+  int op_size = ops_info.operating_points_size();
   for (int i = 0; i < ops_info.operating_points_size(); i++) {
     auto cur = ops_info.operating_points(i);
     throw std::runtime_error("NYI");
     //ops.emplace_back(_manager->GetPlatform(), cur);
   }
 
-  LOGGER->info(" -> Received %d operating points from client %d\n", ops.size(), pid);
-  _manager->reschedule();
+  LOGGER->info(" -> Received %d operating points from client %d\n", op_size, pid);
+  _manager.reschedule();
 
   return true;
 }

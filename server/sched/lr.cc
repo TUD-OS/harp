@@ -47,13 +47,13 @@ LagrangianRelaxationMapper::MinimizeDualFunctionClient(
     int c, const std::map<std::string, double> &lambda) const {
   Client &client = *_clients[c];
   double rem_cratio = 1.0 - client.progress;
-  double best_value = EvaluateOPDual(_cl_pareto[c][0], lambda, rem_cratio);
-  const OperatingPoint *best_op = &_cl_pareto[c][0];
-  for (int i = 1; i < _cl_pareto[c].size(); ++i) {
-    double op_value = EvaluateOPDual(_cl_pareto[c][i], lambda, rem_cratio);
+  double best_value = EvaluateOPDual(_client_ops[c][0], lambda, rem_cratio);
+  const OperatingPoint *best_op = &_client_ops[c][0];
+  for (int i = 1; i < _client_ops[c].size(); ++i) {
+    double op_value = EvaluateOPDual(_client_ops[c][i], lambda, rem_cratio);
     if (op_value < best_value) {
       best_value = op_value;
-      best_op = &_cl_pareto[c][i];
+      best_op = &_client_ops[c][i];
     }
   }
   return std::make_tuple(best_op, best_value);
@@ -150,14 +150,14 @@ const OperatingPoint *LagrangianRelaxationMapper::SelectClientOP(
     const std::map<std::string, double> &lambda, int c) const {
 
   // Sort operating points
-  std::vector<int> order(_cl_pareto[c].size());
+  std::vector<int> order(_client_ops[c].size());
   for (int i = 0; i < order.size(); ++i) {
     order[i] = i;
   }
   std::sort(order.begin(), order.end(), [this, c, &lambda](int i1, int i2) {
     double rem_cratio = 1.0 - this->_clients[c]->progress;
-    auto &op1 = this->_cl_pareto[c][i1];
-    auto &op2 = this->_cl_pareto[c][i2];
+    auto &op1 = this->_client_ops[c][i1];
+    auto &op2 = this->_client_ops[c][i2];
     double value1 = this->EvaluateOPDual(op1, lambda, rem_cratio);
     double value2 = this->EvaluateOPDual(op2, lambda, rem_cratio);
     return value1 < value2;
@@ -166,14 +166,14 @@ const OperatingPoint *LagrangianRelaxationMapper::SelectClientOP(
   // Find the first fitting operating point
   for (auto i : order) {
     bool fit = true;
-    for (auto &[core_type, core_count] : _cl_pareto[c][i].core_counts()) {
+    for (auto &[core_type, core_count] : _client_ops[c][i].core_counts()) {
       if (core_count > cores_count.at(core_type)) {
         fit = false;
         break;
       }
     }
     if (fit) {
-      return &_cl_pareto[c][i];
+      return &_client_ops[c][i];
     }
   }
   return nullptr;
@@ -215,17 +215,17 @@ LagrangianRelaxationMapper::GenerateSchedule(std::vector<Client *> clients,
   _clients = clients;
   _start_time = start_time;
   _blocked = blocked_cores;
-  _cl_pareto.clear();
+  _client_ops.clear();
+
+  LOGGER->debug(
+      "Allocating clients to the resource using LagrangianRelaxationMapper\n");
+  LOGGER->debug("Current clients:\n");
 
   // Filter Pareto-front for each client
-  //
-  // Note: It takes 7ms to filter from 391 to 72 operating points (four jobs).
-  // Possible optimization: save pointers instead of copying OperatingPoints
   for (const auto &c : _clients) {
-    _cl_pareto.push_back(_objective->FilterParetoFront(_platform, c->ops));
-    LOGGER->debug("Filtering operating points for '%s' [%d] from %d to %d.\n",
-                  c->exec.c_str(), c->pid, c->ops.size(),
-                  _cl_pareto.back().size());
+    _client_ops.push_back(c->op_table->GetParetoFront());
+    LOGGER->debug("  - '%s' [%d]: %d operating points.\n", c->exec.c_str(),
+                  c->pid, _client_ops.back().size());
   }
 
   auto [lambda, lr_ops] = SolveDualOptimizationProblem();

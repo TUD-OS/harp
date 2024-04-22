@@ -1,9 +1,9 @@
 #ifndef __MANAGER_H__
 #define __MANAGER_H__
 
-#include <chrono>
 #pragma once
 
+#include <chrono>
 #include <memory>
 
 #include "client.h"
@@ -76,7 +76,7 @@ public:
    * \brief Adds a new client to the client list upon connection.
    */
   void client_connect(int fd, const ConnectionPtr &conn) {
-    auto c = std::make_unique<Client>(conn, this);
+    auto c = std::make_unique<Client>(conn, *this);
     _clients.emplace(fd, std::move(c));
     reschedule();
   }

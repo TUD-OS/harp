@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "server/client.h"
+#include "server/manager.h"
 #include "server/sched/bruteforce.h"
 #include "server/sched/lr.h"
 #include "server/schedule.h"
@@ -13,16 +14,17 @@ using namespace tetris;
 
 class DISABLED_RaptorLakeScheduleTest : public RaptorLakeTest {
 protected:
+  std::unique_ptr<Manager> manager;
   std::map<std::string, std::vector<OperatingPoint>> app_ops;
 
   Client *CreateClient(const std::string &name,
                        const std::vector<OperatingPoint> &ops) {
     ConnectionPtr conn;
-    auto c = new Client(conn, nullptr);
+    auto c = new Client(conn, *manager);
 
     c->exec = name;
     for (auto &op : ops) {
-      c->ops.emplace_back(op);
+      c->op_table->AddOperatingPoint(op);
     }
     return c;
   }
@@ -50,6 +52,7 @@ protected:
 
   virtual void SetUp() {
     RaptorLakeTest::SetUp();
+    manager = std::make_unique<Manager>(std::move(platform), nullptr);
     ReadOperatingPoints();
   }
 

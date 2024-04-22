@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "server/client.h"
+#include "server/manager.h"
 #include "server/sched/bruteforce.h"
 #include "server/schedule.h"
 #include "server/trace_logger.h"
@@ -13,27 +14,28 @@ using namespace tetris;
 class SmallOdroidScheduleTest : public SmallOdroidTest {
 protected:
   Client *CreateClient(const std::string &name,
-                       std::vector<OperatingPoint> &ops) {
+                       const std::vector<OperatingPoint> &ops) {
     ConnectionPtr conn;
-    auto c = new Client(conn, nullptr);
+    auto c = new Client(conn, *manager);
 
     c->exec = name;
     for (auto &op : ops) {
-      c->ops.emplace_back(op);
+      c->op_table->AddOperatingPoint(op);
     }
     return c;
   }
 
   OperatingPoint CreateOP(const std::string &name, double utility, double power,
                           const CPUThreadSet &thread_set) {
+    const Platform &platform = manager->GetPlatform();
     auto core_counts =
-        platform->GetCoreCountPerType(platform->ToCPUCoreSet(thread_set));
+        platform.GetCoreCountPerType(platform.ToCPUCoreSet(thread_set));
     OperatingPoint::Configuration config{name, thread_set, core_counts};
     OperatingPoint::Metrics metrics{utility, power};
     return OperatingPoint{config, metrics};
   }
 
-  Client *GetClientOP0() {
+  std::pair<Client *, std::vector<OperatingPoint>> GetClientOP0() {
     std::vector<OperatingPoint> ops = {
         CreateOP("1L0B", 5.848, 0.351, {0}),
         CreateOP("1L1B", 10.526, 0.758, {0, 2}),
@@ -45,10 +47,10 @@ protected:
         CreateOP("0L2B", 21.739, 3.087, {2, 3}),
     };
 
-    return CreateClient("app1", ops);
+    return std::make_pair(CreateClient("app1", ops), ops);
   }
 
-  Client *GetClientOP1() {
+  std::pair<Client *, std::vector<OperatingPoint>> GetClientOP1() {
     std::vector<OperatingPoint> ops = {
         CreateOP("1L1B", 22.222, 1.333, {0, 2}),
         CreateOP("2L0B", 16.129, 1.065, {0, 1}),
@@ -60,10 +62,10 @@ protected:
         CreateOP("0L1B", 13.158, 1.474, {2}),
     };
 
-    return CreateClient("app2", ops);
+    return std::make_pair(CreateClient("app2", ops), ops);
   }
 
-  Client *GetClientOP2() {
+  std::pair<Client *, std::vector<OperatingPoint>> GetClientOP2() {
     std::vector<OperatingPoint> ops = {
         CreateOP("1L0B", 10.870, 0.435, {0}),
         CreateOP("2L0B", 18.868, 0.849, {0, 1}),
@@ -75,16 +77,28 @@ protected:
         CreateOP("0L1B", 29.412, 2.382, {2}),
     };
 
-    return CreateClient("app3", ops);
+    return std::make_pair(CreateClient("app3", ops), ops);
   }
 
+  std::unique_ptr<Manager> manager;
   std::vector<Client *> clients;
+  std::vector<std::vector<OperatingPoint>> client_ops;
+
   virtual void SetUp() {
     SmallOdroidTest::SetUp();
+    manager = std::make_unique<Manager>(std::move(platform), nullptr);
     // Adding a sample client for use in tests
-    clients.push_back(GetClientOP0());
-    clients.push_back(GetClientOP1());
-    clients.push_back(GetClientOP2());
+    auto [client, ops] = GetClientOP0();
+    clients.push_back(client);
+    client_ops.push_back(ops);
+
+    std::tie(client, ops) = GetClientOP1();
+    clients.push_back(client);
+    client_ops.push_back(ops);
+
+    std::tie(client, ops) = GetClientOP2();
+    clients.push_back(client);
+    client_ops.push_back(ops);
   }
 
   virtual void TearDown() {
@@ -124,7 +138,7 @@ TEST_F(SmallOdroidScheduleTest, OperatingPoints) {
   Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
-  OperatingPointAllocation op(clients[0]->ops[0], {});
+  OperatingPointAllocation op(client_ops[0][0], {});
 
   multi_sched.SetOperatingPoint(0, clients[0], op);
   auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0]);
@@ -155,7 +169,7 @@ TEST_F(SmallOdroidScheduleTest, NoOperatingPointSet) {
 TEST_F(SmallOdroidScheduleTest, SetOperatingPointWithoutSegment) {
   Schedule multi_sched(clients, 0.0, true);
 
-  OperatingPointAllocation op(clients[0]->ops[0], {});
+  OperatingPointAllocation op(client_ops[0][0], {});
 
   // Expecting an error as no segment added yet
   EXPECT_THROW(multi_sched.SetOperatingPoint(0, clients[0], op),
@@ -179,8 +193,8 @@ TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
   Schedule multi_sched(clients, 0.0, true);
   multi_sched.AddSegment(10.0);
 
-  OperatingPointAllocation op0(clients[0]->ops[0], {});
-  OperatingPointAllocation op1(clients[1]->ops[6], {});
+  OperatingPointAllocation op0(client_ops[0][0], {});
+  OperatingPointAllocation op1(client_ops[1][6], {});
 
   multi_sched.SetOperatingPoint(0, clients[0], op0);
   multi_sched.SetOperatingPoint(0, clients[1], op1);
@@ -195,7 +209,7 @@ TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
 #endif
 
   multi_sched.AddSegment(15.0);
-  OperatingPointAllocation op2(clients[1]->ops[0], {});
+  OperatingPointAllocation op2(client_ops[1][0], {});
   multi_sched.SetOperatingPoint(1, clients[0], op0);
   multi_sched.SetOperatingPoint(1, clients[1], op2);
   EXPECT_EQ(multi_sched.GetSegmentThreadSet(1), CPUThreadSet({0, 2}));
@@ -214,7 +228,8 @@ TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
 //
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
-  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  BruteforceMapper mapper(manager->GetPlatform(),
+                          std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0]}, 0.0);
   LOGGER->debug("%s", s1->ToString().c_str());
@@ -251,7 +266,8 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
 }
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
-  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  BruteforceMapper mapper(manager->GetPlatform(),
+                          std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
   EXPECT_EQ(s1->GetNumberOfSegments(), 1);
@@ -303,7 +319,8 @@ TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
 }
 
 TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
-  BruteforceMapper mapper(*platform.get(), std::make_unique<EnergyObjective>());
+  BruteforceMapper mapper(manager->GetPlatform(),
+                          std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
   auto s1 = mapper.GenerateSchedule(clients, 0.0);
   LOGGER->debug("%s", s1->ToString().c_str());
@@ -328,9 +345,9 @@ TEST_F(SmallOdroidScheduleTest,
   std::chrono::high_resolution_clock::time_point zero_time;
 
   TraceLogger logger(zero_time);
-  logger.RegisterPlatform(*platform);
+  logger.RegisterPlatform(manager->GetPlatform());
 
-  BruteforceMapper mapper(*platform.get(),
+  BruteforceMapper mapper(manager->GetPlatform(),
                           std::make_unique<BalancedObjective>());
 
   std::vector<Client *> active = clients;

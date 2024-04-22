@@ -105,7 +105,7 @@ private:
   double _start_time;
   CPUCoreSet _blocked;
 
-  std::vector<std::vector<OperatingPoint>> _cl_pareto; // Pareto front of ops
+  std::vector<std::vector<OperatingPoint>> _client_ops; // Pareto front of ops
 };
 
 } // namespace tetris
