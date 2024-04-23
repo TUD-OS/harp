@@ -40,6 +40,15 @@ Client::~Client()
     LOGGER->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
   if (perf_handle) {
     update_perf_data(std::chrono::high_resolution_clock::now());
+
+    /* Calculate the overall IPS */
+    auto start = perf_data.front();
+    auto last = perf_data.back();
+
+    auto total_ins = last.data["Instructions"] - start.data["Instructions"];
+    auto total_s = std::chrono::duration<double>(last.time - start.time).count();
+    LOGGER->info(" --> Total: %llu\tTime: %lf s\tIPS: %lf\n", total_ins, total_s,
+            total_s != 0 ? total_ins / total_s : 0);
   }
 }
 
@@ -82,6 +91,7 @@ void Client::update_perf_data(std::chrono::high_resolution_clock::time_point tp)
   }
 
   PerfData cur;
+  cur.time = tp;
   cur.data = perf_handle->read();
 
   if (perf_data.size() != 0) {
