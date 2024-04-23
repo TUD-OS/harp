@@ -260,7 +260,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
             break;
           }
 
-          logger->info("Received a signal (%i)\n", siginfo.ssi_signo);
+          logger->debug("Received a signal (%i)\n", siginfo.ssi_signo);
 
           switch (siginfo.ssi_signo) {
           case SIGUSR1:
