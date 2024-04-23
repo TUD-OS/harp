@@ -11,11 +11,11 @@
 #include "client.h"
 #include "mapper/base.h"
 #include "trace_logger.h"
-#include "perf.h"
 
 #include "util/debug_util.h"
 #include "util/platform/cpu_sets.h"
 #include "util/platform/platform.h"
+#include "util/platform/perf.h"
 
 /**
  * \class Manager

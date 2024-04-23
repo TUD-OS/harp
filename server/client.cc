@@ -2,7 +2,6 @@
 
 #include "proto/tetris.pb.h"
 #include "manager.h"
-#include "server/perf.h"
 #include "util/operating_point.h"
 #include "util/string_util.h"
 #include "util/util.h"
@@ -13,13 +12,6 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
-
-#include <linux/perf_event.h>
-#include <linux/hw_breakpoint.h>
-#include <sys/syscall.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-#include <string.h>
 
 
 

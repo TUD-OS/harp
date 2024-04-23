@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include "perf.h"
-
 #include "proto/tetris.pb.h"
 
 #include "util/connection.h"
@@ -12,6 +10,7 @@
 #include "util/operating_point.h"
 #include "util/operating_point_table.h"
 #include "util/platform/cpu_sets.h"
+#include "util/platform/perf.h"
 #include "util/protobuf_util.h"
 
 #include <optional>
