@@ -1,6 +1,5 @@
 #include "server/perf.h"
 
-#include <initializer_list>
 #include <util/string_util.h>
 #include <util/debug_util.h>
 
@@ -17,9 +16,6 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <string.h>
-#include <sched.h>
-#include <pthread.h>
-#include <utility>
 
 
 namespace fs = std::filesystem;

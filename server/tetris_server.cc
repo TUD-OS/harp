@@ -243,11 +243,6 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
               break;
             }
           }
-
-          /* Control connection are usually single shot. So just open this
-           * connection and directly read out the data */
-
-          /* TODO: Handle control messages */
         }
       } else if (cur->data.fd == sig_fd) {
         /* There was a signal delivered to this process. */
