@@ -7,12 +7,11 @@
 #include "server/manager.h"
 #include "server/sched/bruteforce.h"
 #include "server/sched/lr.h"
-#include "server/schedule.h"
 #include "util/mapping_reader.h"
 
 using namespace tetris;
 
-class DISABLED_RaptorLakeScheduleTest : public RaptorLakeTest {
+class DISABLED_RaptorLakeMappingTest : public RaptorLakeTest {
 protected:
   std::unique_ptr<Manager> manager;
   std::map<std::string, std::vector<OperatingPoint>> app_ops;
@@ -77,7 +76,7 @@ protected:
   }
 };
 
-TEST_F(DISABLED_RaptorLakeScheduleTest, BF_FourClients) {
+TEST_F(DISABLED_RaptorLakeMappingTest, BF_FourClients) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());
@@ -86,17 +85,17 @@ TEST_F(DISABLED_RaptorLakeScheduleTest, BF_FourClients) {
   BruteforceMapper mapper(*platform, std::make_unique<EnergyObjective>());
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto s = mapper.GenerateSchedule(clients, 0.0);
+  auto m = mapper.GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
-  LOGGER->info("Scheduling time: %lfs\n", dur_s);
+  LOGGER->info("Mapping time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", s->ToString().c_str());
+  LOGGER->info("%s", m.ToString().c_str());
 }
 
-TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_Energy) {
+TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_Energy) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());
@@ -106,17 +105,17 @@ TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_Energy) {
                                     std::make_unique<EnergyObjective>(), 500);
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto s = mapper.GenerateSchedule(clients, 0.0);
+  auto m = mapper.GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Scheduling time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", s->ToString().c_str());
+  LOGGER->info("%s", m.ToString().c_str());
 }
 
-TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_EDP) {
+TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_EDP) {
   std::vector<Client *> clients;
   clients.push_back(GetClientEP());
   clients.push_back(GetClientCG());
@@ -126,12 +125,12 @@ TEST_F(DISABLED_RaptorLakeScheduleTest, LR_FourClients_EDP) {
                                     std::make_unique<BalancedObjective>(), 500);
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto s = mapper.GenerateSchedule(clients, 0.0);
+  auto m = mapper.GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Scheduling time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", s->ToString().c_str());
+  LOGGER->info("%s", m.ToString().c_str());
 }

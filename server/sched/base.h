@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "server/client.h"
+#include "server/client_mapping.h"
 #include "server/sched/objective.h"
-#include "server/schedule.h"
 #include "util/platform/cpu_sets.h"
 
 namespace tetris {
@@ -16,35 +16,50 @@ namespace tetris {
 /**
  * An abstract class defining the interface for a Mapper.
  */
-class BaseScheduler {
+class BaseClientMapper {
 public:
-  virtual void
-  SetObjective(std::unique_ptr<OptimizationObjective> objective) = 0;
+  explicit BaseClientMapper(const Platform &platform,
+                            std::unique_ptr<OptimizationObjective> objective);
 
-  virtual OptimizationObjective *GetObjective() = 0;
+  void SetObjective(std::unique_ptr<OptimizationObjective> objective) {
+    _objective = std::move(objective);
+  }
+
+  OptimizationObjective *GetObjective() { return _objective.get(); }
+
   /**
-   * Generates a schedule.
+   * Generates a Client Mapping
    *
    * \param clients The list of clients for which mappings need to be selected.
    * \param start_time The start time of the schedule
-   * \return The selected mappings.
+   * \return The se.
    */
-  virtual std::unique_ptr<Schedule>
-  GenerateSchedule(std::vector<Client *> clients, double start_time) {
-    return GenerateSchedule(clients, start_time, CPUCoreSet());
+  virtual ClientMapping GenerateClientMapping(std::vector<Client *> clients) {
+    return GenerateClientMapping(clients, CPUCoreSet());
   }
 
   /**
-   * Generates a schedule considering a list of blocked CPUs.
+   * Generates a Client Mapping considering a list of blocked CPUs.
    *
    * \param clients The list of clients for which mappings need to be selected.
-   * \param start_time The start time of the schedule
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  virtual std::unique_ptr<Schedule>
-  GenerateSchedule(std::vector<Client *> clients, double start_time,
-                   CPUCoreSet blocked_cores) = 0;
+  virtual ClientMapping GenerateClientMapping(std::vector<Client *> clients,
+                                              CPUCoreSet blocked_cores) = 0;
+
+protected:
+  using MappingList = std::vector<const OperatingPoint *>;
+
+  /**
+   * Create a ClientMapping object with the current mapping list
+   */
+  ClientMapping ToClientMapping(const std::vector<Client *> clients,
+                                const MappingList &ops, CPUCoreSet busy_cores);
+
+  const Platform &_platform;
+  std::map<std::string, int> _platform_cores_count;
+  std::unique_ptr<OptimizationObjective> _objective;
 };
 
 } // namespace tetris

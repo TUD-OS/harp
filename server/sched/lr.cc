@@ -12,29 +12,10 @@ std::string LambdaToString(const std::map<std::string, double> &lambda) {
 
 namespace tetris {
 
-/**
- * Create a schedule object with the current mapping list
- */
-std::unique_ptr<Schedule> LagrangianRelaxationMapper::ToSchedule(
-    const std::vector<const OperatingPoint *> &ops, CPUCoreSet busy_cores) {
-  auto &op_allocator = _platform.GetEquivResAllocator();
-  auto schedule = std::make_unique<Schedule>(_clients, _start_time, false);
-  schedule->AddSegment();
-  for (int i = 0; i < _clients.size(); ++i) {
-    if (ops[i] != nullptr) {
-      auto opt_opa = op_allocator.FindEquivOP(*ops[i], busy_cores);
-      assert(opt_opa.has_value());
-      auto opa = *opt_opa;
-      schedule->SetOperatingPoint(0, _clients[i], opa);
-      busy_cores |= _platform.ToCPUCoreSet(opa.threads());
-    }
-  }
-  return schedule;
-}
 double LagrangianRelaxationMapper::EvaluateOPDual(
     const OperatingPoint &op, const std::map<std::string, double> &lambda,
     double rem_cratio) const {
-  double value = _objective->EvaluateOP(op, rem_cratio);
+  double value = _objective->EvaluateOP(op);
 
   for (auto &[core_type, core_count] : op.core_counts()) {
     value += lambda.at(core_type) * core_count;
@@ -203,17 +184,14 @@ std::vector<const OperatingPoint *> LagrangianRelaxationMapper::SelectOPs(
  * Selects client mappings considering a list of blocked CPUs.
  *
  * \param clients The list of clients for which mappings need to be selected.
- * \param start_time The start time of the schedule
  * \param blocked_cpus The list of blocked CPUs.
  * \return The selected mappings.
  */
-std::unique_ptr<Schedule>
-LagrangianRelaxationMapper::GenerateSchedule(std::vector<Client *> clients,
-                                             double start_time,
-                                             CPUCoreSet blocked_cores) {
+ClientMapping
+LagrangianRelaxationMapper::GenerateClientMapping(std::vector<Client *> clients,
+                                                  CPUCoreSet blocked_cores) {
   // Initialize internal data structures
   _clients = clients;
-  _start_time = start_time;
   _blocked = blocked_cores;
   _client_ops.clear();
 
@@ -232,6 +210,6 @@ LagrangianRelaxationMapper::GenerateSchedule(std::vector<Client *> clients,
 
   std::vector<const OperatingPoint *> ops = SelectOPs(lambda, lr_ops);
 
-  return ToSchedule(ops, _blocked);
+  return ToClientMapping(clients, ops, _blocked);
 }
 } // namespace tetris

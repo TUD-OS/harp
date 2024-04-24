@@ -6,12 +6,11 @@
 #include "server/client.h"
 #include "server/manager.h"
 #include "server/sched/bruteforce.h"
-#include "server/schedule.h"
 #include "server/trace_logger.h"
 
 using namespace tetris;
 
-class SmallOdroidScheduleTest : public SmallOdroidTest {
+class SmallOdroidClientMappingTest : public SmallOdroidTest {
 protected:
   Client *CreateClient(const std::string &name,
                        const std::vector<OperatingPoint> &ops) {
@@ -109,238 +108,136 @@ protected:
   }
 };
 
-TEST_F(SmallOdroidScheduleTest, AddSegment) {
-  Schedule multi_sched(clients, 0.0, true); // multi-segment
-  EXPECT_EQ(multi_sched.GetStartTime(), 0.0);
-  EXPECT_EQ(multi_sched.GetNumberOfSegments(), 0); // No segment added yet
-  multi_sched.AddSegment(10.0);
-  EXPECT_EQ(multi_sched.GetNumberOfSegments(), 1);
-  EXPECT_EQ(multi_sched.GetTotalDuration().value(), 10.0);
-  multi_sched.AddSegment(5.0);
-  EXPECT_EQ(multi_sched.GetNumberOfSegments(), 2);
-  EXPECT_EQ(multi_sched.GetTotalDuration().value(), 15.0);
-  EXPECT_EQ(multi_sched.GetSegmentStartTime(0).value(), 0.0);
-  EXPECT_EQ(multi_sched.GetSegmentEndTime(0).value(), 10.0);
-  EXPECT_EQ(multi_sched.GetSegmentStartTime(1).value(), 10.0);
-  EXPECT_EQ(multi_sched.GetSegmentEndTime(1).value(), 15.0);
-  EXPECT_TRUE(multi_sched.IsMultiSegment());
-
-  Schedule single_sched(clients, 0.0, false); // single-segment
-  single_sched.AddSegment();
-  EXPECT_EQ(single_sched.GetNumberOfSegments(), 1);
-  EXPECT_EQ(single_sched.GetSegmentDuration(0).has_value(), false);
-  EXPECT_EQ(single_sched.GetSegmentStartTime(0).value(), 0.0);
-  EXPECT_EQ(single_sched.GetSegmentEndTime(0).has_value(), false);
-  EXPECT_FALSE(single_sched.IsMultiSegment());
-}
-
-TEST_F(SmallOdroidScheduleTest, OperatingPoints) {
-  Schedule multi_sched(clients, 0.0, true);
-  multi_sched.AddSegment(10.0);
+TEST_F(SmallOdroidClientMappingTest, OperatingPoints) {
+  ClientMapping cm;
 
   OperatingPointAllocation op(client_ops[0][0], {});
 
-  multi_sched.SetOperatingPoint(0, clients[0], op);
-  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0]);
+  cm.Set(clients[0], op);
+  auto retrieved_op = cm.Get(clients[0]);
 
-  EXPECT_TRUE(retrieved_op.has_value());
-  EXPECT_NEAR(retrieved_op->utility(), 5.848, 0.001);
-  EXPECT_NEAR(retrieved_op->power(), 0.351, 0.001);
+  EXPECT_NEAR(retrieved_op.utility(), 5.848, 0.001);
+  EXPECT_NEAR(retrieved_op.power(), 0.351, 0.001);
 }
 
-TEST_F(SmallOdroidScheduleTest, InvalidSegmentIndex) {
-  Schedule multi_sched(clients, 0.0, true);
-  multi_sched.AddSegment(10.0);
-
-  // Expecting some kind of error or exception handling
-  EXPECT_THROW(multi_sched.GetSegmentStartTime(1), std::out_of_range);
-  EXPECT_THROW(multi_sched.GetSegmentEndTime(1), std::out_of_range);
-}
-
-TEST_F(SmallOdroidScheduleTest, NoOperatingPointSet) {
-  Schedule multi_sched(clients, 0.0, true);
-  multi_sched.AddSegment(10.0);
-
-  // Not setting any operating point yet
-  auto retrieved_op = multi_sched.GetOperatingPoint(0, clients[0]);
-  EXPECT_FALSE(retrieved_op.has_value());
-}
-
-TEST_F(SmallOdroidScheduleTest, SetOperatingPointWithoutSegment) {
-  Schedule multi_sched(clients, 0.0, true);
-
-  OperatingPointAllocation op(client_ops[0][0], {});
-
-  // Expecting an error as no segment added yet
-  EXPECT_THROW(multi_sched.SetOperatingPoint(0, clients[0], op),
-               std::out_of_range);
-}
-
-TEST_F(SmallOdroidScheduleTest, SplitSegment) {
-  Schedule multi_sched(clients, 0.0, true);
-  multi_sched.AddSegment(10.0);
-
-  multi_sched.SplitAtTimepoint(6.0); // Splitting the segment at 6 seconds
-
-  EXPECT_EQ(multi_sched.GetNumberOfSegments(), 2);
-  EXPECT_EQ(multi_sched.GetSegmentStartTime(0).value(), 0.0);
-  EXPECT_EQ(multi_sched.GetSegmentEndTime(0).value(), 6.0);
-  EXPECT_EQ(multi_sched.GetSegmentStartTime(1).value(), 6.0);
-  EXPECT_EQ(multi_sched.GetSegmentEndTime(1).value(), 10.0);
-}
-
-TEST_F(SmallOdroidScheduleTest, GetThreadSetAndProgress) {
-  Schedule multi_sched(clients, 0.0, true);
-  multi_sched.AddSegment(10.0);
+TEST_F(SmallOdroidClientMappingTest, GetThreadSet) {
+  ClientMapping cm1;
 
   OperatingPointAllocation op0(client_ops[0][0], {});
   OperatingPointAllocation op1(client_ops[1][6], {});
 
-  multi_sched.SetOperatingPoint(0, clients[0], op0);
-  multi_sched.SetOperatingPoint(0, clients[1], op1);
-  EXPECT_EQ(multi_sched.GetSegmentThreadSet(0), CPUThreadSet({0, 2, 3}));
-  EXPECT_FALSE(multi_sched.HasSegmentOverlaps(0));
-#if 0
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[0]),
-              10.0 / 171.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[1]), 10.0 / 42.0,
-              0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(0, clients[2]), 0.0, 0.01);
-#endif
+  cm1.Set(clients[0], op0);
+  cm1.Set(clients[1], op1);
+  EXPECT_EQ(cm1.GetAllThreads(), CPUThreadSet({0, 2, 3}));
+  EXPECT_FALSE(cm1.HasOverlaps());
 
-  multi_sched.AddSegment(15.0);
+  ClientMapping cm2;
   OperatingPointAllocation op2(client_ops[1][0], {});
-  multi_sched.SetOperatingPoint(1, clients[0], op0);
-  multi_sched.SetOperatingPoint(1, clients[1], op2);
-  EXPECT_EQ(multi_sched.GetSegmentThreadSet(1), CPUThreadSet({0, 2}));
-  EXPECT_TRUE(multi_sched.HasSegmentOverlaps(1));
-#if 0
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[0]),
-              15.0 / 171.0, 0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[1]), 15.0 / 45.0,
-              0.01);
-  EXPECT_NEAR(*multi_sched.GetSegmentClientProgress(1, clients[2]), 0.0, 0.01);
-#endif
+  cm2.Set(clients[0], op0);
+  cm2.Set(clients[1], op2);
+  EXPECT_EQ(cm2.GetAllThreads(), CPUThreadSet({0, 2}));
+  EXPECT_TRUE(cm2.HasOverlaps());
 }
 
 //
 //  Brutefore scheduler
 //
 
-TEST_F(SmallOdroidScheduleTest, BruteforceMapper_OneJob) {
+TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_OneJob) {
   BruteforceMapper mapper(manager->GetPlatform(),
                           std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
-  auto s1 = mapper.GenerateSchedule({clients[0]}, 0.0);
-  LOGGER->debug("%s", s1->ToString().c_str());
-  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
-  auto s1_op = s1->GetOperatingPoint(0, clients[0]);
-  EXPECT_TRUE(s1_op.has_value());
-  EXPECT_EQ(s1_op->threads(), CPUThreadSet({0}));
-  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0}));
-  auto s1_result = obj->EvaluateSchedule(*s1);
+  auto s1 = mapper.GenerateClientMapping({clients[0]});
+  LOGGER->debug("%s", s1.ToString().c_str());
+  auto s1_op = s1.Get(clients[0]);
+  EXPECT_EQ(s1_op.threads(), CPUThreadSet({0}));
+  EXPECT_EQ(s1.GetAllThreads(), CPUThreadSet({0}));
+  auto s1_result = obj->EvaluateClientMapping(s1);
   EXPECT_EQ(std::get<0>(s1_result), 1);
   EXPECT_NEAR(std::get<1>(s1_result), 0.060, 0.001);
 
-  auto s2 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0});
-  LOGGER->debug("%s", s2->ToString().c_str());
-  EXPECT_EQ(s2->GetNumberOfSegments(), 1);
-  auto s2_op = s2->GetOperatingPoint(0, clients[0]);
-  EXPECT_TRUE(s2_op.has_value());
-  EXPECT_EQ(s2_op->threads(), CPUThreadSet({1}));
-  EXPECT_EQ(s2->GetSegmentThreadSet(0), CPUThreadSet({1}));
-  auto s2_result = obj->EvaluateSchedule(*s2);
+  auto s2 = mapper.GenerateClientMapping({clients[0]}, CPUCoreSet{0});
+  LOGGER->debug("%s", s2.ToString().c_str());
+  auto s2_op = s2.Get(clients[0]);
+  EXPECT_EQ(s2_op.threads(), CPUThreadSet({1}));
+  EXPECT_EQ(s2.GetAllThreads(), CPUThreadSet({1}));
+  auto s2_result = obj->EvaluateClientMapping(s2);
   EXPECT_EQ(std::get<0>(s2_result), 1);
   EXPECT_NEAR(std::get<1>(s2_result), 0.060, 0.001);
 
-  auto s3 = mapper.GenerateSchedule({clients[0]}, 0.0, CPUCoreSet{0, 1});
-  LOGGER->debug("%s", s3->ToString().c_str());
-  EXPECT_EQ(s3->GetNumberOfSegments(), 1);
-  auto s3_op = s3->GetOperatingPoint(0, clients[0]);
-  EXPECT_TRUE(s3_op.has_value());
-  EXPECT_EQ(s3_op->threads(), CPUThreadSet({2}));
-  EXPECT_EQ(s3->GetSegmentThreadSet(0), CPUThreadSet({2}));
-  auto s3_result = obj->EvaluateSchedule(*s3);
+  auto s3 = mapper.GenerateClientMapping({clients[0]}, CPUCoreSet{0, 1});
+  LOGGER->debug("%s", s3.ToString().c_str());
+  auto s3_op = s3.Get(clients[0]);
+  EXPECT_EQ(s3_op.threads(), CPUThreadSet({2}));
+  EXPECT_EQ(s3.GetAllThreads(), CPUThreadSet({2}));
+  auto s3_result = obj->EvaluateClientMapping(s3);
   EXPECT_EQ(std::get<0>(s3_result), 1);
   EXPECT_NEAR(std::get<1>(s3_result), 0.129, 0.001);
 }
 
-TEST_F(SmallOdroidScheduleTest, BruteforceMapper_TwoJobs) {
+TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_TwoJobs) {
   BruteforceMapper mapper(manager->GetPlatform(),
                           std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
-  auto s1 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
-  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
-  LOGGER->debug("%s", s1->ToString().c_str());
-  auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
-  auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
-  EXPECT_TRUE(s1_op0.has_value());
-  EXPECT_TRUE(s1_op1.has_value());
-  EXPECT_EQ(s1_op0->threads(), CPUThreadSet({0}));
-  EXPECT_EQ(s1_op1->threads(), CPUThreadSet({1, 2}));
-  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2}));
-  auto s1_result = obj->EvaluateSchedule(*s1);
+  auto s1 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  LOGGER->debug("%s", s1.ToString().c_str());
+  auto s1_op0 = s1.Get(clients[0]);
+  auto s1_op1 = s1.Get(clients[1]);
+  EXPECT_EQ(s1_op0.threads(), CPUThreadSet({0}));
+  EXPECT_EQ(s1_op1.threads(), CPUThreadSet({1, 2}));
+  EXPECT_EQ(s1.GetAllThreads(), CPUThreadSet({0, 1, 2}));
+  auto s1_result = obj->EvaluateClientMapping(s1);
   EXPECT_EQ(std::get<0>(s1_result), 2);
   EXPECT_NEAR(std::get<1>(s1_result), 0.120, 0.001);
 
   // Set another objective
   mapper.SetObjective(std::make_unique<DelayObjective>());
   obj = mapper.GetObjective();
-  auto s2 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
-  EXPECT_EQ(s2->GetNumberOfSegments(), 1);
-  LOGGER->debug("%s", s2->ToString().c_str());
-  auto s2_op0 = s2->GetOperatingPoint(0, clients[0]);
-  auto s2_op1 = s2->GetOperatingPoint(0, clients[1]);
-  EXPECT_TRUE(s2_op0.has_value());
-  EXPECT_TRUE(s2_op1.has_value());
-  EXPECT_EQ(s2_op0->threads(), CPUThreadSet({2, 3}));
-  EXPECT_EQ(s2_op1->threads(), CPUThreadSet({0, 1}));
-  EXPECT_EQ(s2->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
-  auto s2_result = obj->EvaluateSchedule(*s2);
+  auto s2 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  LOGGER->debug("%s", s2.ToString().c_str());
+  auto s2_op0 = s2.Get(clients[0]);
+  auto s2_op1 = s2.Get(clients[1]);
+  EXPECT_EQ(s2_op0.threads(), CPUThreadSet({2, 3}));
+  EXPECT_EQ(s2_op1.threads(), CPUThreadSet({0, 1}));
+  EXPECT_EQ(s2.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
+  auto s2_result = obj->EvaluateClientMapping(s2);
   EXPECT_EQ(std::get<0>(s2_result), 2);
   EXPECT_NEAR(std::get<1>(s2_result), 0.108, 0.001);
 
   // Set another objective
   mapper.SetObjective(std::make_unique<GEDPObjective>(0.5));
   obj = mapper.GetObjective();
-  auto s3 = mapper.GenerateSchedule({clients[0], clients[1]}, 0.0);
-  LOGGER->debug("%s", s3->ToString().c_str());
-  EXPECT_EQ(s3->GetNumberOfSegments(), 1);
-  auto s3_op0 = s3->GetOperatingPoint(0, clients[0]);
-  auto s3_op1 = s3->GetOperatingPoint(0, clients[1]);
-  EXPECT_TRUE(s3_op0.has_value());
-  EXPECT_TRUE(s3_op1.has_value());
-  EXPECT_EQ(s3_op0->threads(), CPUThreadSet({0, 2}));
-  EXPECT_EQ(s3_op1->threads(), CPUThreadSet({1, 3}));
-  EXPECT_EQ(s3->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
-  auto s3_result = obj->EvaluateSchedule(*s3);
+  auto s3 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  LOGGER->debug("%s", s3.ToString().c_str());
+  auto s3_op0 = s3.Get(clients[0]);
+  auto s3_op1 = s3.Get(clients[1]);
+  EXPECT_EQ(s3_op0.threads(), CPUThreadSet({0, 2}));
+  EXPECT_EQ(s3_op1.threads(), CPUThreadSet({1, 3}));
+  EXPECT_EQ(s3.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
+  auto s3_result = obj->EvaluateClientMapping(s3);
   EXPECT_EQ(std::get<0>(s3_result), 2);
   EXPECT_NEAR(std::get<1>(s3_result), 0.135, 0.001);
 }
 
-TEST_F(SmallOdroidScheduleTest, BruteforceMapper_ThreeJobs) {
+TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_ThreeJobs) {
   BruteforceMapper mapper(manager->GetPlatform(),
                           std::make_unique<EnergyObjective>());
   auto obj = mapper.GetObjective();
-  auto s1 = mapper.GenerateSchedule(clients, 0.0);
-  LOGGER->debug("%s", s1->ToString().c_str());
-  EXPECT_EQ(s1->GetNumberOfSegments(), 1);
-  auto s1_op0 = s1->GetOperatingPoint(0, clients[0]);
-  auto s1_op1 = s1->GetOperatingPoint(0, clients[1]);
-  auto s1_op2 = s1->GetOperatingPoint(0, clients[2]);
-  EXPECT_TRUE(s1_op0.has_value());
-  EXPECT_TRUE(s1_op1.has_value());
-  EXPECT_TRUE(s1_op2.has_value());
-  EXPECT_EQ(s1_op0->threads(), CPUThreadSet({0}));
-  EXPECT_EQ(s1_op1->threads(), CPUThreadSet({1, 2}));
-  EXPECT_EQ(s1_op2->threads(), CPUThreadSet({3}));
-  EXPECT_EQ(s1->GetSegmentThreadSet(0), CPUThreadSet({0, 1, 2, 3}));
-  auto s1_result = obj->EvaluateSchedule(*s1);
-  EXPECT_EQ(std::get<0>(s1_result), 3);
-  EXPECT_NEAR(std::get<1>(s1_result), 0.201, 0.001);
+  auto client_mapping = mapper.GenerateClientMapping(clients);
+  LOGGER->debug("%s", client_mapping.ToString().c_str());
+  auto op0 = client_mapping.Get(clients[0]);
+  auto op1 = client_mapping.Get(clients[1]);
+  auto op2 = client_mapping.Get(clients[2]);
+  EXPECT_EQ(op0.threads(), CPUThreadSet({0}));
+  EXPECT_EQ(op1.threads(), CPUThreadSet({1, 2}));
+  EXPECT_EQ(op2.threads(), CPUThreadSet({3}));
+  EXPECT_EQ(client_mapping.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
+  auto client_map_result = obj->EvaluateClientMapping(client_mapping);
+  EXPECT_EQ(std::get<0>(client_map_result), 3);
+  EXPECT_NEAR(std::get<1>(client_map_result), 0.201, 0.001);
 }
 
-TEST_F(SmallOdroidScheduleTest,
+TEST_F(SmallOdroidClientMappingTest,
        BruteforceMapper_SimulateThreeJobsWithTraceLogger) {
   std::chrono::high_resolution_clock::time_point zero_time;
 
@@ -356,12 +253,12 @@ TEST_F(SmallOdroidScheduleTest,
     logger.RegisterClient(c);
   }
 
-  auto s1 = mapper.GenerateSchedule(active, 0.0);
-  LOGGER->debug("%s", s1->ToString().c_str());
+  auto s1 = mapper.GenerateClientMapping(active);
+  LOGGER->debug("%s", s1.ToString().c_str());
 
   // assign operating points
   for (auto &c : active) {
-    c->active_op = s1->GetOperatingPoint(0, c);
+    c->active_op = s1.Get(c);
     logger.LogClientMappingBegin(zero_time, c, *c->active_op);
   }
 
@@ -378,12 +275,12 @@ TEST_F(SmallOdroidScheduleTest,
                      [](const Client *c) { return c->exec == "app3"; }),
       active.end());
 
-  auto s2 = mapper.GenerateSchedule(active, 0.0);
-  LOGGER->debug("%s", s2->ToString().c_str());
+  auto s2 = mapper.GenerateClientMapping(active);
+  LOGGER->debug("%s", s2.ToString().c_str());
 
   // assign operating points
   for (auto &c : active) {
-    c->active_op = s2->GetOperatingPoint(0, c);
+    c->active_op = s2.Get(c);
     logger.LogClientMappingBegin(time_34ms, c, *c->active_op);
   }
 

@@ -1,28 +1,9 @@
 #include "bruteforce.h"
 
 #include "util/debug_util.h"
+#include "util/platform/platform.h"
 
 namespace tetris {
-
-/**
- * Create a schedule object with the current mapping list
- */
-std::unique_ptr<Schedule> BruteforceMapper::ToSchedule(const MappingList &ops,
-                                                       CPUCoreSet busy_cores) {
-  auto &op_allocator = _platform.GetEquivResAllocator();
-  auto schedule = std::make_unique<Schedule>(_clients, _start_time, false);
-  schedule->AddSegment();
-  for (int i = 0; i < _clients.size(); ++i) {
-    if (ops[i] != nullptr) {
-      auto opt_opa = op_allocator.FindEquivOP(*ops[i], busy_cores);
-      assert(opt_opa.has_value());
-      auto opa = *opt_opa;
-      schedule->SetOperatingPoint(0, _clients[i], opa);
-      busy_cores |= _platform.ToCPUCoreSet(opa.threads());
-    }
-  }
-  return schedule;
-}
 
 /**
  * Updates the best solution found so far.
@@ -82,8 +63,7 @@ void BruteforceMapper::IterateClient(
       continue;
     }
     _cur_ops[n] = &op;
-    double rem_cratio = 1.0 - _clients[n]->progress;
-    double op_value = _objective->EvaluateOP(op, rem_cratio);
+    double op_value = _objective->EvaluateOP(op);
     IterateClient(n + 1, added_cores, cur_apps + 1, cur_value + op_value);
   }
 
@@ -98,17 +78,14 @@ void BruteforceMapper::IterateClient(
  * Selects client mappings considering a list of blocked CPUs.
  *
  * \param clients The list of clients for which mappings need to be selected.
- * \param start_time The start time of the schedule
  * \param blocked_cpus The list of blocked CPUs.
  * \return The selected mappings.
  */
-std::unique_ptr<Schedule>
-BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
-                                   double start_time,
-                                   CPUCoreSet blocked_cores) {
+ClientMapping
+BruteforceMapper::GenerateClientMapping(std::vector<Client *> clients,
+                                        CPUCoreSet blocked_cores) {
   // Initialize internal data structures
   _clients = clients;
-  _start_time = start_time;
   _blocked = blocked_cores;
   _client_ops.clear();
   _best_value = std::make_tuple(0, 0.0);
@@ -128,7 +105,7 @@ BruteforceMapper::GenerateSchedule(std::vector<Client *> clients,
   // Start bruteforce
   IterateClient(0, _platform.GetCoreCountPerType(_blocked), 0, 0.0);
 
-  return ToSchedule(_best_ops, _blocked);
+  return ToClientMapping(clients, _best_ops, _blocked);
 }
 
 } // namespace tetris

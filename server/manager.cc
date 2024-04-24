@@ -111,14 +111,14 @@ void Manager::print_mappings() {
   std::cout << "======= END OF LIST =======" << std::endl;
 }
 
-void Manager::run_scheduler() {
-  _needs_reschedule = false;
+void Manager::RunMapper() {
+  _run_mapper_flag = false;
   auto start = std::chrono::high_resolution_clock::now();
 
   // Update the current progress of each client
   update_client_progresses(start);
 
-  // Run the scheduler
+  // Run the mapper
   std::vector<Client*> clients;
   for (auto& [cid, c]: _clients) {
     if (c->type == Client::ACTIVE)
@@ -126,16 +126,15 @@ void Manager::run_scheduler() {
   }
 
   if (clients.empty()) {
-    /* We have nothing to schedule here -> bail early */
-    LOGGER->debug(" --> No active clients to schedule\n");
+    /* We have no clients to map here -> bail early */
+    LOGGER->debug(" --> No active clients to map\n");
     return;
   }
 
-  // Measure separately the call to GenerateSchedule()
+  // Measure separately the call to GenerateClientMapping()
   auto before  = std::chrono::high_resolution_clock::now();
 
-  // 0.0 is a dummy start time
-  auto schedule = _scheduler->GenerateSchedule(clients, 0.0, _blocked_cores);
+  auto client_mapping = _mapper->GenerateClientMapping(clients, _blocked_cores);
 
   // The scheduling might be too too long, update progresses again
   auto after = std::chrono::high_resolution_clock::now();
@@ -143,24 +142,22 @@ void Manager::run_scheduler() {
   update_client_progresses(after);
 
   // print
-  LOGGER->info("%s\n", schedule->ToString().c_str());
+  LOGGER->info("%s\n", client_mapping.ToString().c_str());
 
-  // updates the mappings 
+  // updates the mappings
   for (auto& c: clients) {
     if (c->active_op.has_value()) {
       _tracelog->LogClientMappingEnd(after, c);
     }
-    auto op = schedule->GetOperatingPoint(0, c);
-    if (op.has_value()) {
-      c->activate_op(*op);
-      _tracelog->LogClientMappingBegin(after, c, *op);
-    }
-    else {
+    if (!client_mapping.Contains(c)) {
       LOGGER->error("No mapping generated for client '%s' [%d]."
           "Handling of such cases is not yet implemented.",
           c->exec.c_str(), c->pid);
       throw std::runtime_error("Not yet implemented");
     }
+    auto op = client_mapping.Get(c);
+    c->activate_op(op);
+    _tracelog->LogClientMappingBegin(after, c, op);
   }
   auto end = std::chrono::high_resolution_clock::now();
 
@@ -168,6 +165,6 @@ void Manager::run_scheduler() {
   auto full_dur_s = full_dur.count();
   std::chrono::duration<double> sched_dur = after - before;
   auto sched_dur_s = sched_dur.count();
-  LOGGER->info("Activated the scheduler: duration = %lfs [scheduling time: %lfs ]\n",
+  LOGGER->info("Activated the mapper: duration = %lfs [mapping time: %lfs ]\n",
       full_dur_s, sched_dur_s);
 }

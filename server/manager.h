@@ -14,15 +14,6 @@
 #include "util/platform/cpu_sets.h"
 #include "util/platform/platform.h"
 
-/***
- * Failure handling for no mapping found
- ***/
-
-class NoMappingError : public std::runtime_error {
-public:
-  using std::runtime_error::runtime_error;
-};
-
 /**
  * \class Manager
  * \brief Manages clients and their respective mappings.
@@ -43,11 +34,11 @@ public:
 class Manager {
 private:
   std::unique_ptr<tetris::Platform> _platform;
-  std::unique_ptr<tetris::BaseScheduler> _scheduler;
+  std::unique_ptr<tetris::BaseClientMapper> _mapper;
   std::map<int, std::unique_ptr<Client>> _clients;
   tetris::CPUCoreSet _blocked_cores;
 
-  bool _needs_reschedule;
+  bool _run_mapper_flag; // Flag to run the mapper
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
 
@@ -60,9 +51,9 @@ private:
 
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
-                   std::unique_ptr<tetris::BaseScheduler> scheduler)
-      : _platform{std::move(platform)},
-        _scheduler{std::move(scheduler)}, _clients{}, _needs_reschedule{false},
+                   std::unique_ptr<tetris::BaseClientMapper> mapper)
+      : _platform{std::move(platform)}, _mapper{std::move(mapper)}, _clients{},
+        _run_mapper_flag{false},
         _tracelog{std::make_unique<tetris::TraceLogger>(
             std::chrono::high_resolution_clock::now())} {
     _tracelog->RegisterPlatform(*_platform);
@@ -78,7 +69,7 @@ public:
   void client_connect(int fd, const ConnectionPtr &conn) {
     auto c = std::make_unique<Client>(conn, *this);
     _clients.emplace(fd, std::move(c));
-    reschedule();
+    MarkMapperForRun();
   }
 
   /**
@@ -95,18 +86,18 @@ public:
     _tracelog->DeregisterClient(&c);
 
     _clients.erase(fd);
-    reschedule();
+    MarkMapperForRun();
   }
 
   /**
-   * Run the scheduler.
+   * Run the client mapper.
    *
    * First, it updates the current progress for all clients. Then, it runs the
-   * scheduler and gets the operating point allocation for each client.
+   * mapper and gets the operating point allocation for each client.
    * Third, it assigns the found operating point allocation and triggers the
-   *  message sending to the client.
+   * message sending to the client.
    */
-  void run_scheduler();
+  void RunMapper();
 
   /**
    * \brief Handles the incoming message from a client.
@@ -119,15 +110,15 @@ public:
   void print_mappings();
 
   /**
-   * \brief Note that we have to generate a new schedule due to changed client
-   *states
+   * \brief Note that we have to generate a new client mapping due to changed
+   * client states
    **/
-  void reschedule() {
-    LOGGER->info(" -> Marked for reschedule!\n");
-    _needs_reschedule = true;
+  void MarkMapperForRun() {
+    LOGGER->info(" -> Marked to generate a new client mapping.\n");
+    _run_mapper_flag = true;
   }
 
-  bool needs_reschedule() const { return _needs_reschedule; }
+  bool IsMapperMarkedForRun() const { return _run_mapper_flag; }
 };
 
 #endif /* __MANAGER_H__ */

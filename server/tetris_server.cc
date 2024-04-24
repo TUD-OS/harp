@@ -258,9 +258,9 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
       }
     }
 
-    /* Check whether we need to reschedule */
-    if (manager.needs_reschedule())
-      manager.run_scheduler();
+    /* Check whether we need to run the mapper */
+    if (manager.IsMapperMarkedForRun())
+      manager.RunMapper();
   }
 }
 
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
   auto reader = YamlPlatformReader();
   auto platform = reader.ReadFromFile(config.platform_path);
 
-  /* Create a scheduler */
+  /* Create a mapper */
   std::unique_ptr<OptimizationObjective> objective;
   if (config.objective_name == "energy-saving")
     objective = std::make_unique<EnergySavingObjective>();
@@ -376,13 +376,13 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::unique_ptr<BaseScheduler> scheduler;
+  std::unique_ptr<BaseClientMapper> mapper;
   if (config.mapper_name == "BF")
-    scheduler =
+    mapper =
         std::make_unique<BruteforceMapper>(*platform, std::move(objective));
   else if (config.mapper_name == "LR")
     // TODO: pass `max_rounds` from the CL argument
-    scheduler = std::make_unique<LagrangianRelaxationMapper>(
+    mapper = std::make_unique<LagrangianRelaxationMapper>(
         *platform, std::move(objective), 500);
   else {
     std::cerr << "Unknown mapper.\n";
@@ -396,7 +396,7 @@ int main(int argc, char *argv[]) {
   logger = debug::Logger::get();
 
   /* Setting up the manager */
-  Manager manager{std::move(platform), std::move(scheduler)};
+  Manager manager{std::move(platform), std::move(mapper)};
 
   // Setting up the server and control sockets
   int server_fd = -1;

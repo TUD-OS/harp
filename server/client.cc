@@ -1,10 +1,10 @@
 #include "client.h"
-#include "manager.h"
-
-#include "proto/tetris.pb.h"
 
 #include <sstream>
 
+#include "proto/tetris.pb.h"
+
+#include "manager.h"
 
 using namespace tetris;
 
@@ -43,7 +43,7 @@ bool Client::receive_ops(
   }
 
   LOGGER->info(" -> Received %d operating points from client %d\n", op_size, pid);
-  _manager.reschedule();
+  _manager.MarkMapperForRun();
 
   return true;
 }

@@ -13,14 +13,8 @@ namespace tetris {
 /**
  * LagrangianRelaxation mapper.
  */
-class LagrangianRelaxationMapper : public BaseScheduler {
+class LagrangianRelaxationMapper : public BaseClientMapper {
 private:
-  /**
-   * Create a schedule object with the given mapping list
-   */
-  std::unique_ptr<Schedule>
-  ToSchedule(const std::vector<const OperatingPoint *> &ops,
-             CPUCoreSet busy_cores);
   double EvaluateOPDual(const OperatingPoint &op,
                         const std::map<std::string, double> &lambda,
                         double rem_cratio) const;
@@ -69,40 +63,27 @@ public:
   explicit LagrangianRelaxationMapper(
       const Platform &platform,
       std::unique_ptr<OptimizationObjective> objective, int max_rounds)
-      : _platform{platform},
-        _platform_cores_count{platform.GetCoreCountPerType()},
-        _objective{std::move(objective)}, _max_rounds{max_rounds} {}
+      : BaseClientMapper{platform, std::move(objective)}, _max_rounds{
+                                                              max_rounds} {}
 
-  void SetObjective(std::unique_ptr<OptimizationObjective> objective) override {
-    _objective = std::move(objective);
-  }
-
-  OptimizationObjective *GetObjective() override { return _objective.get(); }
-
-  // Bring all overloads of GenerateSchedule()
-  using BaseScheduler::GenerateSchedule;
+  // Bring all overloads of GenerateClientMapping()
+  using BaseClientMapper::GenerateClientMapping;
 
   /**
    * Selects client mappings considering a list of blocked CPUs.
    *
    * \param clients The list of clients for which mappings need to be selected.
-   * \param start_time The start time of the schedule
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  std::unique_ptr<Schedule> GenerateSchedule(std::vector<Client *> clients,
-                                             double start_time,
-                                             CPUCoreSet blocked_cores) override;
+  ClientMapping GenerateClientMapping(std::vector<Client *> clients,
+                                      CPUCoreSet blocked_cores) override;
 
 private:
-  const Platform &_platform;
-  std::map<std::string, int> _platform_cores_count;
-  std::unique_ptr<OptimizationObjective> _objective;
   int _max_rounds;
 
-  // temporary fields (initialized at each invokation of GenerateSchedule())
+  // temporary fields (initialized at each invokation of the mapper)
   std::vector<Client *> _clients;
-  double _start_time;
   CPUCoreSet _blocked;
 
   std::vector<std::vector<OperatingPoint>> _client_ops; // Pareto front of ops

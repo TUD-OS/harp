@@ -6,6 +6,7 @@ add_library(tetrisserverlib STATIC
     client.cc
     manager.cc
     trace_logger.cc
+    sched/base.cc
     sched/bruteforce.cc
     sched/lr.cc
     sched/objective.cc

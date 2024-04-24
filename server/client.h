@@ -3,15 +3,16 @@
 
 #pragma once
 
+#include <optional>
+
 #include "proto/tetris.pb.h"
+
 #include "util/connection.h"
 #include "util/debug_util.h"
 #include "util/operating_point.h"
 #include "util/operating_point_table.h"
 #include "util/platform/cpu_sets.h"
 #include "util/protobuf_util.h"
-
-#include <optional>
 
 using ConnectionPtr = std::shared_ptr<Connection>;
 
@@ -55,14 +56,14 @@ public:
   int type;
 
 private:
-  Manager& _manager;
+  Manager &_manager;
 
   bool receive_ops(const tetris::ClientMessage::OperatingPointsInfo &);
 
 public:
   Client(const Client &) = delete;
 
-  Client(const ConnectionPtr &conn, Manager& manager);
+  Client(const ConnectionPtr &conn, Manager &manager);
 
   ~Client() {
     if (pid != -1)

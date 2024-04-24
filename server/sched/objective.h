@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "server/client.h"
-#include "server/schedule.h"
+#include "server/client_mapping.h"
 
 namespace tetris {
 
@@ -38,8 +38,7 @@ public:
   /**
    * Evaluate an operating point.
    */
-  virtual double EvaluateOP(const OperatingPoint &op,
-                            double rem_cratio = 1.0) const = 0;
+  virtual double EvaluateOP(const OperatingPoint &op) const = 0;
 
   /**
    * Evaluate the job w.r.t. some objective value.
@@ -48,8 +47,8 @@ public:
    * client was successfully scheduled (0 or 1). The second value represents
    * the objective value.
    */
-  virtual std::tuple<int, double> EvaluateClient(const Schedule &schedule,
-                                                 Client *client) const = 0;
+  virtual std::tuple<int, double>
+  EvaluateClient(const ClientMapping &client_mapping, Client *client) const = 0;
 
   /**
    * Evaluate the schedule  w.r.t. some objective value.
@@ -59,12 +58,11 @@ public:
    * value.
    */
   virtual std::tuple<int, double>
-  EvaluateSchedule(const Schedule &schedule) const {
-    auto clients = schedule.GetClients();
+  EvaluateClientMapping(const ClientMapping &client_mapping) const {
     int num_apps = 0;
     double value = 0.0;
-    for (auto &c : clients) {
-      auto cr = EvaluateClient(schedule, c);
+    for (auto &[client, op] : client_mapping.map) {
+      auto cr = EvaluateClient(client_mapping, client);
       if (std::get<0>(cr) == 1) {
         num_apps += 1;
         value += std::get<1>(cr);
@@ -88,9 +86,8 @@ class GEDPObjective : public OptimizationObjective {
 private:
   double _alpha;
 
-  double EvaluateGEDP(double power, double utility, double rem_cratio) const {
-    return pow(power / utility * rem_cratio, _alpha) *
-           pow(1.0 / utility * rem_cratio, 1 - _alpha);
+  double EvaluateGEDP(double power, double utility) const {
+    return pow(power / utility, _alpha) * pow(1.0 / utility, 1 - _alpha);
   }
 
 public:
@@ -100,27 +97,18 @@ public:
     }
   }
 
-  double EvaluateOP(const OperatingPoint &op,
-                    double rem_cratio = 1.0) const override {
-    return EvaluateGEDP(op.power(), op.utility(), rem_cratio);
+  double EvaluateOP(const OperatingPoint &op) const override {
+    return EvaluateGEDP(op.power(), op.utility());
   }
 
-  std::tuple<int, double> EvaluateClient(const Schedule &schedule,
+  std::tuple<int, double> EvaluateClient(const ClientMapping &client_mapping,
                                          Client *client) const override {
-    if (schedule.IsMultiSegment()) {
-      throw std::runtime_error("Not yet implemented");
-    } else {
-      if (schedule.GetNumberOfSegments() == 0)
-        return std::make_tuple(0, 0.0);
-      assert(schedule.GetNumberOfSegments() == 1);
-      auto opt_op = schedule.GetOperatingPoint(0, client);
-      if (!opt_op.has_value())
-        return std::make_tuple(0, 0.0);
-      auto op = *opt_op;
-      double rem_cratio = 1.0 - client->progress;
-      double value = EvaluateOP(op.base, rem_cratio);
-      return std::make_tuple(1, value);
+    if (!client_mapping.Contains(client)) {
+      return std::make_tuple(0, 0.0);
     }
+    auto op = client_mapping.Get(client);
+    double value = EvaluateOP(op.base);
+    return std::make_tuple(1, value);
   }
 };
 
