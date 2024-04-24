@@ -7,3 +7,15 @@ add_library(tetrisclientlegacy SHARED
 target_link_libraries(tetrisclientlegacy client_internal ${Protobuf_LIBRARIES} yaml-cpp)
 add_dependencies(tetrisclientlegacy generated_proto)
 add_dependencies(tetrisclientlegacy tetrisclient)
+
+add_library(scaler_gomp SHARED
+        scaler_gomp.cc
+        )
+target_link_libraries(tetrisclientlegacy client_internal)
+add_dependencies(tetrisclientlegacy tetrisclient)
+
+add_library(scaler_tbb SHARED
+        scaler_tbb.cc
+        )
+target_link_libraries(tetrisclientlegacy client_internal)
+add_dependencies(tetrisclientlegacy tetrisclient)

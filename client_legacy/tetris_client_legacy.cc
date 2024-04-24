@@ -7,8 +7,6 @@
 #include "client/features/movable_threads.h"
 #include "client/features/scalable_application.h"
 
-#include <oneapi/tbb/global_control.h>
-
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -172,30 +170,6 @@ static ParallelLibrary is_scalable_app() {
         return ParallelLibrary::NONE;
 }
 
-std::atomic_int parallel_threads;
-
-bool scale_application_cb_omp(int nr_threads)
-{
-    logger->debug("Setting scaling factor to %d\n", nr_threads);
-    parallel_threads = nr_threads;
-    return true;
-}
-
-bool scale_application_cb_tbb(int nr_threads)
-{
-/*    static oneapi::tbb::global_control *global_limit = nullptr;
-
-    logger->debug("Setting scaling factor TBB to %d\n", nr_threads);
-
-    if (global_limit) {
-        delete global_limit;
-    }
-
-    global_limit = new oneapi::tbb::global_control(oneapi::tbb::global_control::max_allowed_parallelism, nr_threads);
-*/
-    return true;
-}
-
 /***
  * Library setup and tierdown
  ***/
@@ -220,20 +194,39 @@ void __attribute__((constructor)) setup(void)
         logger->error("Missing TETRIS_MAPPING definition!\n");
         tetris_possible = false;
     }
+    if (!getenv("TETRIS_LIBS")) {
+        logger->error("Missing TETRIS_LIBS definition!\n");
+        tetris_possible = false;
+    }
 
     if (tetris_possible) {
         std::string platform_path = getenv("TETRIS_PLATFORM");
         std::string mapping_path = getenv("TETRIS_MAPPING");
+        std::string libs_path = getenv("TETRIS_LIBS");
 
         /* Initialize all the features */
         movable_threads = std::make_unique<tetris::MovableThreads>();
         auto parallel_library = is_scalable_app();
         if (parallel_library != ParallelLibrary::NONE) {
-            parallel_threads = 0;
+            auto scaler_lib = libs_path + "/libscaler_";
             if ((parallel_library == ParallelLibrary::GOMP) || (parallel_library == ParallelLibrary::OMP)) {
-                scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb_omp);
+                scaler_lib += "gomp.so";
             } else if (parallel_library == ParallelLibrary::INTEL_TBB) {
-                scalable_app = std::make_unique<tetris::ScalableApplication>(scale_application_cb_tbb);
+                scaler_lib += "tbb.so";
+            }
+
+            logger->info("Loading scaling support: %s\n", scaler_lib.c_str());
+            auto lib = dlopen(scaler_lib.c_str(), RTLD_NOW);
+            if (!lib) {
+                logger->error("Failed to open scaler lib %s\n", scaler_lib.c_str());
+            } else {
+                using create_func_t = tetris::ScalableApplication* (*)();
+                auto create_func = reinterpret_cast<create_func_t>(dlsym(lib, "get_application_scaler"));
+                if (!create_func) {
+                    logger->error("Failed to get function pointer to 'get_application_scaler' function\n");
+                } else {
+                    scalable_app = ScalableApplicationPtr(create_func());
+                }
             }
         }
 
@@ -477,31 +470,30 @@ int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
 
 /***
  * libgomp wrappers
+ *
+ * For the GOMP and OMP wrapper we need to overwrite the central OMP loop which is not possible with dlopen.
  ***/
 extern "C"
 void GOMP_parallel (void (*fn) (void*), void *data, unsigned int num_threads, unsigned int flags)
 {
     using real_func_t = void (*)(void (*) (void*), void *, unsigned int, unsigned int);
 
-    Timer t{time_ns};
-
     /* Get the real GOMP_parallel function. */
     real_func_t real_func = nullptr;
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "GOMP_parallel"));
 
     if (real_func) {
-        if (parallel_threads != 0) {
+        auto num_threads = scalable_app ? scalable_app->current_scale() : 0;
+        if (num_threads != 0) {
             /* Call the function with our internal parallel thread count if already set */
-            unsigned int own_num_threads = parallel_threads;
-            t.stop();
+            unsigned int own_num_threads = num_threads;
             real_func(fn, data, own_num_threads, flags);
         } else {
             /* Otherwise use the given num_threads as parallel thread count */
-            t.stop();
             real_func(fn, data, num_threads, flags);
         }
     } else {
-        logger->error("Failed to get real GOMP_parallel function.\n");
+        LOGGER->error("Failed to get real GOMP_parallel function.\n");
         exit(-1);
     }
 }

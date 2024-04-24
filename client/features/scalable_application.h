@@ -34,6 +34,10 @@ class ScalableApplication : public MappingFeature
     void mapping_update(const MappingUpdate &mapping, const ConversionMap &conv) override;
 
     bool extend_mapping(MappingsInfo &mappings) override;
+
+    virtual int current_scale() const {
+        return 0;
+    }
 };
 
 } /* namespace tetris */
