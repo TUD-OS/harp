@@ -1,6 +1,7 @@
 #ifndef __MOCK_CLIENT_H__
 #define __MOCK_CLIENT_H__
 
+#include <chrono>
 #include <memory>
 #pragma once
 
@@ -9,6 +10,8 @@
 #include "util/connection.h"
 #include "util/debug_util.h"
 #include "util/platform/platform.h"
+#include "util/platform/energy.h"
+#include "util/platform/perf.h"
 
 #include "mock_message_listener.h"
 
@@ -25,6 +28,11 @@ class MockClient : public Client {
      * \brief Builds a concrete client.
      */
     explicit MockClient(const std::string &server_socket_path, const std::string &platform_desc_path);
+
+    /**
+     * \brief Destructor
+     */
+    ~MockClient();
 
     /**
      * \copydoc bind(TETRiS::Feature *feature)
@@ -71,6 +79,14 @@ class MockClient : public Client {
     /* The platform description of the system we run on */
     std::unique_ptr<Platform> _platform;
     std::unique_ptr<Mapping> _active_mapping;
+
+    /* Performance and Energy Measurements */
+    std::unique_ptr<Measure> _energy_measure;
+    std::unique_ptr<perf::PerfManager> _perf_measure;
+    perf::HandlePtr _perf_handle;
+
+    void take_measurement();
+    std::vector<std::tuple<std::chrono::high_resolution_clock::time_point, uint64_t, std::map<std::string, uint64_t>>> _energy_perf_measurments;
 
     /// \brief Push message listener, listening for requests from the TETRiS server.
     MockMessageListener _mock_message_listener;

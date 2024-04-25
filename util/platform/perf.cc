@@ -28,12 +28,6 @@ enum Events : uint64_t {
   CacheMisses = PERF_COUNT_HW_CACHE_MISSES
 };
 
-static const std::map<uint64_t, std::string> EventNames = {{Events::Instructions, "Instructions"},
-                                                           {Events::CacheMisses, "Cache-Misses"}};
-
-static const std::vector<uint64_t> EventList = { Events::Instructions, Events::CacheMisses };
-
-
 static std::optional<uint64_t> start_perf(uint64_t type, uint64_t event, int pid, int &group_fd)
 {
   struct perf_event_attr pea;
@@ -168,17 +162,18 @@ public:
 
 class SinglePMU : public Starter {
 public:
-  HandlePtr new_process(int pid, const std::vector<uint64_t> &events) override
+  HandlePtr new_process(int pid, const std::vector<uint64_t> &events,
+          const std::map<uint64_t, std::string> &event_names) override
   {
     int perf_fd = -1;
     std::map<uint64_t, std::string> event_ids;
 
     for (auto event : events) {
       if (auto id = start_perf(PERF_TYPE_HARDWARE, event, pid, perf_fd)) {
-        event_ids.insert({id.value(), EventNames.at(event)});
+        event_ids.insert({id.value(), event_names.at(event)});
       } else {
         LOGGER->warning("Failed to monitor perf event %s for client %d\n",
-                EventNames.at(event).c_str(), pid);
+                event_names.at(event).c_str(), pid);
       }
     }
 
@@ -282,7 +277,8 @@ public:
     }
   }
 
-  HandlePtr new_process(int pid, const std::vector<uint64_t> &events) override {
+  HandlePtr new_process(int pid, const std::vector<uint64_t> &events,
+          const std::map<uint64_t, std::string> &event_names) override {
     std::vector<std::pair<int, std::map<uint64_t, std::string>>> pmu_events;
 
     for (auto &pmu : pmus) {
@@ -292,12 +288,12 @@ public:
       for (auto &event : events) {
          if (auto id = start_perf(PERF_TYPE_HARDWARE, pmu.perf_event_type(event), pid, perf_fd)) {
           LOGGER->debug(" -> [%s] Registered event %s for client %d\n", pmu.name().c_str(),
-                  EventNames.at(event).c_str(), pid);
+                  event_names.at(event).c_str(), pid);
 
-          event_ids.insert({id.value(), EventNames.at(event)});
+          event_ids.insert({id.value(), event_names.at(event)});
         } else {
           LOGGER->warning(" -> [%s] Failed to register event %s for client %d\n", pmu.name().c_str(),
-                  EventNames.at(event).c_str(), pid);
+                  event_names.at(event).c_str(), pid);
         }
       }
       if (perf_fd != -1) {
@@ -316,7 +312,9 @@ public:
 };
 
 
-PerfManager::PerfManager() : starter{nullptr}
+PerfManager::PerfManager() : starter{nullptr},
+    EventList{{ Events::Instructions, Events::CacheMisses }},
+    EventNames{{{Events::Instructions, "Instructions"},{Events::CacheMisses, "Cache-Misses"}}}
 {
   /*
    * Figure out if we are running on a heterogeneous system, because then we need a different perf starter type:
@@ -339,7 +337,7 @@ PerfManager::PerfManager() : starter{nullptr}
 std::optional<HandlePtr> PerfManager::open(int pid)
 {
   try {
-    auto handle = starter->new_process(pid, EventList);
+    auto handle = starter->new_process(pid, EventList, EventNames);
 
     return std::move(handle);
   } catch (std::exception &e) {

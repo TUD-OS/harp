@@ -3,13 +3,8 @@
 
 #pragma once
 
-#include <filesystem>
-#include <initializer_list>
 #include <map>
 #include <memory>
-#include <semaphore>
-#include <thread>
-#include <tuple>
 #include <vector>
 #include <optional>
 
@@ -33,7 +28,8 @@ using HandlePtr = std::unique_ptr<Handle>;
 class Starter {
 public:
   virtual ~Starter() = default;
-  virtual HandlePtr new_process(int pid, const std::vector<uint64_t> &events) = 0;
+  virtual HandlePtr new_process(int pid, const std::vector<uint64_t> &events,
+          const std::map<uint64_t, std::string> &event_names) = 0;
 };
 
 using StarterPtr = std::unique_ptr<Starter>;
@@ -41,6 +37,9 @@ using StarterPtr = std::unique_ptr<Starter>;
 class PerfManager {
 private:
   StarterPtr starter;
+
+  const std::vector<uint64_t> EventList;
+  const std::map<uint64_t, std::string> EventNames;
 
 public:
   PerfManager();

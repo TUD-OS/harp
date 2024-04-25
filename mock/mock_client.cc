@@ -1,7 +1,9 @@
 #include "mock_client.h"
+#include "util/platform/perf.h"
 #include "util/protobuf_util.h"
 #include "util/platform/reader.h"
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -19,12 +21,36 @@ MockClient::MockClient(const std::string &server_socket_path, const std::string 
     try {
         YamlPlatformReader platform_reader;
         _platform = std::move(platform_reader.ReadFromFile(platform_desc_path));
+        _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
+        _perf_measure = std::make_unique<perf::PerfManager>();
+        if (auto tmp = _perf_measure->open(getpid())) {
+            _perf_handle = std::move(tmp.value());
+        } else {
+            _logger->warning("No perf measurements available!\n");
+        }
 
         _tetris_server_connection.connect(server_socket_path);
         _managed = register_client();
+
+        /* Take energy and performance measurements */
+        take_measurement();
     } catch (std::exception &e) {
         _logger->info("No TETRiS server, TETRiS is unused.\n");
         _managed = false;
+    }
+}
+
+MockClient::~MockClient() {
+    take_measurement();
+
+    if (_energy_perf_measurments.size() > 1) {
+        auto [f_time, f_energy, f_perf] = _energy_perf_measurments.front();
+        auto [b_time, b_energy, b_perf] = _energy_perf_measurments.back();
+
+        _logger->info("time;energy;ips\n%lu;%llu;%lf\n",
+                std::chrono::duration<double, std::milli>(b_time - f_time).count(),
+                b_energy - f_energy, 
+                (b_perf["Instructions"] - f_perf["Instructions"]) / std::chrono::duration<double>(b_time - f_time).count());
     }
 }
 
@@ -49,7 +75,7 @@ void MockClient::bind(MappingFeature *feature)
     _mapping_features.push_back(feature);
 
     /* If we already have an active mapping, let the feature know about this! */
-    if (_active_mapping)
+if (_active_mapping)
         feature->mapping_update(*_active_mapping, {});
 }
 
@@ -127,6 +153,17 @@ bool MockClient::register_client()
         return true;
     } catch (std::exception &e) {
         return false;
+    }
+}
+
+void MockClient::take_measurement()
+{
+    if (_perf_handle) {
+        auto tp = std::chrono::high_resolution_clock::now();
+        auto energy = _energy_measure->read();
+        auto perf = _perf_handle->read();
+
+        _energy_perf_measurments.emplace_back(tp, energy, perf);
     }
 }
 

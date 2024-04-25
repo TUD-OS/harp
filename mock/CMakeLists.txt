@@ -18,6 +18,8 @@ add_library(tetrismockserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
     ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
     ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/energy.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/perf.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
 )
