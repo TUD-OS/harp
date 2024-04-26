@@ -4,11 +4,9 @@
 
 namespace tetris {
 
-BaseClientMapper::BaseClientMapper(
-    const Platform &platform, std::unique_ptr<OptimizationObjective> objective)
-    : _platform{platform},
-      _platform_cores_count{platform.GetCoreCountPerType()},
-      _objective{std::move(objective)} {}
+BaseClientMapper::BaseClientMapper(const Platform &platform)
+    : _platform{platform}, _platform_cores_count{
+                               platform.GetCoreCountPerType()} {}
 /**
  * Create a ClientMapping object with the current mapping list
  */

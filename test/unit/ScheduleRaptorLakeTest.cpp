@@ -5,8 +5,7 @@
 
 #include "server/client.h"
 #include "server/manager.h"
-#include "server/sched/bruteforce.h"
-#include "server/sched/lr.h"
+#include "server/sched/factory.h"
 #include "util/mapping_reader.h"
 
 using namespace tetris;
@@ -82,17 +81,19 @@ TEST_F(DISABLED_RaptorLakeMappingTest, BF_FourClients) {
   clients.push_back(GetClientCG());
   clients.push_back(GetClientMG());
   clients.push_back(GetClientFT());
-  BruteforceMapper mapper(*platform, std::make_unique<EnergyObjective>());
+  auto mapper = ClientMapperFactory::Create("BF", *platform);
+  mapper->SetOperatingPointEvaluator(
+      OperatingPointEvaluatorFactory::Create("energy"));
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto m = mapper.GenerateClientMapping(clients);
+  auto cm = mapper->GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Mapping time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", m.ToString().c_str());
+  LOGGER->info("%s", cm.ToString().c_str());
 }
 
 TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_Energy) {
@@ -101,18 +102,19 @@ TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_Energy) {
   clients.push_back(GetClientCG());
   clients.push_back(GetClientMG());
   clients.push_back(GetClientFT());
-  LagrangianRelaxationMapper mapper(*platform,
-                                    std::make_unique<EnergyObjective>(), 500);
+  auto mapper = ClientMapperFactory::Create("LR", *platform);
+  mapper->SetOperatingPointEvaluator(
+      OperatingPointEvaluatorFactory::Create("energy"));
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto m = mapper.GenerateClientMapping(clients);
+  auto cm = mapper->GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Scheduling time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", m.ToString().c_str());
+  LOGGER->info("%s", cm.ToString().c_str());
 }
 
 TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_EDP) {
@@ -121,16 +123,17 @@ TEST_F(DISABLED_RaptorLakeMappingTest, LR_FourClients_EDP) {
   clients.push_back(GetClientCG());
   clients.push_back(GetClientMG());
   clients.push_back(GetClientFT());
-  LagrangianRelaxationMapper mapper(*platform,
-                                    std::make_unique<BalancedObjective>(), 500);
+  auto mapper = ClientMapperFactory::Create("LR", *platform);
+  mapper->SetOperatingPointEvaluator(
+      OperatingPointEvaluatorFactory::Create("balanced"));
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto m = mapper.GenerateClientMapping(clients);
+  auto cm = mapper->GenerateClientMapping(clients);
   auto end = std::chrono::high_resolution_clock::now();
 
   std::chrono::duration<double> dur = end - start;
   auto dur_s = dur.count();
   LOGGER->info("Scheduling time: %lfs\n", dur_s);
 
-  LOGGER->info("%s", m.ToString().c_str());
+  LOGGER->info("%s", cm.ToString().c_str());
 }

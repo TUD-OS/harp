@@ -4,12 +4,12 @@ set_source_files_properties(
 # Add the library target
 add_library(tetrisserverlib STATIC
     client.cc
+    client_mapping.cc
     manager.cc
     trace_logger.cc
     sched/base.cc
     sched/bruteforce.cc
     sched/lr.cc
-    sched/objective.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc

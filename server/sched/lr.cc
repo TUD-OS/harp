@@ -15,7 +15,7 @@ namespace tetris {
 double LagrangianRelaxationMapper::EvaluateOPDual(
     const OperatingPoint &op, const std::map<std::string, double> &lambda,
     double rem_cratio) const {
-  double value = _objective->EvaluateOP(op);
+  double value = _evaluator->Evaluate(op);
 
   for (auto &[core_type, core_count] : op.core_counts()) {
     value += lambda.at(core_type) * core_count;

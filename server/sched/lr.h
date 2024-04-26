@@ -60,11 +60,9 @@ private:
             const std::vector<const OperatingPoint *> &lr_ops);
 
 public:
-  explicit LagrangianRelaxationMapper(
-      const Platform &platform,
-      std::unique_ptr<OptimizationObjective> objective, int max_rounds)
-      : BaseClientMapper{platform, std::move(objective)}, _max_rounds{
-                                                              max_rounds} {}
+  explicit LagrangianRelaxationMapper(const Platform &platform,
+                                      int max_rounds = 500)
+      : BaseClientMapper(platform), _max_rounds(max_rounds) {}
 
   // Bring all overloads of GenerateClientMapping()
   using BaseClientMapper::GenerateClientMapping;

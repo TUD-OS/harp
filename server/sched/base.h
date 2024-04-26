@@ -8,7 +8,7 @@
 
 #include "server/client.h"
 #include "server/client_mapping.h"
-#include "server/sched/objective.h"
+#include "util/operating_point_evaluator.h"
 #include "util/platform/cpu_sets.h"
 
 namespace tetris {
@@ -18,21 +18,19 @@ namespace tetris {
  */
 class BaseClientMapper {
 public:
-  explicit BaseClientMapper(const Platform &platform,
-                            std::unique_ptr<OptimizationObjective> objective);
+  explicit BaseClientMapper(const Platform &platform);
 
-  void SetObjective(std::unique_ptr<OptimizationObjective> objective) {
-    _objective = std::move(objective);
+  void SetOperatingPointEvaluator(
+      std::shared_ptr<OperatingPointEvaluator> evaluator) {
+    _evaluator = std::move(evaluator);
   }
-
-  OptimizationObjective *GetObjective() { return _objective.get(); }
 
   /**
    * Generates a Client Mapping
    *
    * \param clients The list of clients for which mappings need to be selected.
    * \param start_time The start time of the schedule
-   * \return The se.
+   * \return The selected mappings.
    */
   virtual ClientMapping GenerateClientMapping(std::vector<Client *> clients) {
     return GenerateClientMapping(clients, CPUCoreSet());
@@ -59,7 +57,7 @@ protected:
 
   const Platform &_platform;
   std::map<std::string, int> _platform_cores_count;
-  std::unique_ptr<OptimizationObjective> _objective;
+  std::shared_ptr<OperatingPointEvaluator> _evaluator;
 };
 
 } // namespace tetris

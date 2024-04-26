@@ -5,7 +5,7 @@
 
 #include "server/client.h"
 #include "server/manager.h"
-#include "server/sched/bruteforce.h"
+#include "server/sched/factory.h"
 #include "server/trace_logger.h"
 
 using namespace tetris;
@@ -144,86 +144,96 @@ TEST_F(SmallOdroidClientMappingTest, GetThreadSet) {
 //
 
 TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_OneJob) {
-  BruteforceMapper mapper(manager->GetPlatform(),
-                          std::make_unique<EnergyObjective>());
-  auto obj = mapper.GetObjective();
-  auto s1 = mapper.GenerateClientMapping({clients[0]});
+  auto mapper = ClientMapperFactory::Create("BF", manager->GetPlatform());
+  std::shared_ptr<OperatingPointEvaluator> evaluator =
+      OperatingPointEvaluatorFactory::Create("energy");
+  mapper->SetOperatingPointEvaluator(evaluator);
+
+  auto s1 = mapper->GenerateClientMapping({clients[0]});
   LOGGER->debug("%s", s1.ToString().c_str());
   auto s1_op = s1.Get(clients[0]);
   EXPECT_EQ(s1_op.threads(), CPUThreadSet({0}));
   EXPECT_EQ(s1.GetAllThreads(), CPUThreadSet({0}));
-  auto s1_result = obj->EvaluateClientMapping(s1);
+  auto s1_result = s1.EvaluateWith(*evaluator);
   EXPECT_EQ(std::get<0>(s1_result), 1);
   EXPECT_NEAR(std::get<1>(s1_result), 0.060, 0.001);
 
-  auto s2 = mapper.GenerateClientMapping({clients[0]}, CPUCoreSet{0});
+  auto s2 = mapper->GenerateClientMapping({clients[0]}, CPUCoreSet{0});
   LOGGER->debug("%s", s2.ToString().c_str());
   auto s2_op = s2.Get(clients[0]);
   EXPECT_EQ(s2_op.threads(), CPUThreadSet({1}));
   EXPECT_EQ(s2.GetAllThreads(), CPUThreadSet({1}));
-  auto s2_result = obj->EvaluateClientMapping(s2);
+  auto s2_result = s2.EvaluateWith(*evaluator);
   EXPECT_EQ(std::get<0>(s2_result), 1);
   EXPECT_NEAR(std::get<1>(s2_result), 0.060, 0.001);
 
-  auto s3 = mapper.GenerateClientMapping({clients[0]}, CPUCoreSet{0, 1});
+  auto s3 = mapper->GenerateClientMapping({clients[0]}, CPUCoreSet{0, 1});
   LOGGER->debug("%s", s3.ToString().c_str());
   auto s3_op = s3.Get(clients[0]);
   EXPECT_EQ(s3_op.threads(), CPUThreadSet({2}));
   EXPECT_EQ(s3.GetAllThreads(), CPUThreadSet({2}));
-  auto s3_result = obj->EvaluateClientMapping(s3);
+  auto s3_result = s3.EvaluateWith(*evaluator);
   EXPECT_EQ(std::get<0>(s3_result), 1);
   EXPECT_NEAR(std::get<1>(s3_result), 0.129, 0.001);
 }
 
 TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_TwoJobs) {
-  BruteforceMapper mapper(manager->GetPlatform(),
-                          std::make_unique<EnergyObjective>());
-  auto obj = mapper.GetObjective();
-  auto s1 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  auto mapper = ClientMapperFactory::Create("BF", manager->GetPlatform());
+  std::shared_ptr<OperatingPointEvaluator> energy_evaluator =
+      OperatingPointEvaluatorFactory::Create("energy");
+  mapper->SetOperatingPointEvaluator(energy_evaluator);
+
+  auto s1 = mapper->GenerateClientMapping({clients[0], clients[1]});
   LOGGER->debug("%s", s1.ToString().c_str());
   auto s1_op0 = s1.Get(clients[0]);
   auto s1_op1 = s1.Get(clients[1]);
   EXPECT_EQ(s1_op0.threads(), CPUThreadSet({0}));
   EXPECT_EQ(s1_op1.threads(), CPUThreadSet({1, 2}));
   EXPECT_EQ(s1.GetAllThreads(), CPUThreadSet({0, 1, 2}));
-  auto s1_result = obj->EvaluateClientMapping(s1);
+  auto s1_result = s1.EvaluateWith(*energy_evaluator);
   EXPECT_EQ(std::get<0>(s1_result), 2);
   EXPECT_NEAR(std::get<1>(s1_result), 0.120, 0.001);
 
   // Set another objective
-  mapper.SetObjective(std::make_unique<DelayObjective>());
-  obj = mapper.GetObjective();
-  auto s2 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  std::shared_ptr<OperatingPointEvaluator> performance_evaluator =
+      OperatingPointEvaluatorFactory::Create("performance");
+  mapper->SetOperatingPointEvaluator(performance_evaluator);
+
+  auto s2 = mapper->GenerateClientMapping({clients[0], clients[1]});
   LOGGER->debug("%s", s2.ToString().c_str());
   auto s2_op0 = s2.Get(clients[0]);
   auto s2_op1 = s2.Get(clients[1]);
   EXPECT_EQ(s2_op0.threads(), CPUThreadSet({2, 3}));
   EXPECT_EQ(s2_op1.threads(), CPUThreadSet({0, 1}));
   EXPECT_EQ(s2.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
-  auto s2_result = obj->EvaluateClientMapping(s2);
+  auto s2_result = s2.EvaluateWith(*performance_evaluator);
   EXPECT_EQ(std::get<0>(s2_result), 2);
   EXPECT_NEAR(std::get<1>(s2_result), 0.108, 0.001);
 
   // Set another objective
-  mapper.SetObjective(std::make_unique<GEDPObjective>(0.5));
-  obj = mapper.GetObjective();
-  auto s3 = mapper.GenerateClientMapping({clients[0], clients[1]});
+  std::shared_ptr<OperatingPointEvaluator> balanced_evaluator =
+      OperatingPointEvaluatorFactory::Create("balanced");
+  mapper->SetOperatingPointEvaluator(balanced_evaluator);
+
+  auto s3 = mapper->GenerateClientMapping({clients[0], clients[1]});
   LOGGER->debug("%s", s3.ToString().c_str());
   auto s3_op0 = s3.Get(clients[0]);
   auto s3_op1 = s3.Get(clients[1]);
   EXPECT_EQ(s3_op0.threads(), CPUThreadSet({0, 2}));
   EXPECT_EQ(s3_op1.threads(), CPUThreadSet({1, 3}));
   EXPECT_EQ(s3.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
-  auto s3_result = obj->EvaluateClientMapping(s3);
+  auto s3_result = s3.EvaluateWith(*balanced_evaluator);
   EXPECT_EQ(std::get<0>(s3_result), 2);
   EXPECT_NEAR(std::get<1>(s3_result), 0.135, 0.001);
 }
 
 TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_ThreeJobs) {
-  BruteforceMapper mapper(manager->GetPlatform(),
-                          std::make_unique<EnergyObjective>());
-  auto obj = mapper.GetObjective();
-  auto client_mapping = mapper.GenerateClientMapping(clients);
+  auto mapper = ClientMapperFactory::Create("BF", manager->GetPlatform());
+  std::shared_ptr<OperatingPointEvaluator> energy_evaluator =
+      OperatingPointEvaluatorFactory::Create("energy");
+  mapper->SetOperatingPointEvaluator(energy_evaluator);
+
+  auto client_mapping = mapper->GenerateClientMapping(clients);
   LOGGER->debug("%s", client_mapping.ToString().c_str());
   auto op0 = client_mapping.Get(clients[0]);
   auto op1 = client_mapping.Get(clients[1]);
@@ -232,7 +242,7 @@ TEST_F(SmallOdroidClientMappingTest, BruteforceMapper_ThreeJobs) {
   EXPECT_EQ(op1.threads(), CPUThreadSet({1, 2}));
   EXPECT_EQ(op2.threads(), CPUThreadSet({3}));
   EXPECT_EQ(client_mapping.GetAllThreads(), CPUThreadSet({0, 1, 2, 3}));
-  auto client_map_result = obj->EvaluateClientMapping(client_mapping);
+  auto client_map_result = client_mapping.EvaluateWith(*energy_evaluator);
   EXPECT_EQ(std::get<0>(client_map_result), 3);
   EXPECT_NEAR(std::get<1>(client_map_result), 0.201, 0.001);
 }
@@ -244,8 +254,10 @@ TEST_F(SmallOdroidClientMappingTest,
   TraceLogger logger(zero_time);
   logger.RegisterPlatform(manager->GetPlatform());
 
-  BruteforceMapper mapper(manager->GetPlatform(),
-                          std::make_unique<BalancedObjective>());
+  auto mapper = ClientMapperFactory::Create("BF", manager->GetPlatform());
+  std::shared_ptr<OperatingPointEvaluator> balanced_evaluator =
+      OperatingPointEvaluatorFactory::Create("balanced");
+  mapper->SetOperatingPointEvaluator(balanced_evaluator);
 
   std::vector<Client *> active = clients;
 
@@ -253,7 +265,7 @@ TEST_F(SmallOdroidClientMappingTest,
     logger.RegisterClient(c);
   }
 
-  auto s1 = mapper.GenerateClientMapping(active);
+  auto s1 = mapper->GenerateClientMapping(active);
   LOGGER->debug("%s", s1.ToString().c_str());
 
   // assign operating points
@@ -275,7 +287,7 @@ TEST_F(SmallOdroidClientMappingTest,
                      [](const Client *c) { return c->exec == "app3"; }),
       active.end());
 
-  auto s2 = mapper.GenerateClientMapping(active);
+  auto s2 = mapper->GenerateClientMapping(active);
   LOGGER->debug("%s", s2.ToString().c_str());
 
   // assign operating points

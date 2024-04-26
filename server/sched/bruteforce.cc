@@ -63,7 +63,7 @@ void BruteforceMapper::IterateClient(
       continue;
     }
     _cur_ops[n] = &op;
-    double op_value = _objective->EvaluateOP(op);
+    double op_value = _evaluator->Evaluate(op);
     IterateClient(n + 1, added_cores, cur_apps + 1, cur_value + op_value);
   }
 

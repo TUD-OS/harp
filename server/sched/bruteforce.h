@@ -31,9 +31,8 @@ private:
                      int cur_apps, double cur_value);
 
 public:
-  explicit BruteforceMapper(const Platform &platform,
-                            std::unique_ptr<OptimizationObjective> objective)
-      : BaseClientMapper{platform, std::move(objective)} {}
+  explicit BruteforceMapper(const Platform &platform)
+      : BaseClientMapper(platform) {}
 
   // Bring all overloads of GenerateClientMapping()
   using BaseClientMapper::GenerateClientMapping;
