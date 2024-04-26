@@ -271,8 +271,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
             manager.print_mappings();
             break;
           case SIGALRM:
-            manager.update_perf_data();
-            manager.update_energy_data();
+            manager.update_client_metrics();
             break;
           default:
             done = 1;

@@ -276,3 +276,13 @@ void Manager::update_energy_data() {
 
   _energy_data.push_back(energy);
 }
+
+void Manager::update_client_metrics()
+{
+    /* First update tell all clients to update their perf data and energy measurements */
+    update_perf_data();
+    update_energy_data();
+
+    /* Iterate through all clients, get their current metrics and update their op-table accordingly with the metrics */
+    /* TODO */
+}

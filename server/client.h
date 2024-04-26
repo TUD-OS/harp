@@ -25,6 +25,8 @@ class Manager;
 
 struct PerfData {
   std::chrono::high_resolution_clock::time_point time;
+  std::chrono::high_resolution_clock::duration update_interval;
+
   std::map<std::string, uint64_t> data;
   std::map<std::string, uint64_t> diff;
 };
@@ -60,6 +62,7 @@ struct EnergyData {
 
 struct ProcessEnergyData {
   std::chrono::high_resolution_clock::time_point time;
+  std::chrono::high_resolution_clock::duration update_interval;
   ProcessTimes raw_ctimes;
 
   std::map<pid_t, int> thread_core_assignment;
@@ -140,6 +143,8 @@ public:
   void update_perf_data(std::chrono::high_resolution_clock::time_point tp);
 
   void update_energy_data(EnergyData &systemwide, uint64_t duration_ms);
+
+  std::optional<tetris::OperatingPoint::Metrics> current_metrics();
 };
 
 #endif /* __CLIENT_H__ */

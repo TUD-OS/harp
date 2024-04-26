@@ -49,6 +49,16 @@ private:
   std::unique_ptr<tetris::Measure> _energy_measure;
   std::vector<EnergyData> _energy_data;
 
+  /**
+   * \brief Update the perf data of all connected clients
+   **/
+  void update_perf_data();
+
+  /**
+   * \brief Update energy data and attribute it to the connected clients
+   **/
+  void update_energy_data();
+
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
                    std::unique_ptr<tetris::BaseClientMapper> mapper)
@@ -126,14 +136,9 @@ public:
   bool IsMapperMarkedForRun() const { return _run_mapper_flag; }
 
   /**
-   * \brief Update the perf data of all connected clients
-   **/
-  void update_perf_data();
-
-  /**
-   * \brief Update energy data and attribute it to the connected clients
-   **/
-  void update_energy_data();
+   * \brief Update the metrics of the currently running OPs of all enabled clients.
+   */
+  void update_client_metrics();
 };
 
 #endif /* __MANAGER_H__ */

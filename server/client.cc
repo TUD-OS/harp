@@ -7,6 +7,7 @@
 #include "util/util.h"
 
 #include <chrono>
+#include <optional>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -88,6 +89,8 @@ void Client::update_perf_data(std::chrono::high_resolution_clock::time_point tp)
 
   if (perf_data.size() != 0) {
     auto prev = perf_data.back();
+    cur.update_interval = cur.time - prev.time;
+
     for (auto &[name, val] : cur.data) {
         cur.diff[name] = val - prev.data[name];
     }
@@ -164,6 +167,7 @@ void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
    *    in this period. */
   if (energy_data.size() > 0) {
     auto last = energy_data.back();
+    proc_energy.update_interval = proc_energy.time - last.time;
 
     proc_energy.ctimes.all = util::ctime_to_ms(proc_energy.raw_ctimes.all - last.raw_ctimes.all);
     for (auto &[tid, raw_time] : proc_energy.raw_ctimes.threads) {
@@ -197,6 +201,24 @@ void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
   }
 
   energy_data.push_back(proc_energy);
+}
+
+std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics()
+{
+  if (energy_data.size() < 2 || perf_data.size() < 2)
+    return std::nullopt;
+
+  tetris::OperatingPoint::Metrics res;
+
+  /* Calculate power in mW */
+  auto energy_measurement = energy_data.back();
+  res.power = energy_measurement.energy.all / std::chrono::duration<double, std::milli>(energy_measurement.update_interval).count();
+
+  /* Calculate utility in instructions per second (IPS) */
+  auto perf_measurement = perf_data.back();
+  res.utility = perf_measurement.diff["Instructions"] / std::chrono::duration<double>(perf_measurement.update_interval).count();
+
+  return res;
 }
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
