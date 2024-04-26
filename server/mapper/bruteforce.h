@@ -1,5 +1,5 @@
-#ifndef __SCHED_BRUTEFORCE_H__
-#define __SCHED_BRUTEFORCE_H__
+#ifndef __MAPPER_BRUTEFORCE_H__
+#define __MAPPER_BRUTEFORCE_H__
 
 #pragma once
 
@@ -61,4 +61,4 @@ private:
 
 } // namespace tetris
 
-#endif /* __SCHED_BRUTEFORCE_H__ */
+#endif /* __MAPPER_BRUTEFORCE_H__ */

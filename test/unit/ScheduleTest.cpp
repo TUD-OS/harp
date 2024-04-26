@@ -5,7 +5,7 @@
 
 #include "server/client.h"
 #include "server/manager.h"
-#include "server/sched/factory.h"
+#include "server/mapper/factory.h"
 #include "server/trace_logger.h"
 
 using namespace tetris;

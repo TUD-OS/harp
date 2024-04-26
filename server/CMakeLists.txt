@@ -6,10 +6,10 @@ add_library(tetrisserverlib STATIC
     client.cc
     client_mapping.cc
     manager.cc
+    mapper/base.cc
+    mapper/bruteforce.cc
+    mapper/lr.cc
     trace_logger.cc
-    sched/base.cc
-    sched/bruteforce.cc
-    sched/lr.cc
     ${PROTO_OUTPUT_SOURCES}
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc

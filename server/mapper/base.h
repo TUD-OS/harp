@@ -1,5 +1,5 @@
-#ifndef __SCHED_BASE_H__
-#define __SCHED_BASE_H__
+#ifndef __MAPPER_BASE_H__
+#define __MAPPER_BASE_H__
 
 #pragma once
 
@@ -75,4 +75,4 @@ protected:
 
 } // namespace tetris
 
-#endif /* __SCHED_BASE_H__ */
+#endif /* __MAPPER_BASE_H__ */

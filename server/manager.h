@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "client.h"
-#include "sched/base.h"
+#include "mapper/base.h"
 #include "trace_logger.h"
 
 #include "util/debug_util.h"

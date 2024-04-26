@@ -1,8 +1,6 @@
 #include "manager.h"
 
 #include "util/platform/platform.h"
-#include <memory>
-#include <chrono>
 
 using namespace tetris;
 

@@ -1,12 +1,13 @@
-#ifndef __SCHED_LR_H__
-#define __SCHED_LR_H__
+#ifndef __MAPPER_LR_H__
+#define __MAPPER_LR_H__
 
 #pragma once
 
 #include "base.h"
-#include "util/platform/platform.h"
 
 #include <tuple>
+
+#include "util/platform/platform.h"
 
 namespace tetris {
 
@@ -88,4 +89,4 @@ private:
 
 } // namespace tetris
 
-#endif /* __SCHED_LR_H__ */
+#endif /* __MAPPER_LR_H__ */
