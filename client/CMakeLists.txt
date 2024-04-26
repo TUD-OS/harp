@@ -42,7 +42,7 @@ add_library(tetrisclient STATIC
 
 # ensure through a dependency that Protobuf message sources file are going to be generated
 add_dependencies(tetrisclient generated_proto)
-target_link_libraries(tetrisclient PRIVATE  protobuf::libprotobuf protobuf::libprotoc yaml-cpp)
+target_link_libraries(tetrisclient PRIVATE ${Protobuf_LIBRARIES} yaml-cpp)
 
 target_include_directories(tetrisclient
   PUBLIC
