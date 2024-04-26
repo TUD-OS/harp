@@ -4,7 +4,16 @@
 
 namespace tetris {
 
-void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
+void OperatingPointTable::SetOperatingPointEvaluator(
+    std::shared_ptr<OperatingPointEvaluator> evaluator) {
+  if (_pareto_filter && _evaluator == evaluator) {
+    // This is the same evaluator, do nothing
+    return;
+  }
+
+  // Store evaluator
+  _evaluator = std::move(evaluator);
+
   // Intialize _pareto_filter
   std::vector<ObjectiveBetterFunc> objectives;
   auto types = _platform.GetCPUTypes();
@@ -14,13 +23,18 @@ void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
     });
   }
 
-  if (new_objective) {
+  if (_evaluator) {
     objectives.push_back(
-        [new_objective](const OperatingPoint &a, const OperatingPoint &b) {
-          return new_objective(a) < new_objective(b);
+        [this](const OperatingPoint &a, const OperatingPoint &b) {
+          return this->_evaluator->Evaluate(a) < this->_evaluator->Evaluate(b);
         });
   }
-  _pareto_filter->Reset(objectives);
+  if (_pareto_filter) {
+    _pareto_filter->Reset(objectives);
+  } else {
+    _pareto_filter =
+        std::make_unique<ParetoFrontFilter<OperatingPoint>>(objectives);
+  }
 
   // Mark to regenerate Pareto Front
   _update_pareto = true;
@@ -28,17 +42,22 @@ void OperatingPointTable::SetValueObjective(ObjectiveValueFunc new_objective) {
 
 std::vector<OperatingPoint> OperatingPointTable::GetParetoFront() {
   if (_update_pareto) {
+    LOGGER->debug("Updating the Pareto front of the operating points.\n");
     auto ops = GetOperatingPoints(EnabledApproximation());
     _pareto = _pareto_filter->Filter(ops);
     _update_pareto = false;
+  } else {
+    LOGGER->debug("Returning the previously filtered Pareto front of the "
+                  "operating points.\n");
   }
   return _pareto;
 }
 
 ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
-    const Platform &platform, ObjectiveValueFunc value_objective,
-    bool measurement, bool approximation, double ema_alpha)
-    : OperatingPointTable(platform, value_objective, measurement,
+    const Platform &platform,
+    std::shared_ptr<OperatingPointEvaluator> evaluator, bool measurement,
+    bool approximation, double ema_alpha)
+    : OperatingPointTable(platform, std::move(evaluator), measurement,
                           approximation),
       _ema_alpha(ema_alpha), _update_approximated(false) {
 

@@ -3,7 +3,14 @@
 
 #pragma once
 
+#include <cmath>
+
+#include "operating_point.h"
+
 namespace tetris {
+
+inline const double kMinPower = 0;
+inline const double kMinUtility = 1e-6;
 
 class OperatingPointEvaluator {
 public:
@@ -17,6 +24,8 @@ private:
 
   static double CalculateGEDP(double power, double utility, double alpha) {
     // Calculates the generalized energy-delay product
+    power = (power < kMinPower) ? kMinPower : power;
+    utility = (utility < kMinUtility) ? kMinUtility : utility;
     return pow(power / utility, alpha) * pow(1.0 / utility, 1 - alpha);
   }
 

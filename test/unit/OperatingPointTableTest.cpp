@@ -21,7 +21,10 @@ protected:
 };
 
 TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
-  ThreadSetOperatingPointTable op_table(*platform);
+  std::shared_ptr<OperatingPointEvaluator> evaluator =
+      OperatingPointEvaluatorFactory::Create("balanced");
+  ThreadSetOperatingPointTable op_table(*platform, evaluator);
+
   // clang-format off
   // P-HT=3 P-ST=0 E=11
   op_table.AddOperatingPoint(CreateOperatingPoint(

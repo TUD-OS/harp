@@ -3,13 +3,14 @@
 
 #pragma once
 
+#include <vector>
+
 #include "util/debug_util.h"
 #include "util/operating_point.h"
+#include "util/operating_point_evaluator.h"
 #include "util/pareto.h"
 #include "util/regression.h"
 #include "util/string_util.h"
-
-#include <vector>
 
 namespace tetris {
 
@@ -24,7 +25,6 @@ class Platform;
  */
 class OperatingPointTable {
 public:
-  using ObjectiveValueFunc = std::function<double(const OperatingPoint &)>;
   using ObjectiveBetterFunc =
       ParetoFrontFilter<OperatingPoint>::ObjectiveBetterFunc;
 
@@ -34,14 +34,13 @@ public:
    * \param measurement Indicates if measurement capabilities are enabled.
    * \param approximation Indicates if approximation capabilities are enabled.
    */
-  explicit OperatingPointTable(const Platform &platform,
-                               ObjectiveValueFunc value_objective,
-                               bool measurement, bool approximation)
+  explicit OperatingPointTable(
+      const Platform &platform,
+      std::shared_ptr<OperatingPointEvaluator> evaluator, bool measurement,
+      bool approximation)
       : _platform(platform), _measurement(measurement),
         _approximation(approximation), _pareto_filter{nullptr} {
-    _pareto_filter = std::make_unique<ParetoFrontFilter<OperatingPoint>>(
-        std::vector<ObjectiveBetterFunc>());
-    SetValueObjective(value_objective);
+    SetOperatingPointEvaluator(std::move(evaluator));
   }
 
   virtual ~OperatingPointTable() = default;
@@ -69,7 +68,8 @@ public:
 
   virtual void Clear() = 0;
 
-  void SetValueObjective(ObjectiveValueFunc new_objective);
+  void SetOperatingPointEvaluator(
+      std::shared_ptr<OperatingPointEvaluator> evaluator);
 
   std::vector<OperatingPoint> GetParetoFront();
 
@@ -79,6 +79,7 @@ protected:
   bool _approximation;
 
   // Manage Pareto-Front Filtering
+  std::shared_ptr<OperatingPointEvaluator> _evaluator;
   std::unique_ptr<ParetoFrontFilter<OperatingPoint>> _pareto_filter;
   std::vector<OperatingPoint> _pareto; // Store the current Pareto front
   bool _update_pareto;                 // Flag to update
@@ -96,12 +97,7 @@ class ThreadSetOperatingPointTable : public OperatingPointTable {
 public:
   explicit ThreadSetOperatingPointTable(
       const Platform &platform,
-      ObjectiveValueFunc value_objective =
-          [](const OperatingPoint &a) {
-            const double &power = a.power();
-            const double &utility = a.utility();
-            return power / utility / utility;
-          },
+      std::shared_ptr<OperatingPointEvaluator> evaluator = nullptr,
       bool measurement = true, bool approximation = true,
       double ema_alpha = 0.1);
 
@@ -181,14 +177,10 @@ class CustomOperatingPointTable : public OperatingPointTable {
 public:
   explicit CustomOperatingPointTable(
       const Platform &platform,
-      ObjectiveValueFunc value_objective =
-          [](const OperatingPoint &a) {
-            const double &power = a.power();
-            const double &utility = a.utility();
-            return power / utility / utility;
-          },
+      std::shared_ptr<OperatingPointEvaluator> evaluator = nullptr,
       bool measurement = false)
-      : OperatingPointTable(platform, value_objective, measurement, false) {}
+      : OperatingPointTable(platform, std::move(evaluator), measurement,
+                            false) {}
 
   std::vector<OperatingPoint>
   GetOperatingPoints(bool approximated = false) override {

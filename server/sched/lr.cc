@@ -187,25 +187,20 @@ ClientMapping
 LagrangianRelaxationMapper::GenerateClientMapping(std::vector<Client *> clients,
                                                   CPUCoreSet blocked_cores) {
   // Initialize internal data structures
-  _clients = clients;
-  _blocked = blocked_cores;
+  _clients = std::move(clients);
+  _blocked = std::move(blocked_cores);
   _client_ops.clear();
 
   LOGGER->debug(
-      "Allocating clients to the resource using LagrangianRelaxationMapper\n");
-  LOGGER->debug("Current clients:\n");
+      "Allocating clients to the resources using LagrangianRelaxationMapper\n");
 
   // Filter Pareto-front for each client
-  for (const auto &c : _clients) {
-    _client_ops.push_back(c->op_table->GetParetoFront());
-    LOGGER->debug("  - '%s' [%d]: %d operating points.\n", c->exec.c_str(),
-                  c->pid, _client_ops.back().size());
-  }
+  _client_ops = GetClientsParetoFront(_clients);
 
   auto [lambda, lr_ops] = SolveDualOptimizationProblem();
 
   std::vector<const OperatingPoint *> ops = SelectOPs(lambda, lr_ops);
 
-  return ToClientMapping(clients, ops, _blocked);
+  return ToClientMapping(_clients, ops, _blocked);
 }
 } // namespace tetris

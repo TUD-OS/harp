@@ -35,7 +35,6 @@ class Manager {
 private:
   std::unique_ptr<tetris::Platform> _platform;
   std::unique_ptr<tetris::BaseClientMapper> _mapper;
-  std::shared_ptr<tetris::OperatingPointEvaluator> _evaluator;
   std::map<int, std::unique_ptr<Client>> _clients;
   tetris::CPUCoreSet _blocked_cores;
 
@@ -56,6 +55,11 @@ public:
   const tetris::Platform &GetPlatform() const { return *_platform; }
 
   const tetris::TraceLogger &GetTraceLogger() const { return *_tracelog; }
+
+  void UpdateOperatingPointEvaluator(
+      std::shared_ptr<tetris::OperatingPointEvaluator> evaluator) {
+    _mapper->SetOperatingPointEvaluator(std::move(evaluator));
+  }
 
   /**
    * \brief Adds a new client to the client list upon connection.

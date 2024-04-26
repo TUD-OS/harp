@@ -85,27 +85,22 @@ ClientMapping
 BruteforceMapper::GenerateClientMapping(std::vector<Client *> clients,
                                         CPUCoreSet blocked_cores) {
   // Initialize internal data structures
-  _clients = clients;
-  _blocked = blocked_cores;
+  _clients = std::move(clients);
+  _blocked = std::move(blocked_cores);
   _client_ops.clear();
   _best_value = std::make_tuple(0, 0.0);
   _cur_ops.clear();
-  _cur_ops.resize(clients.size());
+  _cur_ops.resize(_clients.size());
 
-  LOGGER->debug("Allocating clients to the resource using BruteforceMapper\n");
-  LOGGER->debug("Current clients:\n");
+  LOGGER->debug("Allocating clients to the resources using BruteforceMapper\n");
 
   // Filter Pareto-front for each client
-  for (const auto &c : _clients) {
-    _client_ops.push_back(c->op_table->GetParetoFront());
-    LOGGER->debug("  - '%s' [%d]: %d operating points.\n", c->exec.c_str(),
-                  c->pid, _client_ops.back().size());
-  }
+  _client_ops = GetClientsParetoFront(_clients);
 
   // Start bruteforce
   IterateClient(0, _platform.GetCoreCountPerType(_blocked), 0, 0.0);
 
-  return ToClientMapping(clients, _best_ops, _blocked);
+  return ToClientMapping(_clients, _best_ops, _blocked);
 }
 
 } // namespace tetris

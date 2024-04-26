@@ -59,6 +59,9 @@ public:
 protected:
   using MappingList = std::vector<const OperatingPoint *>;
 
+  std::vector<std::vector<OperatingPoint>>
+  GetClientsParetoFront(std::vector<Client *> clients);
+
   /**
    * Create a ClientMapping object with the current mapping list
    */
