@@ -21,7 +21,7 @@ add_library(tetrisserverlib STATIC
     ${CMAKE_SOURCE_DIR}/util/regression.cc
     ${CMAKE_SOURCE_DIR}/util/util.cc
 )
-target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp Eigen3::Eigen)
+target_link_libraries(tetrisserverlib protobuf::libprotobuf protobuf::libprotoc yaml-cpp Eigen3::Eigen)
 add_dependencies(tetrisserverlib generated_proto)
 
 # Add the executable target

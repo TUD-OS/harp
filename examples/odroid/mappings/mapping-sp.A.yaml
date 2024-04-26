@@ -1,0 +1,221 @@
+application: sp.A
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - ARM00
+  metadata:
+  - 550.207
+  - 285.38455
+  - 1
+  name: mapping0
+- cores:
+  - ARM00
+  - ARM01
+  metadata:
+  - 269.5445
+  - 184.392899
+  - 2
+  name: mapping1
+- cores:
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 182.7105
+  - 153.494382
+  - 3
+  name: mapping2
+- cores:
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 139.402
+  - 137.974488
+  - 4
+  name: mapping3
+- cores:
+  - ARM04
+  metadata:
+  - 155.6615
+  - 419.0362485
+  - 1
+  name: mapping4
+- cores:
+  - ARM04
+  - ARM00
+  metadata:
+  - 164.472
+  - 356.922304
+  - 2
+  name: mapping5
+- cores:
+  - ARM04
+  - ARM00
+  - ARM01
+  metadata:
+  - 139.955
+  - 309.704038
+  - 3
+  name: mapping6
+- cores:
+  - ARM04
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 122.2085
+  - 262.292546
+  - 4
+  name: mapping7
+- cores:
+  - ARM04
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 106.108
+  - 234.106385
+  - 5
+  name: mapping8
+- cores:
+  - ARM04
+  - ARM05
+  metadata:
+  - 90.323
+  - 341.502922
+  - 2
+  name: mapping9
+- cores:
+  - ARM04
+  - ARM05
+  - ARM00
+  metadata:
+  - 118.916
+  - 318.76024
+  - 3
+  name: mapping10
+- cores:
+  - ARM04
+  - ARM05
+  - ARM00
+  - ARM01
+  metadata:
+  - 100.909
+  - 288.413102
+  - 4
+  name: mapping11
+- cores:
+  - ARM04
+  - ARM05
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 93.6355
+  - 266.625824
+  - 5
+  name: mapping12
+- cores:
+  - ARM04
+  - ARM05
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 84.28
+  - 247.13477
+  - 6
+  name: mapping13
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  metadata:
+  - 70.286
+  - 277.427001
+  - 3
+  name: mapping14
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 80.2
+  - 260.310906
+  - 6
+  name: mapping15
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 74.139
+  - 250.335937
+  - 7
+  name: mapping16
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM07
+  metadata:
+  - 60.031
+  - 285.473516
+  - 4
+  name: mapping17
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM07
+  - ARM00
+  - ARM01
+  metadata:
+  - 74.312
+  - 273.725248
+  - 6
+  name: mapping18
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM07
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 71.1775
+  - 260.343774
+  - 7
+  name: mapping19
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM07
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 65.396
+  - 250.68677
+  - 8
+  name: mapping20
+platform: odroid
+type: OMP

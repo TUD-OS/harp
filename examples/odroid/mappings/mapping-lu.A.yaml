@@ -1,0 +1,98 @@
+application: lu.A
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - ARM00
+  metadata:
+  - 453.242
+  - 225.132812
+  - 1
+  name: mapping0
+- cores:
+  - ARM00
+  - ARM01
+  metadata:
+  - 221.252
+  - 151.02604
+  - 2
+  name: mapping1
+- cores:
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 148.2225
+  - 127.064025
+  - 3
+  name: mapping2
+- cores:
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 115.294
+  - 117.5337395
+  - 4
+  name: mapping3
+- cores:
+  - ARM04
+  metadata:
+  - 125.466
+  - 341.375039
+  - 1
+  name: mapping4
+- cores:
+  - ARM04
+  - ARM00
+  - ARM01
+  - ARM02
+  metadata:
+  - 111.284
+  - 295.297356
+  - 4
+  name: mapping5
+- cores:
+  - ARM04
+  - ARM00
+  - ARM01
+  - ARM02
+  - ARM03
+  metadata:
+  - 94.0325
+  - 259.513791
+  - 5
+  name: mapping6
+- cores:
+  - ARM04
+  - ARM05
+  metadata:
+  - 66.611
+  - 258.598956
+  - 2
+  name: mapping7
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  metadata:
+  - 49.325
+  - 211.2629445
+  - 3
+  name: mapping8
+- cores:
+  - ARM04
+  - ARM05
+  - ARM06
+  - ARM07
+  metadata:
+  - 39.995
+  - 211.635328
+  - 4
+  name: mapping9
+platform: odroid
+type: OMP

@@ -48,6 +48,7 @@
         protobufc
         protobuf
         yaml-cpp
+        tbb_2021_8.dev
       ];
 
       # Setting up the environment variables you need during

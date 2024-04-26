@@ -1,0 +1,42 @@
+core_types:
+  - type: E
+    threads: 1
+  - type: P
+    threads: 1
+
+equivalence_scheme: core-type
+
+cores:
+  - type: E
+    threads:
+      - name: E0
+        affinity: 0
+  - type: E
+    threads:
+      - name: E1
+        affinity: 1
+  - type: E
+    threads:
+      - name: E2
+        affinity: 2
+  - type: E
+    threads:
+      - name: E3
+        affinity: 3
+  - type: P
+    threads:
+      - name: P0
+        affinity: 4
+  - type: P
+    threads:
+      - name: P1
+        affinity: 5
+  - type: P
+    threads:
+      - name: P2
+        affinity: 6
+  - type: P
+    threads:
+      - name: P3
+        affinity: 7
+

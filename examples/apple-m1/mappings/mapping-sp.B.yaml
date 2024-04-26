@@ -1,0 +1,106 @@
+application: sp.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 145.39055046321.01
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 72.1817861.06
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 51.44434431881.006
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 41.443482435
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 45.7486380446
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  metadata:
+  - 43.736569429
+  - 1.0
+  - 2
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 40.732851752
+  - 1.0
+  - 4
+  name: mapping6
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 33.3385617418
+  - 1.0
+  - 5
+  name: mapping7
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 27.1602382754
+  - 1.0
+  - 2
+  name: mapping8
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 22.41.06982241.003
+  - 1.0
+  - 3
+  name: mapping9
+- cores:
+  - P0
+  - P1
+  - P2
+  - P3
+  metadata:
+  - 20.7425764912
+  - 1.0
+  - 4
+  name: mapping10
+platform: apple-m1
+type: OMP

@@ -1,0 +1,88 @@
+application: mg.B
+mapping_template:
+  metadata:
+  - execution_time
+  - energy
+  - nr_threads
+mappings:
+- cores:
+  - E0
+  metadata:
+  - 5.548366576
+  - 1.0
+  - 1
+  name: mapping0
+- cores:
+  - E0
+  - E1
+  metadata:
+  - 2.9111234132
+  - 1.0
+  - 2
+  name: mapping1
+- cores:
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 2.1885584334
+  - 1.0
+  - 3
+  name: mapping2
+- cores:
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 1.915784043
+  - 1.0
+  - 4
+  name: mapping3
+- cores:
+  - P0
+  metadata:
+  - 1.9682486174
+  - 1.0
+  - 1
+  name: mapping4
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  metadata:
+  - 1.7041195286
+  - 1.0
+  - 4
+  name: mapping5
+- cores:
+  - P0
+  - E0
+  - E1
+  - E2
+  - E3
+  metadata:
+  - 1.5731001644
+  - 1.0
+  - 5
+  name: mapping6
+- cores:
+  - P0
+  - P1
+  metadata:
+  - 1.1243562944
+  - 1.0
+  - 2
+  name: mapping7
+- cores:
+  - P0
+  - P1
+  - P2
+  metadata:
+  - 1.019675268
+  - 1.0
+  - 3
+  name: mapping8
+platform: apple-m1
+type: OMP
