@@ -115,9 +115,6 @@ void Manager::RunMapper() {
   _run_mapper_flag = false;
   auto start = std::chrono::high_resolution_clock::now();
 
-  // Update the current progress of each client
-  update_client_progresses(start);
-
   // Run the mapper
   std::vector<Client*> clients;
   for (auto& [cid, c]: _clients) {
@@ -138,8 +135,6 @@ void Manager::RunMapper() {
 
   // The scheduling might be too too long, update progresses again
   auto after = std::chrono::high_resolution_clock::now();
-
-  update_client_progresses(after);
 
   // print
   LOGGER->info("%s\n", client_mapping.ToString().c_str());

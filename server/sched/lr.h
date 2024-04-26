@@ -16,8 +16,7 @@ namespace tetris {
 class LagrangianRelaxationMapper : public BaseClientMapper {
 private:
   double EvaluateOPDual(const OperatingPoint &op,
-                        const std::map<std::string, double> &lambda,
-                        double rem_cratio) const;
+                        const std::map<std::string, double> &lambda) const;
 
   std::tuple<const OperatingPoint *, double>
   MinimizeDualFunctionClient(int c,

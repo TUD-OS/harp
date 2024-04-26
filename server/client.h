@@ -49,10 +49,6 @@ public:
   std::unique_ptr<tetris::OperatingPointTable> op_table;
   std::optional<tetris::OperatingPointAllocation> active_op;
 
-  double progress; // current progress (0.0...1.0)
-  std::chrono::high_resolution_clock::time_point
-      progress_tp; // last progress update
-
   int type;
 
 private:
@@ -86,28 +82,6 @@ public:
   void activate_op(const tetris::OperatingPointAllocation &new_op);
 
   tetris::ServerResponse handle_message(const tetris::ClientMessage &msg);
-
-  void update_progress(std::chrono::high_resolution_clock::time_point new_tp,
-                       bool reset = false) {
-    throw std::runtime_error("NYI");
-#if 0
-    if (active_op.has_value()) {
-      std::chrono::duration<double, std::milli> diff = new_tp - progress_tp;
-      auto diff_ms = diff.count();
-      auto extime = active_op->characteristic("execution_time");
-      auto cur_progress = diff_ms / extime;
-      progress += cur_progress;
-
-      if (progress >= 1.0 && reset) {
-        LOGGER->info("Progress of the client '%s' [%i] is beyound 1.0, "
-                     "resetting to 0.9\n",
-                     exec.c_str(), pid);
-        progress = 0.9;
-      }
-    }
-    progress_tp = new_tp;
-#endif
-  }
 };
 
 #endif /* __CLIENT_H__ */

@@ -13,8 +13,8 @@ std::string LambdaToString(const std::map<std::string, double> &lambda) {
 namespace tetris {
 
 double LagrangianRelaxationMapper::EvaluateOPDual(
-    const OperatingPoint &op, const std::map<std::string, double> &lambda,
-    double rem_cratio) const {
+    const OperatingPoint &op,
+    const std::map<std::string, double> &lambda) const {
   double value = _evaluator->Evaluate(op);
 
   for (auto &[core_type, core_count] : op.core_counts()) {
@@ -27,11 +27,10 @@ std::tuple<const OperatingPoint *, double>
 LagrangianRelaxationMapper::MinimizeDualFunctionClient(
     int c, const std::map<std::string, double> &lambda) const {
   Client &client = *_clients[c];
-  double rem_cratio = 1.0 - client.progress;
-  double best_value = EvaluateOPDual(_client_ops[c][0], lambda, rem_cratio);
+  double best_value = EvaluateOPDual(_client_ops[c][0], lambda);
   const OperatingPoint *best_op = &_client_ops[c][0];
   for (int i = 1; i < _client_ops[c].size(); ++i) {
-    double op_value = EvaluateOPDual(_client_ops[c][i], lambda, rem_cratio);
+    double op_value = EvaluateOPDual(_client_ops[c][i], lambda);
     if (op_value < best_value) {
       best_value = op_value;
       best_op = &_client_ops[c][i];
@@ -108,14 +107,12 @@ std::vector<int> LagrangianRelaxationMapper::SortClients(
   }
 
   // Sort clients according the objective values in non-decreasing order
-  std::sort(
-      order.begin(), order.end(), [this, &lr_ops, &lambda](int i1, int i2) {
-        double rem_cratio1 = 1.0 - this->_clients[i1]->progress;
-        double rem_cratio2 = 1.0 - this->_clients[i2]->progress;
-        double value1 = this->EvaluateOPDual(*lr_ops[i1], lambda, rem_cratio1);
-        double value2 = this->EvaluateOPDual(*lr_ops[i2], lambda, rem_cratio2);
-        return value1 < value2;
-      });
+  std::sort(order.begin(), order.end(),
+            [this, &lr_ops, &lambda](int i1, int i2) {
+              double value1 = this->EvaluateOPDual(*lr_ops[i1], lambda);
+              double value2 = this->EvaluateOPDual(*lr_ops[i2], lambda);
+              return value1 < value2;
+            });
 
   std::vector<std::string> order_str;
   for (auto i : order) {
@@ -136,11 +133,10 @@ const OperatingPoint *LagrangianRelaxationMapper::SelectClientOP(
     order[i] = i;
   }
   std::sort(order.begin(), order.end(), [this, c, &lambda](int i1, int i2) {
-    double rem_cratio = 1.0 - this->_clients[c]->progress;
     auto &op1 = this->_client_ops[c][i1];
     auto &op2 = this->_client_ops[c][i2];
-    double value1 = this->EvaluateOPDual(op1, lambda, rem_cratio);
-    double value2 = this->EvaluateOPDual(op2, lambda, rem_cratio);
+    double value1 = this->EvaluateOPDual(op1, lambda);
+    double value2 = this->EvaluateOPDual(op2, lambda);
     return value1 < value2;
   });
 

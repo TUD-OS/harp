@@ -35,19 +35,13 @@ class Manager {
 private:
   std::unique_ptr<tetris::Platform> _platform;
   std::unique_ptr<tetris::BaseClientMapper> _mapper;
+  std::shared_ptr<tetris::OperatingPointEvaluator> _evaluator;
   std::map<int, std::unique_ptr<Client>> _clients;
   tetris::CPUCoreSet _blocked_cores;
 
   bool _run_mapper_flag; // Flag to run the mapper
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
-
-  void update_client_progresses(
-      std::chrono::high_resolution_clock::time_point new_tp) {
-    for (auto &[cid, c] : _clients) {
-      c->update_progress(new_tp, true);
-    }
-  }
 
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
@@ -80,7 +74,6 @@ public:
     auto &c = *_clients.at(fd);
 
     if (c.active_op.has_value()) {
-      c.update_progress(now);
       _tracelog->LogClientMappingEnd(now, &c);
     }
     _tracelog->DeregisterClient(&c);
@@ -92,9 +85,8 @@ public:
   /**
    * Run the client mapper.
    *
-   * First, it updates the current progress for all clients. Then, it runs the
-   * mapper and gets the operating point allocation for each client.
-   * Third, it assigns the found operating point allocation and triggers the
+   * It runs the mapper and gets the operating point allocation for each client.
+   * Then, it assigns the found operating point allocation and triggers the
    * message sending to the client.
    */
   void RunMapper();

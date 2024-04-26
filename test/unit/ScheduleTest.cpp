@@ -276,7 +276,6 @@ TEST_F(SmallOdroidClientMappingTest,
 
   auto time_34ms = zero_time + std::chrono::milliseconds(34);
   for (auto &c : active) {
-    LOGGER->debug("client_progress: %.3lf\n", c->progress);
     logger.LogClientMappingEnd(time_34ms, c);
     if (c->exec == "app3")
       logger.DeregisterClient(c);
@@ -298,7 +297,6 @@ TEST_F(SmallOdroidClientMappingTest,
 
   auto time_63ms = zero_time + std::chrono::milliseconds(63);
   for (auto &c : active) {
-    LOGGER->debug("client_progress: %.3lf\n", c->progress);
     logger.LogClientMappingEnd(time_63ms, c);
     logger.DeregisterClient(c);
   }

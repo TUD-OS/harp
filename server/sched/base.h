@@ -20,9 +20,19 @@ class BaseClientMapper {
 public:
   explicit BaseClientMapper(const Platform &platform);
 
+  /**
+   * \brief Sets an operating point evaluator
+   */
   void SetOperatingPointEvaluator(
       std::shared_ptr<OperatingPointEvaluator> evaluator) {
     _evaluator = std::move(evaluator);
+  }
+
+  /**
+   * \brief Returns the operating point evaluator
+   */
+  std::shared_ptr<OperatingPointEvaluator> GetOperatingPointEvaluator() {
+    return _evaluator;
   }
 
   /**

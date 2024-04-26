@@ -10,10 +10,8 @@ using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn, Manager& manager)
     : connection{conn}, exec{}, pid{-1}, op_table{},
-      active_op{}, progress{0.0}, type{Type::PASSIV}, _manager{manager}
+      active_op{}, type{Type::PASSIV}, _manager{manager}
 {
-  progress_tp = std::chrono::high_resolution_clock::now();
-
   // TODO: choose the type of operating point table based on the client info
   // TODO: Pass the objective function
   op_table = std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
