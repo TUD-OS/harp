@@ -18,11 +18,10 @@ public:
   virtual double Evaluate(const OperatingPoint &op) const = 0;
 };
 
+template <double alpha>
 class GeneralizedEDPEvaluator : public OperatingPointEvaluator {
 private:
-  double _alpha; // Weighting factor between power and utility
-
-  static double CalculateGEDP(double power, double utility, double alpha) {
+  static double CalculateGEDP(double power, double utility) {
     // Calculates the generalized energy-delay product
     power = (power < kMinPower) ? kMinPower : power;
     utility = (utility < kMinUtility) ? kMinUtility : utility;
@@ -30,33 +29,33 @@ private:
   }
 
 public:
-  explicit GeneralizedEDPEvaluator(double alpha) : _alpha(alpha) {
+  explicit GeneralizedEDPEvaluator() {
     if (alpha < 0 || alpha > 1) {
       throw std::runtime_error("Alpha must be in the range [0.0, 1.0]");
     }
   }
 
   double Evaluate(const OperatingPoint &op) const override {
-    return CalculateGEDP(op.power(), op.utility(), _alpha);
+    return CalculateGEDP(op.power(), op.utility());
   }
 };
 
 // Focuses entirely on minimizing power consumption
-class EnergyEvaluator : public GeneralizedEDPEvaluator {
+class EnergyEvaluator : public GeneralizedEDPEvaluator<1.0> {
 public:
-  EnergyEvaluator() : GeneralizedEDPEvaluator(1.0) {}
+  EnergyEvaluator() : GeneralizedEDPEvaluator() {}
 };
 
 // Focuses entirely on maximizing utility
-class PerformanceEvaluator : public GeneralizedEDPEvaluator {
+class PerformanceEvaluator : public GeneralizedEDPEvaluator<0.0> {
 public:
-  PerformanceEvaluator() : GeneralizedEDPEvaluator(0.0) {}
+  PerformanceEvaluator() : GeneralizedEDPEvaluator() {}
 };
 
 // Balances between power and utility
-class BalancedEvaluator : public GeneralizedEDPEvaluator {
+class BalancedEvaluator : public GeneralizedEDPEvaluator<0.5> {
 public:
-  BalancedEvaluator() : GeneralizedEDPEvaluator(0.5) {}
+  BalancedEvaluator() : GeneralizedEDPEvaluator() {}
 };
 
 class OperatingPointEvaluatorFactory {
