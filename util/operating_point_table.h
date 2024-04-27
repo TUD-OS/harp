@@ -36,10 +36,9 @@ public:
    * \param measurement Indicates if measurement capabilities are enabled.
    * \param approximation Indicates if approximation capabilities are enabled.
    */
-  explicit OperatingPointTable(
-      const Platform &platform,
-      std::shared_ptr<OperatingPointEvaluator> evaluator, bool measurement,
-      bool approximation)
+  OperatingPointTable(const Platform &platform,
+                      std::shared_ptr<OperatingPointEvaluator> evaluator,
+                      bool measurement, bool approximation)
       : _platform(platform), _measurement(measurement),
         _approximation(approximation), _pareto_filter{nullptr} {
     SetOperatingPointEvaluator(std::move(evaluator));
