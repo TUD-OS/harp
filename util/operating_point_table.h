@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "proto/tetris.pb.h"
+
 #include "util/debug_util.h"
 #include "util/operating_point.h"
 #include "util/operating_point_evaluator.h"
@@ -61,6 +63,8 @@ public:
 
   virtual void AddOperatingPoint(const OperatingPoint::Configuration &config,
                                  const OperatingPoint::Metrics &metrics) = 0;
+
+  void AddOperatingPoint(const ClientMessage::OperatingPointsInfo::OPData &op);
 
   virtual void
   AddOperatingPointMeasurement(const OperatingPoint::Configuration &config,

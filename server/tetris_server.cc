@@ -367,6 +367,7 @@ int main(int argc, char *argv[]) {
 
   /* Setting up the manager */
   Manager manager{std::move(platform), std::move(mapper)};
+  manager.UpdateOperatingPointEvaluator(std::move(evaluator));
 
   // Setting up the server and control sockets
   int server_fd = -1;

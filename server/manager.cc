@@ -87,7 +87,7 @@ bool Manager::client_message(int fd) try {
   LOGGER->warning("Received message for unknown client %i\n", fd);
   return true;
 } catch (std::runtime_error &e) {
-  LOGGER->warning("Error working with message for client %i: %s", fd, e.what());
+  LOGGER->error("Error working with message for client %i: %s\n", fd, e.what());
   return true;
 }
 

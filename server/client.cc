@@ -13,7 +13,6 @@ Client::Client(const ConnectionPtr &conn, Manager& manager)
       active_op{}, type{Type::PASSIV}, _manager{manager}
 {
   // TODO: choose the type of operating point table based on the client info
-  // TODO: Pass the objective function
   op_table = std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
 }
 
@@ -36,8 +35,7 @@ bool Client::receive_ops(
   int op_size = ops_info.operating_points_size();
   for (int i = 0; i < ops_info.operating_points_size(); i++) {
     auto cur = ops_info.operating_points(i);
-    throw std::runtime_error("NYI");
-    //ops.emplace_back(_manager->GetPlatform(), cur);
+    op_table->AddOperatingPoint(cur);
   }
 
   LOGGER->info(" -> Received %d operating points from client %d\n", op_size, pid);

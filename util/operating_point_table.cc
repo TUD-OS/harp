@@ -4,6 +4,47 @@
 
 namespace tetris {
 
+void OperatingPointTable::AddOperatingPoint(
+    const ClientMessage::OperatingPointsInfo::OPData &op) {
+  CPUThreadSet threads;
+
+  for (int i = 0; i < op.cpu_ids_size(); ++i) {
+    threads.Set(op.cpu_ids(i));
+  }
+  auto cores_count =
+      _platform.GetCoreCountPerType(_platform.ToCPUCoreSet(threads));
+
+  OperatingPoint::Configuration config{op.identifier(), threads, cores_count};
+
+  double utility = -1;
+  double power = -1;
+
+  for (int i = 0; i < op.characteristics_size(); ++i) {
+    auto c = op.characteristics(i);
+    if (c.name() == "utility") {
+      utility = c.value();
+    }
+    if (c.name() == "power") {
+      power = c.value();
+    }
+  }
+
+  if (utility == -1) {
+    LOGGER->warning("Operating point %s does not specify utility\n",
+                    op.identifier().c_str());
+    utility = 0;
+  }
+  if (power == -1) {
+    LOGGER->warning("Operating point %s does not specify power\n",
+                    op.identifier().c_str());
+    power = 0;
+  }
+
+  OperatingPoint::Metrics metrics{utility, power};
+  LOGGER->debug(" -> AddOperatingPoint:last\n");
+  AddOperatingPoint(config, metrics);
+}
+
 void OperatingPointTable::SetOperatingPointEvaluator(
     std::shared_ptr<OperatingPointEvaluator> evaluator) {
   if (_pareto_filter && _evaluator == evaluator) {
