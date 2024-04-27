@@ -118,6 +118,113 @@ TEST_F(RaptorLakeTest, GetCPUThreads) {
   EXPECT_EQ(threads[3]->GetCPUCore().GetID(), 12);
 }
 
+TEST_F(OdroidTest, GetThreadCapacityPerCoreType) {
+  auto capacity_map = platform->GetThreadCapacityInfo();
+
+  EXPECT_EQ(capacity_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, cap] : capacity_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "A15");
+      EXPECT_EQ(cap, 1);
+    } else {
+      EXPECT_EQ(name, "A7");
+      EXPECT_EQ(cap, 1);
+    }
+    ++i;
+  }
+}
+
+TEST_F(RaptorLakeTest, GetThreadCapacityPerCoreType) {
+  auto capacity_map = platform->GetThreadCapacityInfo();
+
+  EXPECT_EQ(capacity_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, cap] : capacity_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "E-core");
+      EXPECT_EQ(cap, 1);
+    } else {
+      EXPECT_EQ(name, "P-core");
+      EXPECT_EQ(cap, 2);
+    }
+    ++i;
+  }
+}
+
+TEST_F(OdroidTest, GetThreadUsagePerCoreType) {
+  auto usage_map = platform->GetThreadUsageInfo(CPUThreadSet{0, 1, 6});
+
+  EXPECT_EQ(usage_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, usage_vec] : usage_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "A15");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 1);
+    } else {
+      EXPECT_EQ(name, "A7");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 2);
+    }
+    ++i;
+  }
+}
+
+TEST_F(RaptorLakeTest, GetThreadUsagePerCoreType) {
+  auto usage_map =
+      platform->GetThreadUsageInfo(CPUThreadSet{0, 1, 2, 4, 16, 20});
+
+  EXPECT_EQ(usage_map.size(), 2);
+
+  int i = 0;
+  for (auto &[name, usage_vec] : usage_map) {
+    if (i == 0) {
+      EXPECT_EQ(name, "E-core");
+      EXPECT_EQ(usage_vec.size(), 1);
+      EXPECT_EQ(usage_vec[0], 2);
+    } else {
+      EXPECT_EQ(name, "P-core");
+      EXPECT_EQ(usage_vec.size(), 2);
+      EXPECT_EQ(usage_vec[0], 2);
+      EXPECT_EQ(usage_vec[1], 1);
+    }
+    ++i;
+  }
+}
+
+TEST_F(OdroidTest, GetCPUThreadSetFromThreadUsageInfo) {
+  std::map<std::string, std::vector<int>> usage1{{"A15", {1}}, {"A7", {3}}};
+  auto threads1 = platform->GetCPUThreadSetFromThreadUsageInfo(usage1);
+  CPUThreadSet ref1{0, 1, 2, 4};
+  EXPECT_EQ(threads1, ref1);
+
+  std::map<std::string, std::vector<int>> usage2{{"A15", {4}}, {"A7", {0}}};
+  auto threads2 = platform->GetCPUThreadSetFromThreadUsageInfo(usage2);
+  CPUThreadSet ref2{4, 5, 6, 7};
+  EXPECT_EQ(threads2, ref2);
+}
+
+TEST_F(RaptorLakeTest, GetCPUThreadSetFromThreadUsageInfo) {
+  std::map<std::string, std::vector<int>> usage1{{"E-core", {16}},
+                                                 {"P-core", {0, 8}}};
+  auto threads1 = platform->GetCPUThreadSetFromThreadUsageInfo(usage1);
+  CPUThreadSet ref1{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
+                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                    22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+  EXPECT_EQ(threads1, ref1);
+
+  std::map<std::string, std::vector<int>> usage2{{"E-core", {8}},
+                                                 {"P-core", {4, 4}}};
+  auto threads2 = platform->GetCPUThreadSetFromThreadUsageInfo(usage2);
+  CPUThreadSet ref2{0,  1,  2,  3,  4,  5,  6,  7,  8,  10,
+                    12, 14, 16, 17, 18, 19, 20, 21, 22, 23};
+  EXPECT_EQ(threads2, ref2);
+}
+
 TEST_F(OdroidTest, ConvertCPUSets) {
   auto threads1 = CPUThreadSet{0, 2, 5, 7};
   auto cores1 = CPUCoreSet{0, 2, 5, 7};

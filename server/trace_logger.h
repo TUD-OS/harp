@@ -29,11 +29,9 @@ class TraceLogger {
     double begin_ts;
     double end_ts;
     std::string mapping_name;
-    double exec_time;
-    double energy;
-    double begin_progress;
-    double end_progress;
-    CPUThreadSet cpus;
+    double utility;
+    double power;
+    CPUThreadSet threads;
   };
 
 private:

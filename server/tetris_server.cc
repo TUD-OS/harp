@@ -1,14 +1,12 @@
-
-#include <filesystem>
-
 #include <signal.h>
 #include <sys/epoll.h>
 #include <sys/signalfd.h>
 
+#include <filesystem>
+
 #include "manager.h"
-#include "sched/bruteforce.h"
-#include "sched/lr.h"
-#include "sched/objective.h"
+#include "mapper/factory.h"
+#include "util/operating_point_evaluator.h"
 #include "util/platform/reader.h"
 #include "util/socket.h"
 #include "util/string_util.h"
@@ -32,10 +30,8 @@ void usage() {
             << "   -m, --mapper <name>       specify the mapper (BF, LR). "
                "Defaults to BF.\n"
             << "   -o, --obj <objective>     specify the objective "
-               "(energy-saving, balanced,\n"
-            << "                             performance, energy, delay). "
-               "Defaults to "
-               "\"energy-saving\".\n"
+               "(energy, balanced, performance). \n"
+            << "                             Defaults to \"balanced\".\n"
             << "   -t, --trace <trace_file>  path to export the trace "
                "(defaults to \"trace.json\""
             << "\n";
@@ -258,9 +254,9 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
       }
     }
 
-    /* Check whether we need to reschedule */
-    if (manager.needs_reschedule())
-      manager.run_scheduler();
+    /* Check whether we need to run the mapper */
+    if (manager.IsMapperMarkedForRun())
+      manager.RunMapper();
   }
 }
 
@@ -347,7 +343,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (config.objective_name.empty()) {
-    config.objective_name = "energy-saving";
+    config.objective_name = "balanced";
   }
 
   if (config.trace_filename.empty()) {
@@ -358,37 +354,11 @@ int main(int argc, char *argv[]) {
   auto reader = YamlPlatformReader();
   auto platform = reader.ReadFromFile(config.platform_path);
 
-  /* Create a scheduler */
-  std::unique_ptr<OptimizationObjective> objective;
-  if (config.objective_name == "energy-saving")
-    objective = std::make_unique<EnergySavingObjective>();
-  else if (config.objective_name == "balanced")
-    objective = std::make_unique<BalancedObjective>();
-  else if (config.objective_name == "performance")
-    objective = std::make_unique<PerformanceObjective>();
-  else if (config.objective_name == "energy")
-    objective = std::make_unique<EnergyObjective>();
-  else if (config.objective_name == "delay")
-    objective = std::make_unique<DelayObjective>();
-  else {
-    std::cerr << "Unknown objective.\n";
-    usage();
-    return 1;
-  }
+  /* Create a mapper */
+  auto mapper = ClientMapperFactory::Create(config.mapper_name, *platform);
 
-  std::unique_ptr<BaseScheduler> scheduler;
-  if (config.mapper_name == "BF")
-    scheduler =
-        std::make_unique<BruteforceMapper>(*platform, std::move(objective));
-  else if (config.mapper_name == "LR")
-    // TODO: pass `max_rounds` from the CL argument
-    scheduler = std::make_unique<LagrangianRelaxationMapper>(
-        *platform, std::move(objective), 500);
-  else {
-    std::cerr << "Unknown mapper.\n";
-    usage();
-    return 1;
-  }
+  auto evaluator =
+      OperatingPointEvaluatorFactory::Create(config.objective_name);
 
   std::cout << "Welcome to TETRiS" << std::endl;
 
@@ -396,7 +366,8 @@ int main(int argc, char *argv[]) {
   logger = debug::Logger::get();
 
   /* Setting up the manager */
-  Manager manager{std::move(platform), std::move(scheduler)};
+  Manager manager{std::move(platform), std::move(mapper)};
+  manager.UpdateOperatingPointEvaluator(std::move(evaluator));
 
   // Setting up the server and control sockets
   int server_fd = -1;

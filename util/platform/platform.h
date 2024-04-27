@@ -21,6 +21,11 @@ class CPUCore;
 class EquivResAllocator;
 class Platform;
 
+/**
+ * \class CPUType
+ * \brief Represents a specific CPU type and the number of hardware threads it
+ * supports.
+ */
 class CPUType {
 public:
   CPUType(const std::string &name, int num_threads)
@@ -42,6 +47,10 @@ private:
   int _num_threads;
 };
 
+/**
+ * \class CPUThread
+ * \brief Represents an individual hardware thread within a CPU core.
+ */
 class CPUThread {
 public:
   CPUThread(CPUCore &core, const std::string &name, int thread_id)
@@ -66,6 +75,11 @@ private:
   int _id;
 };
 
+/**
+ * \class CPUCore
+ * \brief Represents a CPU core, which is part of a platform and has a specific
+ * type. It contains multiple hardware threads.
+ */
 class CPUCore {
 public:
   CPUCore(Platform &platform, CPUType &type, int core_id)
@@ -103,6 +117,12 @@ private:
   std::vector<std::unique_ptr<CPUThread>> _threads;
 };
 
+/**
+ * \class Platform
+ * \brief A platform that manages various CPU cores and threads, along with
+ * their configurations. Provides methods to find and manage CPU threads and
+ * cores based on different criteria.
+ */
 class Platform {
 public:
   Platform() = default;
@@ -138,6 +158,14 @@ public:
       return nullptr;
     }
     return _cpu_cores[index].get();
+  }
+
+  std::vector<std::string> GetCPUTypes() const {
+    std::vector<std::string> types;
+    for (auto &[type, _] : _cpu_types) {
+      types.push_back(type);
+    }
+    return types;
   }
 
   std::vector<CPUCore *> GetCPUCores() const {
@@ -224,6 +252,64 @@ public:
     return res;
   }
 
+  std::map<std::string, int> GetThreadCapacityInfo() const {
+    std::map<std::string, int> res;
+    for (const auto &[name, cpu_type] : _cpu_types) {
+      res.emplace(name, cpu_type->GetNumThreads());
+    }
+
+    return res;
+  }
+
+  std::map<std::string, std::vector<int>>
+  GetThreadUsageInfo(const CPUThreadSet &thread_set) const {
+    std::map<std::string, std::vector<int>> res;
+    for (const auto &[name, cpu_type] : _cpu_types) {
+      res.emplace(name, std::vector<int>(cpu_type->GetNumThreads()));
+    }
+
+    for (auto &c : GetCPUCores()) {
+      auto name = c->GetType().GetName();
+
+      auto threads = c->GetCPUThreads();
+      int n = 0;
+      for (auto &t : threads) {
+        auto id = t->GetID();
+        if (thread_set.At(id)) {
+          n++;
+        }
+      }
+
+      if (n > 0) {
+        res[name][n - 1] += 1;
+      }
+    }
+    return res;
+  }
+
+  CPUThreadSet GetCPUThreadSetFromThreadUsageInfo(
+      const std::map<std::string, std::vector<int>> &thread_usage) const {
+    CPUThreadSet res;
+    for (const auto &[type, vdata] : thread_usage) {
+      auto cpu_type = GetCPUType(type);
+      assert(vdata.size() == cpu_type->GetNumThreads());
+      const auto &indices_per_core = _indices_per_type.at(type);
+      int core_idx = 0;
+      for (int w = vdata.size() - 1; w >= 0; --w) {
+        int n = vdata[w];
+        while (n > 0) {
+          const auto &indices = indices_per_core.at(core_idx);
+          for (int i = 0; i <= w; ++i) {
+            res.Set(indices.at(i));
+          }
+          --n;
+          core_idx++;
+        }
+      }
+    }
+    return res;
+  }
+
 private:
   void AddCPUType(const std::string &name, int num_threads) {
     auto cpu_type = std::make_unique<CPUType>(name, num_threads);
@@ -249,6 +335,18 @@ private:
     _cpu_threads.insert({index, thread_ptr});
   }
 
+  void FinishConstruction() {
+    for (const auto c : GetCPUCores()) {
+      auto type = c->GetType().GetName();
+      auto threads = c->GetCPUThreads();
+      std::vector<int> core_indices{};
+      for (const auto t : threads) {
+        core_indices.push_back(t->GetID());
+      }
+      _indices_per_type[type].push_back(core_indices);
+    }
+  }
+
   friend class CPUCore;
   friend class YamlPlatformReader;
 
@@ -257,6 +355,8 @@ private:
   std::map<std::string, std::unique_ptr<CPUType>> _cpu_types;
   std::vector<std::unique_ptr<CPUCore>> _cpu_cores;
   std::map<int, CPUThread *> _cpu_threads;
+
+  std::map<std::string, std::vector<std::vector<int>>> _indices_per_type;
 };
 
 } /* namespace tetris */

@@ -8,7 +8,6 @@
 #include "util/platform/platform.h"
 #include <yaml-cpp/yaml.h>
 
-
 namespace tetris {
 
 class YamlPlatformReader {
@@ -48,6 +47,8 @@ public:
         throw std::runtime_error("Unknown Equivalent Resource Allocator");
       }
     }
+
+    platform->FinishConstruction();
 
     return platform;
   }

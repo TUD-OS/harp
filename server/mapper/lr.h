@@ -1,32 +1,23 @@
-#ifndef __SCHED_LR_H__
-#define __SCHED_LR_H__
+#ifndef __MAPPER_LR_H__
+#define __MAPPER_LR_H__
 
 #pragma once
 
 #include "base.h"
-#include "util/platform/platform.h"
 
 #include <tuple>
+
+#include "util/platform/platform.h"
 
 namespace tetris {
 
 /**
- * Bruteforce mapper.
- *
- * This scheduler generates a single-segment schedule (that's why called
- * "mapper") using a bruteforce algorithm.
+ * LagrangianRelaxation mapper.
  */
-class LagrangianRelaxationMapper : public BaseScheduler {
+class LagrangianRelaxationMapper : public BaseClientMapper {
 private:
-  /**
-   * Create a schedule object with the given mapping list
-   */
-  std::unique_ptr<Schedule>
-  ToSchedule(const std::vector<const OperatingPoint *> &ops,
-             CPUCoreSet busy_cores);
   double EvaluateOPDual(const OperatingPoint &op,
-                        const std::map<std::string, double> &lambda,
-                        double rem_cratio) const;
+                        const std::map<std::string, double> &lambda) const;
 
   std::tuple<const OperatingPoint *, double>
   MinimizeDualFunctionClient(int c,
@@ -69,48 +60,33 @@ private:
             const std::vector<const OperatingPoint *> &lr_ops);
 
 public:
-  explicit LagrangianRelaxationMapper(
-      const Platform &platform,
-      std::unique_ptr<OptimizationObjective> objective, int max_rounds)
-      : _platform{platform},
-        _platform_cores_count{platform.GetCoreCountPerType()},
-        _objective{std::move(objective)}, _max_rounds{max_rounds} {}
+  explicit LagrangianRelaxationMapper(const Platform &platform,
+                                      int max_rounds = 500)
+      : BaseClientMapper(platform), _max_rounds(max_rounds) {}
 
-  void SetObjective(std::unique_ptr<OptimizationObjective> objective) override {
-    _objective = std::move(objective);
-  }
-
-  OptimizationObjective *GetObjective() override { return _objective.get(); }
-
-  // Bring all overloads of GenerateSchedule()
-  using BaseScheduler::GenerateSchedule;
+  // Bring all overloads of GenerateClientMapping()
+  using BaseClientMapper::GenerateClientMapping;
 
   /**
    * Selects client mappings considering a list of blocked CPUs.
    *
    * \param clients The list of clients for which mappings need to be selected.
-   * \param start_time The start time of the schedule
    * \param blocked_cpus The list of blocked CPUs.
    * \return The selected mappings.
    */
-  std::unique_ptr<Schedule> GenerateSchedule(std::vector<Client *> clients,
-                                             double start_time,
-                                             CPUCoreSet blocked_cores) override;
+  ClientMapping GenerateClientMapping(std::vector<Client *> clients,
+                                      CPUCoreSet blocked_cores) override;
 
 private:
-  const Platform &_platform;
-  std::map<std::string, int> _platform_cores_count;
-  std::unique_ptr<OptimizationObjective> _objective;
   int _max_rounds;
 
-  // temporary fields (initialized at each invokation of GenerateSchedule())
+  // temporary fields (initialized at each invokation of the mapper)
   std::vector<Client *> _clients;
-  double _start_time;
   CPUCoreSet _blocked;
 
-  std::vector<std::vector<OperatingPoint>> _cl_pareto; // Pareto front of ops
+  std::vector<std::vector<OperatingPoint>> _client_ops; // Pareto front of ops
 };
 
 } // namespace tetris
 
-#endif /* __SCHED_LR_H__ */
+#endif /* __MAPPER_LR_H__ */

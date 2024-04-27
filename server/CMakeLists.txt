@@ -4,22 +4,24 @@ set_source_files_properties(
 # Add the library target
 add_library(tetrisserverlib STATIC
     client.cc
+    client_mapping.cc
     manager.cc
+    mapper/base.cc
+    mapper/bruteforce.cc
+    mapper/lr.cc
     trace_logger.cc
-    sched/bruteforce.cc
-    sched/lr.cc
-    sched/objective.cc
     ${PROTO_OUTPUT_SOURCES}
-    ${CMAKE_SOURCE_DIR}/util/path_util.cc
-    ${CMAKE_SOURCE_DIR}/util/util.cc
     ${CMAKE_SOURCE_DIR}/util/debug_util.cc
-    ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
-    ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
     ${CMAKE_SOURCE_DIR}/util/mapping_reader.cc
     ${CMAKE_SOURCE_DIR}/util/mapping.cc
-    ${CMAKE_SOURCE_DIR}/util/operating_point.cc
+    ${CMAKE_SOURCE_DIR}/util/operating_point_table.cc
+    ${CMAKE_SOURCE_DIR}/util/path_util.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/equiv_res_alloc.cc
+    ${CMAKE_SOURCE_DIR}/util/platform/platform.cc
+    ${CMAKE_SOURCE_DIR}/util/regression.cc
+    ${CMAKE_SOURCE_DIR}/util/util.cc
 )
-target_link_libraries(tetrisserverlib protobuf::libprotobuf protobuf::libprotoc yaml-cpp)
+target_link_libraries(tetrisserverlib ${Protobuf_LIBRARIES} yaml-cpp Eigen3::Eigen)
 add_dependencies(tetrisserverlib generated_proto)
 
 # Add the executable target

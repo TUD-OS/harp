@@ -25,6 +25,7 @@ include_directories(${CMAKE_BINARY_DIR})
 # Find the Protobuf library
 FIND_PACKAGE(Protobuf CONFIG)
 FIND_PACKAGE(Protobuf REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 # Generate .pb.cc and .pb.h files
 set(PROTO_PATH "${CMAKE_CURRENT_SOURCE_DIR}/proto")

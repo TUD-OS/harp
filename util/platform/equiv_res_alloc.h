@@ -4,14 +4,13 @@
 #include "util/mapping.h"
 #pragma once
 
-#include "util/operating_point.h"
 #include "util/mapping.h"
+#include "util/operating_point.h"
 #include "util/platform/cpu_sets.h"
 
 #include <map>
 #include <optional>
 #include <string>
-
 
 namespace tetris {
 
@@ -29,9 +28,9 @@ public:
 
   virtual std::string GetEquivClassName(const OperatingPoint &op) const = 0;
 
-  virtual std::string GetEquivClassName(const OperatingPointAllocation &op) const
-  {
-      return GetEquivClassName(op.base);
+  virtual std::string
+  GetEquivClassName(const OperatingPointAllocation &op) const {
+    return GetEquivClassName(op.base);
   }
 
   virtual std::optional<Mapping>
@@ -50,19 +49,20 @@ public:
   std::string GetEquivClassName(const CPUThreadSet &threads) const override;
 
   std::string GetEquivClassName(const Mapping &map) const override {
-      return GetEquivClassName(map.cpus);
+    return GetEquivClassName(map.cpus);
   }
 
   std::string GetEquivClassName(const OperatingPoint &op) const override {
-    return GetEquivClassName(op.cpus);
+    return GetEquivClassName(op.threads());
   }
 
   std::optional<Mapping>
-  FindEquivMapping(const Mapping &m, const CPUCoreSet &used_cpus) const override;
+  FindEquivMapping(const Mapping &m,
+                   const CPUCoreSet &used_cpus) const override;
 
   std::optional<OperatingPointAllocation>
   FindEquivOP(const OperatingPoint &op,
-                   const CPUCoreSet &used_cpus) const override;
+              const CPUCoreSet &used_cpus) const override;
 
 private:
   std::optional<std::map<int, int>>

@@ -7,78 +7,65 @@
 #include "util/platform/cpu_sets.h"
 
 #include <map>
-#include <stdexcept>
 #include <string>
 
 namespace tetris {
 
-class Platform;
+struct OperatingPoint {
+  struct Configuration {
+    std::string name;                       // Unique name of the configuration
+    CPUThreadSet threads;                   // Tracks active CPU threads
+    std::map<std::string, int> core_counts; // Core counts by type
+  };
 
-class OperatingPoint {
-public:
-  std::string name;
-  std::map<std::string, double> characteristics;
-  CPUThreadSet cpus;
-  std::map<std::string, int> cores_count;
+  struct Metrics {
+    double utility; // Performance (instructions per second)
+    double power;   // Power consumption in watts
+  };
 
-public:
-  OperatingPoint()
-      : name{"default"}, characteristics{}, cpus{}, cores_count{} {}
+  Configuration config; // Details about the configuration
+  Metrics metrics;      // Metrics from the configuration
 
-  OperatingPoint(const std::string &name,
-                 const std::map<std::string, double> &characteristics,
-                 const CPUThreadSet &cpus,
-                 const std::map<std::string, int> &cores_count)
-      : name{name}, characteristics{characteristics}, cpus{cpus},
-        cores_count{cores_count} {}
+  const std::string &name() const { return config.name; }
 
-  OperatingPoint(const Platform &platform,
-                 const ClientMessage::OperatingPointsInfo::OPData &op);
+  const CPUThreadSet &threads() const { return config.threads; }
 
-  double characteristic(const std::string &criteria) const {
-    if (characteristics.find(criteria) != characteristics.end())
-      return characteristics.at(criteria);
-
-    throw std::runtime_error("Unknown characteristic criteria.");
+  const std::map<std::string, int> &core_counts() const {
+    return config.core_counts;
   }
 
-  int CoresCount(const std::string &core_type) {
-    if (cores_count.find(core_type) != cores_count.end())
-      return cores_count.at(core_type);
+  const double &utility() const { return metrics.utility; }
 
-    throw std::runtime_error("Unknown core type.");
-  }
+  const double &power() const { return metrics.power; }
 };
 
-class OperatingPointAllocation {
-public:
+struct OperatingPointAllocation {
   OperatingPoint base;
-  std::map<int, int> cpu_allocation;
+  std::map<int, int> permutation;
 
-public:
-  OperatingPointAllocation() : base{}, cpu_allocation{} {}
+  const std::string &name() const { return base.config.name; }
 
-  OperatingPointAllocation(const OperatingPoint &base,
-                           const std::map<int, int> &cpu_allocation)
-      : base{base}, cpu_allocation{cpu_allocation} {}
-
-  double characteristic(const std::string &criteria) const {
-    return base.characteristic(criteria);
-  }
-
-  CPUThreadSet GetThreadSet() const {
+  CPUThreadSet threads() const {
     CPUThreadSet res;
-    auto cores = base.cpus.GetList();
+    auto cores = base.config.threads.GetList();
 
     for (auto &c : cores) {
-      if (cpu_allocation.count(c) > 0) {
-        res.Set(cpu_allocation.at(c));
+      if (permutation.contains(c)) {
+        res.Set(permutation.at(c));
       } else {
         res.Set(c);
       }
     }
     return res;
   }
+
+  const std::map<std::string, int> &core_counts() const {
+    return base.config.core_counts;
+  }
+
+  const double &utility() const { return base.metrics.utility; }
+
+  const double &power() const { return base.metrics.power; }
 };
 
 } /* namespace tetris */
