@@ -145,6 +145,8 @@ public:
   void update_energy_data(EnergyData &systemwide, uint64_t duration_ms);
 
   std::optional<tetris::OperatingPoint::Metrics> current_metrics();
+
+  void UpdateCurrentMeasurement();
 };
 
 #endif /* __CLIENT_H__ */

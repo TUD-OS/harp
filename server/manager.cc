@@ -284,5 +284,7 @@ void Manager::update_client_metrics()
     update_energy_data();
 
     /* Iterate through all clients, get their current metrics and update their op-table accordingly with the metrics */
-    /* TODO */
+    for (auto & [_, client]: _clients) {
+      client->UpdateCurrentMeasurement();
+    }
 }

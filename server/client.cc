@@ -221,6 +221,17 @@ std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics()
   return res;
 }
 
+void Client::UpdateCurrentMeasurement() {
+  if (!op_table->EnabledMeasurement()) {
+    return;
+  }
+
+  auto metrics = current_metrics();
+  if (active_op && metrics) {
+    op_table->AddOperatingPointMeasurement(active_op->base.config, *metrics);
+  }
+}
+
 void Client::activate_op(const OperatingPointAllocation &new_op) {
   LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
                new_op.name().c_str());
