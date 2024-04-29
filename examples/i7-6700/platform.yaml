@@ -1,0 +1,34 @@
+core_types:
+  - type: P-core
+    threads: 2
+    power_coefficient: 1
+
+equivalence_scheme: core-type
+energy_measure_method: perf
+static_power_mw: 15659
+
+cores:
+  - type: P-core
+    threads:
+      - name: P0_0
+        affinity: 0
+      - name: P0_1
+        affinity: 4
+  - type: P-core
+    threads:
+      - name: P1_0
+        affinity: 1
+      - name: P1_1
+        affinity: 5
+  - type: P-core
+    threads:
+      - name: P2_0
+        affinity: 2
+      - name: P2_1
+        affinity: 6
+  - type: P-core
+    threads:
+      - name: P3_0
+        affinity: 3
+      - name: P3_1
+        affinity: 7
