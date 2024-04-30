@@ -98,6 +98,7 @@ public:
   ConnectionPtr connection;
   std::string exec;
   int pid;
+  bool mapping_coarse_grained;
 
   std::unique_ptr<tetris::OperatingPointTable> op_table;
   std::optional<tetris::OperatingPointAllocation> active_op;

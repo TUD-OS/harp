@@ -2,14 +2,15 @@
 // Created by dylan on 10/08/2020.
 //
 
-#include "concrete_client.h"
+#include <memory>
+#include <sstream>
+
 #include "client.h"
+#include "concrete_client.h"
 #include "util/mapping_reader.h"
 #include "util/platform/reader.h"
 #include "util/protobuf_util.h"
-
-#include <memory>
-#include <sstream>
+#include "util/string_util.h"
 
 namespace tetris {
 
@@ -148,39 +149,83 @@ std::string ConcreteClient::get_push_listener_socket_path()
     return string_stream.str();
 }
 
-ClientResponse ConcreteClient::handle(const ServerMessage &msg)
-{
-    ClientResponse response{};
-    response.set_type(tetris::ClientResponse::ERROR);
+ClientResponse ConcreteClient::handle(const ServerMessage &msg) {
+  ClientResponse response{};
+  response.set_type(tetris::ClientResponse::ERROR);
 
+  // Process the message based on its type
+  switch (msg.type()) {
+  case ServerMessage::ACTIVATE_CUSTOM_OP:
     if (msg.has_activated_op_info()) {
-        /* Call all mapping_features with the new mapping, so that they can adapt */
-        auto active_op = msg.activated_op_info();
+      /* Call all mapping_features with the new mapping, so that they can adapt
+       */
+      const auto &active_op = msg.activated_op_info();
 
-        auto map_id = active_op.identifier();
-        _logger->info(" * Got mapping update from server: %s\n", map_id.c_str());
+      auto map_id = active_op.identifier();
+      _logger->info(" * Got mapping update from server: %s\n", map_id.c_str());
 
-        std::map<int, int> conv_map;
-        for (int i = 0; i < active_op.cpu_convs_size(); ++i) {
-            auto conv = active_op.cpu_convs(i);
-            conv_map.emplace(conv.cpu_id_from(), conv.cpu_id_to());
+      std::map<int, int> conv_map;
+      for (int i = 0; i < active_op.cpu_convs_size(); ++i) {
+        auto conv = active_op.cpu_convs(i);
+        conv_map.emplace(conv.cpu_id_from(), conv.cpu_id_to());
+      }
+
+      auto it = std::find_if(
+          _mappings.begin(), _mappings.end(),
+          [&map_id](const Mapping &m) { return m.name == map_id; });
+      if (it != _mappings.end()) {
+        _active_mapping = std::make_unique<Mapping>(*it, conv_map);
+        _logger->debug(" -> Active mapping %s\n",
+                       _active_mapping->name.c_str());
+
+        /* Tell the features to react to the new mapping */
+        for (const auto &feature : _mapping_features) {
+          feature->mapping_update(*_active_mapping, conv_map);
         }
 
-        auto it = std::find_if(_mappings.begin(), _mappings.end(), [&map_id](const Mapping& m) { return m.name == map_id; });
-        if (it != _mappings.end()) {
-            _active_mapping = std::make_unique<Mapping>(*it, conv_map);
-            _logger->debug(" -> Active mapping %s\n", _active_mapping->name.c_str());
-
-            /* Tell the features to react to the new mapping */
-            for (const auto& feature : _mapping_features) {
-                feature->mapping_update(*_active_mapping, conv_map);
-            }
-
-            response.set_type(ClientResponse::ACKNOWLEDGE);
-        }
+        response.set_type(ClientResponse::ACKNOWLEDGE);
+      } else {
+        _logger->error("The received mapping (%s) was not found\n",
+                       map_id.c_str());
+      }
+    } else {
+      _logger->error("Expected 'activated_op_info' field but not found\n");
     }
+    break;
+  case ServerMessage::ACTIVATE_CPUS:
+    if (msg.has_activated_cpus()) {
+      const auto &cpu_alloc = msg.activated_cpus();
+      std::vector<int> cpu_ids;
+      CPUThreadSet threads;
 
-    return response;
+      for (int cpu_id : cpu_alloc.cpu_ids()) {
+        cpu_ids.push_back(cpu_id);
+        threads.Set(cpu_id);
+      }
+
+      // Construct the mapping object manually
+      Mapping mapping(*_platform);
+      mapping.name = "[" + string_util::join(cpu_ids, ",") + "]";
+
+      for (const auto &c : cpu_ids) {
+        mapping.thread_map.emplace("thread" + std::to_string(c), c);
+      }
+      mapping.cpus = threads;
+
+      std::map<int, int> conv_map;
+      /* Tell the features to react to the new mapping */
+      for (const auto &feature : _mapping_features) {
+        feature->mapping_update(mapping, conv_map);
+      }
+      response.set_type(ClientResponse::ACKNOWLEDGE);
+    } else {
+      _logger->error("Expected 'activated_cpus' field but not found\n");
+    }
+    break;
+  default:
+    _logger->error("Unknown server message type\n");
+  }
+  return response;
 }
 
 bool ConcreteClient::register_client()

@@ -19,10 +19,9 @@
 using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn, Manager &manager)
-    : connection{conn}, exec{}, pid{-1}, op_table{}, active_op{},
-      type{Type::PASSIV}, perf_handle{}, perf_data{}, _manager{manager} {
-  // TODO: choose the type of operating point table based on the client info
-}
+    : connection{conn}, exec{}, pid{-1}, mapping_coarse_grained{false},
+      op_table{}, active_op{}, type{Type::PASSIV},
+      perf_handle{}, perf_data{}, _manager{manager} {}
 
 Client::~Client() {
   if (pid != -1)
@@ -48,9 +47,11 @@ void Client::HandleRegistrationRequest(const tetris::RegistrationRequest &req) {
 
   const auto &mapping_type = req.mapping_type();
   if (mapping_type == RegistrationRequest::COARSE_GRAINED) {
+    mapping_coarse_grained = true;
     op_table =
         std::make_unique<ThreadSetOperatingPointTable>(_manager.GetPlatform());
   } else if (mapping_type == RegistrationRequest::FINE_GRAINED) {
+    mapping_coarse_grained = false;
     op_table =
         std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
   }
@@ -254,14 +255,25 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
    * about the change and can react accordingly. */
   ServerMessage msg{};
   msg.set_feature_id(0);
-  msg.set_type(ServerMessage::ACTIVATE_OP);
-  auto op_info = msg.mutable_activated_op_info();
-  op_info->set_identifier(new_op.name());
 
-  for (const auto &[fc, tc] : new_op.permutation) {
-    auto conv = op_info->add_cpu_convs();
-    conv->set_cpu_id_from(fc);
-    conv->set_cpu_id_to(tc);
+  if (mapping_coarse_grained) {
+    msg.set_type(ServerMessage::ACTIVATE_CPUS);
+    auto cpus_info = msg.mutable_activated_cpus();
+    auto threads = new_op.threads();
+
+    for (const auto &t : threads.GetList()) {
+      cpus_info->add_cpu_ids(t);
+    }
+  } else {
+    msg.set_type(ServerMessage::ACTIVATE_CUSTOM_OP);
+    auto op_info = msg.mutable_activated_op_info();
+    op_info->set_identifier(new_op.name());
+
+    for (const auto &[fc, tc] : new_op.permutation) {
+      auto conv = op_info->add_cpu_convs();
+      conv->set_cpu_id_from(fc);
+      conv->set_cpu_id_to(tc);
+    }
   }
 
   LOGGER->info(" -> sending mapping info to client\n");

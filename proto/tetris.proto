@@ -69,8 +69,9 @@ message ServerResponse {
 message ServerMessage {
     required uint32 feature_id = 1; // The ID of the feature which should handle this message
 
-    enum Type {                     // The message types
-        ACTIVATE_OP = 1;            // Inform the client about the activated operation point
+    enum Type {                       // The message types
+        ACTIVATE_CUSTOM_OP = 1;       // Inform the client about the activated operation point (for fine-grained mapping types)
+        ACTIVATE_CPUS = 2;            // Inform the client about the active CPUS (for coarse-grained mapping types)
     }
     required Type type = 2;
 
@@ -84,6 +85,11 @@ message ServerMessage {
         repeated CPUConversion cpu_convs = 2;
     }
     optional OperatingPointAllocation activated_op_info = 3;
+
+    message CPUAllocation {                  // The information of the activate operating point
+        repeated uint32 cpu_ids = 1;         // The list of CPU affinities to activate
+    }
+    optional CPUAllocation activated_cpus = 4;
 }
 
 message MockServerMessage {
