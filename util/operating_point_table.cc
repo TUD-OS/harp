@@ -15,33 +15,7 @@ void OperatingPointTable::AddOperatingPoint(
       _platform.GetCoreCountPerType(_platform.ToCPUCoreSet(threads));
 
   OperatingPoint::Configuration config{op.identifier(), threads, cores_count};
-
-  double utility = -1;
-  double power = -1;
-
-  for (int i = 0; i < op.characteristics_size(); ++i) {
-    auto c = op.characteristics(i);
-    if (c.name() == "utility") {
-      utility = c.value();
-    }
-    if (c.name() == "power") {
-      power = c.value();
-    }
-  }
-
-  if (utility == -1) {
-    LOGGER->warning("Operating point %s does not specify utility\n",
-                    op.identifier().c_str());
-    utility = 0;
-  }
-  if (power == -1) {
-    LOGGER->warning("Operating point %s does not specify power\n",
-                    op.identifier().c_str());
-    power = 0;
-  }
-
-  OperatingPoint::Metrics metrics{utility, power};
-  LOGGER->debug(" -> AddOperatingPoint:last\n");
+  OperatingPoint::Metrics metrics{op.utility(), op.power()};
   AddOperatingPoint(config, metrics);
 }
 

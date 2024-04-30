@@ -45,8 +45,8 @@ bool Manager::client_message(int fd) try {
 
   while (!done) {
     if (c->pid == -1) {
-      /* The client is not yet fully registered with the server. Until now we only accept
-       * registration requests. */
+      /* The client is not yet fully registered with the server. Until now we
+       * only accept registration requests. */
       RegistrationRequest request{};
       auto res = protobuf_util::Receive(conn->locked(), request);
 
@@ -58,10 +58,10 @@ bool Manager::client_message(int fd) try {
         close = true;
         done = true;
       } else {
-        c->pid = request.pid();
-        c->exec = request.exec();
+        c->HandleRegistrationRequest(request);
 
-        LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(), c->pid);
+        LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(),
+                     c->pid);
         _tracelog->RegisterClient(c.get());
 
         /* Get the perf handle for this client */
@@ -73,7 +73,8 @@ bool Manager::client_message(int fd) try {
         RegistrationResponse response{};
         response.set_id(fd);
 
-        if (protobuf_util::Send(conn->locked(), response) != Connection::OutState::DONE)
+        if (protobuf_util::Send(conn->locked(), response) !=
+            Connection::OutState::DONE)
           LOGGER->error("Failed to acknowledge the new-thread message\n");
       }
     } else {
@@ -92,7 +93,8 @@ bool Manager::client_message(int fd) try {
       } else {
         LOGGER->debug(" -> Forward message to client [%d]\n", c->pid);
         auto response = c->handle_message(msg);
-        if (protobuf_util::Send(conn->locked(), response) != Connection::OutState::DONE)
+        if (protobuf_util::Send(conn->locked(), response) !=
+            Connection::OutState::DONE)
           LOGGER->error("Failed to acknowledge the new-thread message\n");
       }
     }
@@ -129,8 +131,8 @@ void Manager::RunMapper() {
   auto start = std::chrono::high_resolution_clock::now();
 
   // Run the mapper
-  std::vector<Client*> clients;
-  for (auto& [cid, c]: _clients) {
+  std::vector<Client *> clients;
+  for (auto &[cid, c] : _clients) {
     if (c->type == Client::ACTIVE)
       clients.push_back(c.get());
   }
@@ -142,7 +144,7 @@ void Manager::RunMapper() {
   }
 
   // Measure separately the call to GenerateClientMapping()
-  auto before  = std::chrono::high_resolution_clock::now();
+  auto before = std::chrono::high_resolution_clock::now();
 
   auto client_mapping = _mapper->GenerateClientMapping(clients, _blocked_cores);
 
@@ -153,14 +155,14 @@ void Manager::RunMapper() {
   LOGGER->info("%s\n", client_mapping.ToString().c_str());
 
   // updates the mappings
-  for (auto& c: clients) {
+  for (auto &c : clients) {
     if (c->active_op.has_value()) {
       _tracelog->LogClientMappingEnd(after, c);
     }
     if (!client_mapping.Contains(c)) {
       LOGGER->error("No mapping generated for client '%s' [%d]."
-          "Handling of such cases is not yet implemented.",
-          c->exec.c_str(), c->pid);
+                    "Handling of such cases is not yet implemented.",
+                    c->exec.c_str(), c->pid);
       throw std::runtime_error("Not yet implemented");
     }
     auto op = client_mapping.Get(c);
@@ -174,15 +176,15 @@ void Manager::RunMapper() {
   std::chrono::duration<double> sched_dur = after - before;
   auto sched_dur_s = sched_dur.count();
   LOGGER->info("Activated the mapper: duration = %lfs [mapping time: %lfs ]\n",
-      full_dur_s, sched_dur_s);
+               full_dur_s, sched_dur_s);
 }
 
 void Manager::update_perf_data() {
   LOGGER->debug("Updating perf data based on timer update\n");
   auto now = std::chrono::high_resolution_clock::now();
 
-  for (auto& [cid, c]: _clients) {
-      c->update_perf_data(now);
+  for (auto &[cid, c] : _clients) {
+    c->update_perf_data(now);
   }
 }
 

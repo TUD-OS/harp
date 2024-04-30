@@ -4,9 +4,9 @@
 
 #include "concrete_client.h"
 #include "client.h"
-#include "util/protobuf_util.h"
-#include "util/platform/reader.h"
 #include "util/mapping_reader.h"
+#include "util/platform/reader.h"
+#include "util/protobuf_util.h"
 
 #include <memory>
 #include <sstream>
@@ -14,9 +14,12 @@
 namespace tetris {
 
 ConcreteClient::ConcreteClient(const std::string &server_socket_path,
-        const std::string &platform_desc_path, const std::string &mapping_path)
+                               const std::string &platform_desc_path,
+                               const std::string &mapping_path,
+                               bool mapping_coarse_grained)
         : Client(), _push_message_listener(get_push_listener_socket_path(), this),
-          _managed(false), _communication_mutex()
+          _managed(false), _communication_mutex(),
+          _mapping_coarse_grained(mapping_coarse_grained)
 {
     _logger = debug::Logger::get();
     _managed = true;
@@ -55,11 +58,19 @@ ConcreteClient::ConcreteClient(const std::string &server_socket_path,
                 auto op_data = ops_info->add_operating_points();
 
                 op_data->set_identifier(m.name);
+                double power = 0;
+                double utility = 0;
                 for (const auto& [cn, cv] : m.characteristics_map) {
-                    auto c = op_data->add_characteristics();
-                    c->set_name(cn);
-                    c->set_value(cv);
+                  if (cn == "utility") {
+                    utility = cv;
+                  }
+                  if (cn == "power") {
+                    power = cv;
+                  }
                 }
+
+                op_data->set_utility(utility);
+                op_data->set_power(power);
 
                 for (const auto& c : m.cpus) {
                     op_data->add_cpu_ids(c);
@@ -183,6 +194,12 @@ bool ConcreteClient::register_client()
     readlink("/proc/self/exe", exec, sizeof(exec));
     request.set_exec(exec);
 
+    if (_mapping_coarse_grained) {
+      request.set_mapping_type(RegistrationRequest::COARSE_GRAINED);
+    } else {
+      request.set_mapping_type(RegistrationRequest::FINE_GRAINED);
+    }
+
     // Send the command.
     try {
         RegistrationResponse response{};
@@ -199,4 +216,4 @@ bool ConcreteClient::register_client()
     }
 }
 
-}
+} // namespace tetris

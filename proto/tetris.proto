@@ -4,8 +4,13 @@ package tetris;
 
 // Registration message from the TETRiS client to the server
 message RegistrationRequest {
+    enum MappingType {
+      COARSE_GRAINED = 1;           // Mapping is determined only by a set of CPUs
+      FINE_GRAINED = 2;             // Mapping include thread-to-core pinning and/or application-specific knobs
+    }
     required uint32 pid = 1;        // PID of the client
     required string exec = 2;       // The executable to identify the client
+    required MappingType mapping_type = 3;
 }
 
 message RegistrationResponse {
@@ -25,13 +30,10 @@ message ClientMessage {
         message OPData {
             required string identifier = 1;
 
-            message Characteristic {
-                required string name = 1;   // The name that describes the characteristic
-                required float value = 2;   // The value of the characteristic
-            }
-            repeated Characteristic characteristics = 2;
+            repeated uint32 cpu_ids = 2;    // The platform specific IDs of the CPUs
 
-            repeated uint32 cpu_ids = 3;    // The platform specific IDs of the CPUs
+            required double utility = 3;    // IPS
+            required double power = 4;      // The power consumption
         }
         repeated OPData operating_points = 1;
     }

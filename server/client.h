@@ -13,11 +13,11 @@
 #include "util/platform/perf.h"
 #include "util/protobuf_util.h"
 
-#include <optional>
 #include <chrono>
-#include <vector>
-#include <map>
 #include <cstdint>
+#include <map>
+#include <optional>
+#include <vector>
 
 using ConnectionPtr = std::shared_ptr<Connection>;
 
@@ -104,7 +104,7 @@ public:
 
   int type;
 
- private:
+private:
   tetris::perf::HandlePtr perf_handle;
   std::vector<PerfData> perf_data;
   std::vector<ProcessEnergyData> energy_data;
@@ -120,6 +120,8 @@ public:
   Client(const ConnectionPtr &conn, Manager &manager);
 
   ~Client();
+
+  void HandleRegistrationRequest(const tetris::RegistrationRequest &req);
 
   std::string push_path() const;
 

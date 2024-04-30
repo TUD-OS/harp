@@ -18,6 +18,8 @@ protected:
     auto c = new Client(conn, *manager);
 
     c->exec = name;
+    c->op_table =
+        std::make_unique<CustomOperatingPointTable>(manager->GetPlatform());
     for (auto &op : ops) {
       c->op_table->AddOperatingPoint(op);
     }

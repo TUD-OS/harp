@@ -19,16 +19,12 @@
 using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn, Manager &manager)
-    : connection{conn}, exec{}, pid{-1}, op_table{},
-      active_op{}, type{Type::PASSIV}, perf_handle{}, perf_data{},
-      _manager{manager}
-{
+    : connection{conn}, exec{}, pid{-1}, op_table{}, active_op{},
+      type{Type::PASSIV}, perf_handle{}, perf_data{}, _manager{manager} {
   // TODO: choose the type of operating point table based on the client info
-  op_table = std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
 }
 
-Client::~Client()
-{
+Client::~Client() {
   if (pid != -1)
     LOGGER->info("Client removed '%s' [%d]\n", exec.c_str(), pid);
   if (perf_handle) {
@@ -39,22 +35,35 @@ Client::~Client()
     auto last = perf_data.back();
 
     auto total_ins = last.data["Instructions"] - start.data["Instructions"];
-    auto total_s = std::chrono::duration<double>(last.time - start.time).count();
-    LOGGER->info(" --> Total: %llu\tTime: %lf s\tIPS: %lf\n", total_ins, total_s,
-            total_s != 0 ? total_ins / total_s : 0);
+    auto total_s =
+        std::chrono::duration<double>(last.time - start.time).count();
+    LOGGER->info(" --> Total: %llu\tTime: %lf s\tIPS: %lf\n", total_ins,
+                 total_s, total_s != 0 ? total_ins / total_s : 0);
   }
 }
 
-std::string Client::push_path() const
-{
+void Client::HandleRegistrationRequest(const tetris::RegistrationRequest &req) {
+  pid = req.pid();
+  exec = req.exec();
+
+  const auto &mapping_type = req.mapping_type();
+  if (mapping_type == RegistrationRequest::COARSE_GRAINED) {
+    op_table =
+        std::make_unique<ThreadSetOperatingPointTable>(_manager.GetPlatform());
+  } else if (mapping_type == RegistrationRequest::FINE_GRAINED) {
+    op_table =
+        std::make_unique<CustomOperatingPointTable>(_manager.GetPlatform());
+  }
+}
+
+std::string Client::push_path() const {
   std::stringstream path{};
   path << "/tmp/tetris_push_listener_" << pid;
 
   return path.str();
 }
 
-bool Client::receive_ops(
-    const ClientMessage::OperatingPointsInfo &ops_info) {
+bool Client::receive_ops(const ClientMessage::OperatingPointsInfo &ops_info) {
   /* Mark the client active since we now have operating points */
   type = Type::ACTIVE;
 
@@ -67,7 +76,8 @@ bool Client::receive_ops(
     op_table->AddOperatingPoint(cur);
   }
 
-  LOGGER->info(" -> Received %d operating points from client %d\n", op_size, pid);
+  LOGGER->info(" -> Received %d operating points from client %d\n", op_size,
+               pid);
   _manager.MarkMapperForRun();
 
   return true;
@@ -77,9 +87,11 @@ void Client::enable_perf(tetris::perf::HandlePtr handle) {
   perf_handle = std::move(handle);
 }
 
-void Client::update_perf_data(std::chrono::high_resolution_clock::time_point tp) {
+void Client::update_perf_data(
+    std::chrono::high_resolution_clock::time_point tp) {
   if (!perf_handle) {
-    LOGGER->debug("Perf not properly initialized for client '%s' [%i]\n", exec.c_str(), pid);
+    LOGGER->debug("Perf not properly initialized for client '%s' [%i]\n",
+                  exec.c_str(), pid);
     return;
   }
 
@@ -112,8 +124,9 @@ void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
   ProcessEnergyData proc_energy;
   proc_energy.time = sw_energy.time;
 
-  /* In order to partially account the energy to the current client we need to get utime and stime
-   * as well as core assignments for the threads of the corresponding process */
+  /* In order to partially account the energy to the current client we need to
+   * get utime and stime as well as core assignments for the threads of the
+   * corresponding process */
 
   /* 1. Get the total utime and stime of the process */
   {
@@ -245,7 +258,7 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
   auto op_info = msg.mutable_activated_op_info();
   op_info->set_identifier(new_op.name());
 
-  for (const auto& [fc, tc] : new_op.permutation) {
+  for (const auto &[fc, tc] : new_op.permutation) {
     auto conv = op_info->add_cpu_convs();
     conv->set_cpu_id_from(fc);
     conv->set_cpu_id_to(tc);
@@ -261,7 +274,7 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     protobuf_util::Receive(conn.locked(), response);
 
     if (response.type() != ClientResponse::ACKNOWLEDGE) {
-        LOGGER->warning(" -! Client didn't acknowledge the message!\n");
+      LOGGER->warning(" -! Client didn't acknowledge the message!\n");
     }
   } catch (std::exception &e) {
     LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
@@ -270,25 +283,23 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
   LOGGER->info(" * done\n");
 }
 
-ServerResponse Client::handle_message(const ClientMessage &msg)
-{
+ServerResponse Client::handle_message(const ClientMessage &msg) {
   ServerResponse response{};
   response.set_type(ServerResponse::ERROR);
 
-  switch(msg.type()) {
-    case ClientMessage::OPERATING_POINTS:
-      LOGGER->debug(" -> Received operating point message from client\n");
-      /* Parse the mapping information from the client */
-      if (msg.has_ops_info() && receive_ops(msg.ops_info())) {
-        response.set_type(ServerResponse::ACKNOWLEDGE);
-      }
-      break;
-    case ClientMessage::OPTIMIZATION_TARGET:
-      break;
-    case ClientMessage::FEATURE_SUBSCRIBE:
-      break;
+  switch (msg.type()) {
+  case ClientMessage::OPERATING_POINTS:
+    LOGGER->debug(" -> Received operating point message from client\n");
+    /* Parse the mapping information from the client */
+    if (msg.has_ops_info() && receive_ops(msg.ops_info())) {
+      response.set_type(ServerResponse::ACKNOWLEDGE);
+    }
+    break;
+  case ClientMessage::OPTIMIZATION_TARGET:
+    break;
+  case ClientMessage::FEATURE_SUBSCRIBE:
+    break;
   }
 
   return response;
 }
-

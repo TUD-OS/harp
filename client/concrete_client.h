@@ -8,27 +8,27 @@
 #include "util/debug_util.h"
 #include "util/platform/platform.h"
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-
 
 namespace tetris {
 
 /**
  * \brief TETRiS concrete client.
  *
- * This implementation embeds a basic socket connection with the TETRiS server and a push listener.
+ * This implementation embeds a basic socket connection with the TETRiS server
+ * and a push listener.
  */
-class ConcreteClient : public Client
-{
+class ConcreteClient : public Client {
 public:
     /**
      * \brief Builds a concrete client.
      */
     explicit ConcreteClient(const std::string &server_socket_path,
-            const std::string &platform_desc_path,
-            const std::string &mapping_path);
+                            const std::string &platform_desc_path,
+                            const std::string &mapping_path,
+                            bool mapping_coarse_grained);
 
     /**
      * \copydoc bind(TETRiS::Feature *feature)
@@ -89,7 +89,10 @@ private:
 
     /// \brief List of available Mappings for this client
     std::vector<Mapping> _mappings;
+
+    /// \brief Flag whether mappings are coarse-grained
+    bool _mapping_coarse_grained;
 };
-}
+} // namespace tetris
 
 #endif //__CONCRETE_CLIENT_H__

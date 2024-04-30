@@ -4,16 +4,15 @@
 #include "feature.h"
 #include "mapping_feature.h"
 
-#include <string>
 #include <memory>
+#include <string>
 
 namespace tetris {
 
 /**
  * \brief TETRiS client interface.
  */
-class Client
-{
+class Client {
 public:
     virtual ~Client() = default;
 
@@ -60,15 +59,17 @@ public:
  *
  * Provides a instance of a ConcreteClient.
  */
-class ClientProvider
-{
+class ClientProvider {
 public:
     /**
      * \brief Initializes a TETRiS client.
      *
      * \param server_socket_path Path of the TETRiS server socket.
      */
-    static void initialize(const std::string &socket_path, const std::string &platform_path, const std::string &mapping_path);
+    static void initialize(const std::string &socket_path,
+                           const std::string &platform_path,
+                           const std::string &mapping_path,
+                           bool mapping_coarse_grained);
 
     /**
      * \brief Finalizes the TETRiS client.
@@ -86,6 +87,6 @@ private:
     static std::unique_ptr<Client> _instance;
 };
 
-}
+} // namespace tetris
 
 #endif // __CLIENT_H__

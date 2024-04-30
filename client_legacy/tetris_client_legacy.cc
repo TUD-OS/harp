@@ -26,14 +26,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 /***
  * Time Keeping
  ***/
 
-template<typename T, typename Clock, typename Resolution>
-class TimeKeeper
-{
+template <typename T, typename Clock, typename Resolution> class TimeKeeper {
 private:
     T &_total;
     typename Clock::time_point _start;
@@ -68,7 +65,6 @@ public:
         }
     }
 };
-
 
 /***
  * Thread management
@@ -115,7 +111,8 @@ enum ParallelLibrary {
  * Global variables
  ***/
 
-using Timer = TimeKeeper<std::atomic_ulong, std::chrono::system_clock, std::chrono::nanoseconds>;
+using Timer = TimeKeeper<std::atomic_ulong, std::chrono::system_clock,
+                         std::chrono::nanoseconds>;
 
 using ClientPtr = std::unique_ptr<tetris::ConcreteClient>;
 using MovableThreadsPtr = std::unique_ptr<tetris::MovableThreads>;
@@ -231,7 +228,7 @@ void __attribute__((constructor)) setup(void)
         }
 
         tetris_client = std::make_unique<tetris::ConcreteClient>(tetris::SERVER_SOCKET,
-                platform_path, mapping_path);
+                platform_path, mapping_path, true);
         if (tetris_client->is_managed()) {
             logger->info("->> Managed by TETRIS <<-\n");
 
@@ -270,7 +267,6 @@ void __attribute__((destructor)) tierdown(void)
     unsigned ns = _ns % 1000;
     logger->always("Total time spent in TETRIS: %lu.%03u%03lu ms (%lu ns)\n", ms, us, ns, _ns);
 }
-
 
 /***
  * pthread wrapper
@@ -471,7 +467,8 @@ int pthread_setaffinity_np(pthread_t thread_id, size_t cpusetsize,
 /***
  * libgomp wrappers
  *
- * For the GOMP and OMP wrapper we need to overwrite the central OMP loop which is not possible with dlopen.
+ * For the GOMP and OMP wrapper we need to overwrite the central OMP loop which
+ * is not possible with dlopen.
  ***/
 extern "C"
 void GOMP_parallel (void (*fn) (void*), void *data, unsigned int num_threads, unsigned int flags)
