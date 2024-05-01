@@ -1,27 +1,25 @@
 #include "client.h"
 
-#include "proto/tetris.pb.h"
 #include "manager.h"
+#include "proto/tetris.pb.h"
 #include "util/operating_point.h"
 #include "util/string_util.h"
 #include "util/util.h"
 
 #include <chrono>
-#include <optional>
-#include <sstream>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
+#include <sstream>
 #include <string>
-#include <filesystem>
-
-
 
 using namespace tetris;
 
 Client::Client(const ConnectionPtr &conn, Manager &manager)
     : connection{conn}, exec{}, pid{-1}, mapping_coarse_grained{false},
-      op_table{}, active_op{}, type{Type::PASSIV},
-      perf_handle{}, perf_data{}, _manager{manager} {}
+      op_table{}, active_op{}, type{Type::PASSIV}, perf_handle{}, perf_data{},
+      new_measurements{0}, _manager{manager} {}
 
 Client::~Client() {
   if (pid != -1)
@@ -217,8 +215,7 @@ void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
   energy_data.push_back(proc_energy);
 }
 
-std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics()
-{
+std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics() {
   if (energy_data.size() < 2 || perf_data.size() < 2)
     return std::nullopt;
 
@@ -242,8 +239,18 @@ void Client::UpdateCurrentMeasurement() {
 
   auto metrics = current_metrics();
   if (active_op && metrics) {
-    op_table->AddOperatingPointMeasurement(active_op->base.config, *metrics);
+    // FIXME:Currently, the energy measurement may give gigantic values,
+    // possible due to overflow
+    if (metrics->power <= 1e11) {
+      op_table->AddOperatingPointMeasurement(active_op->base.config, *metrics);
+      new_measurements++;
+    }
   }
+
+  if (new_measurements >= 10) {
+    _manager.MarkMapperForRun();
+  }
+  op_table->Dump();
 }
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
@@ -292,6 +299,7 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
   }
 
+  new_measurements = 0;
   LOGGER->info(" * done\n");
 }
 

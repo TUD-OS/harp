@@ -110,6 +110,8 @@ private:
   std::vector<PerfData> perf_data;
   std::vector<ProcessEnergyData> energy_data;
 
+  int new_measurements;
+
 private:
   Manager &_manager;
 

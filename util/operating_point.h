@@ -3,11 +3,13 @@
 
 #pragma once
 
-#include "proto/tetris.pb.h"
-#include "util/platform/cpu_sets.h"
-
 #include <map>
 #include <string>
+
+#include "proto/tetris.pb.h"
+
+#include "util/platform/cpu_sets.h"
+#include "util/string_util.h"
 
 namespace tetris {
 
@@ -37,6 +39,22 @@ struct OperatingPoint {
   const double &utility() const { return metrics.utility; }
 
   const double &power() const { return metrics.power; }
+
+  std::string ToString() const {
+    std::ostringstream ss;
+    ss << "Name: " << config.name << ", "
+       << "Cores: [";
+    std::vector<std::string> core_count_str;
+    for (const auto &core_count : config.core_counts) {
+      core_count_str.push_back(core_count.first + ": " +
+                               std::to_string(core_count.second));
+    }
+    ss << string_util::join(core_count_str, ", ") << "], "
+       << "Utility: " << metrics.utility << ", Power: " << metrics.power
+       << ", Threads: [" << string_util::join(config.threads.GetList(), ", ")
+       << "]";
+    return ss.str();
+  }
 };
 
 struct OperatingPointAllocation {

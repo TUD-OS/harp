@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <optional>
 #include <vector>
 
 #include "proto/tetris.pb.h"
@@ -76,6 +77,8 @@ public:
 
   std::vector<OperatingPoint> GetParetoFront();
 
+  virtual void Dump() = 0;
+
 protected:
   const Platform &_platform;
   bool _measurement;
@@ -121,6 +124,8 @@ public:
     _sample_counts.clear();
     _update_approximated = true;
   }
+
+  void Dump() override;
 
 private:
   using Configuration = std::vector<int>;
@@ -223,6 +228,8 @@ public:
     _ops.clear();
     _update_pareto = true;
   }
+
+  void Dump() override;
 
 private:
   std::map<std::string, OperatingPoint> _ops;

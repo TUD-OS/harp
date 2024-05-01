@@ -188,6 +188,23 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   sample_count += 1;
 }
 
+void ThreadSetOperatingPointTable::Dump() {
+  LOGGER->debug("Operating Points:\n");
+  for (const auto &config : _all_configurations) {
+    if (_ops.contains(config)) {
+      const auto &metric = _ops.at(config);
+      LOGGER->debug(" - Name: %s, Count: %d, Utility: %lf, Power: %lf\n",
+                    GetConfigurationString(config).c_str(),
+                    _sample_counts.at(config), metric.utility, metric.power);
+    } else {
+      const auto &metric = _approx_ops.at(config);
+      LOGGER->debug(" - Name: %s, Approximated, Utility: %lf, Power: %lf\n",
+                    GetConfigurationString(config).c_str(), metric.utility,
+                    metric.power);
+    }
+  }
+}
+
 ThreadSetOperatingPointTable::Configuration
 ThreadSetOperatingPointTable::GetConfiguration(
     const OperatingPoint::Configuration &op_config) const {
@@ -335,4 +352,13 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
 
   _update_approximated = false;
 }
+
+void CustomOperatingPointTable::Dump() {
+  auto ops = GetOperatingPoints(EnabledApproximation());
+  LOGGER->debug("Operating Points:\n");
+  for (const auto &op : ops) {
+    LOGGER->debug(" - %s\n", op.ToString().c_str());
+  }
+}
+
 } // namespace tetris
