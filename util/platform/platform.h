@@ -4,8 +4,8 @@
 #pragma once
 
 #include "util/platform/cpu_sets.h"
-#include "util/platform/equiv_res_alloc.h"
 #include "util/platform/energy.h"
+#include "util/platform/equiv_res_alloc.h"
 
 #include "util/debug_util.h"
 
@@ -28,7 +28,8 @@ class Platform;
 class CPUType {
 public:
   CPUType(const std::string &name, int num_threads, int power_coefficient)
-      : _name(name), _num_threads(num_threads), _power_coefficient{power_coefficient} {}
+      : _name(name),
+        _num_threads(num_threads), _power_coefficient{power_coefficient} {}
 
   CPUType(const CPUType &) = delete;
   CPUType &operator=(const CPUType &) = delete;
@@ -206,6 +207,14 @@ public:
       res.push_back(thread_ptr);
     }
 
+    return res;
+  }
+
+  CPUCoreSet GetFullCPUCoreSet() const {
+    CPUCoreSet res;
+    for (auto &core : _cpu_cores) {
+      res.Set(core->GetID());
+    }
     return res;
   }
 

@@ -118,6 +118,8 @@ private:
 
   bool receive_ops(const tetris::ClientMessage::OperatingPointsInfo &);
 
+  void SelectNextOperatingPointForMeasurement();
+
 public:
   Client(const Client &) = delete;
 

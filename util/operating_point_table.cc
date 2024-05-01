@@ -243,6 +243,10 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
     }
   }
 
+  if (X_test.size() == 0) {
+    return {};
+  }
+
   auto Y_test = _regression->Predict(X_test);
 
   // 3. Calculate Error and select one with the largest error

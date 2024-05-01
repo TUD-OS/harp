@@ -232,6 +232,21 @@ std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics() {
   return res;
 }
 
+void Client::SelectNextOperatingPointForMeasurement() {
+  auto op = op_table->GetOperatingPointToMeasure(allowed_cores);
+  if (op) {
+    auto busy_cores = _manager.GetPlatform().GetFullCPUCoreSet();
+    auto op_cores = _manager.GetPlatform().ToCPUCoreSet(op->threads());
+    busy_cores ^= op_cores;
+    auto &op_allocator = _manager.GetPlatform().GetEquivResAllocator();
+    auto opt_opa = op_allocator.FindEquivOP(*op, busy_cores);
+
+    activate_op(*opt_opa);
+  } else {
+    _manager.MarkMapperForRun();
+  }
+}
+
 void Client::UpdateCurrentMeasurement() {
   if (!op_table->EnabledMeasurement()) {
     return;
@@ -247,10 +262,11 @@ void Client::UpdateCurrentMeasurement() {
     }
   }
 
-  if (new_measurements >= 10) {
-    _manager.MarkMapperForRun();
-  }
   op_table->Dump();
+
+  if (new_measurements >= 10) {
+    SelectNextOperatingPointForMeasurement();
+  }
 }
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
