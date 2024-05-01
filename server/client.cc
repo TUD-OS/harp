@@ -256,6 +256,15 @@ void Client::UpdateCurrentMeasurement() {
 void Client::activate_op(const OperatingPointAllocation &new_op) {
   LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
                new_op.name().c_str());
+  auto op_cores = _manager.GetPlatform().ToCPUCoreSet(new_op.threads());
+  if (!op_cores.IsSubsetOf(allowed_cores)) {
+    LOGGER->error("The new allocation core set %s is not a subset of the "
+                  "allowed core set %s\n",
+                  op_cores.GetString().c_str(),
+                  allowed_cores.GetString().c_str());
+    throw std::runtime_error(
+        "New core allocation is not within the allowed core set");
+  }
   active_op = new_op;
 
   /* Send the new mapping information to the client so that client library knows

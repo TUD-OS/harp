@@ -7,8 +7,10 @@
 
 #include <initializer_list>
 #include <set>
+#include <string>
 #include <vector>
 
+#include "util/string_util.h"
 
 namespace tetris {
 
@@ -118,6 +120,15 @@ public:
     return tmp.Size() != 0;
   }
 
+  bool IsSubsetOf(const Derived &o) const {
+    for (auto key : _set) {
+      if (!o.At(key)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Returns a list of CPU indices in the set.
   std::vector<int> GetList() const {
     std::vector<int> result;
@@ -127,6 +138,10 @@ public:
     }
 
     return result;
+  }
+
+  std::string GetString() const {
+    return "{" + string_util::join(_set, ", ") + "}";
   }
 
   // Make CPUSetBase compatible with range-based loops

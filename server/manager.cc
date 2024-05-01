@@ -166,6 +166,8 @@ void Manager::RunMapper() {
       throw std::runtime_error("Not yet implemented");
     }
     auto op = client_mapping.Get(c);
+    auto core_set = _platform->ToCPUCoreSet(op.threads());
+    c->allowed_cores = core_set;
     c->activate_op(op);
     _tracelog->LogClientMappingBegin(after, c, op);
   }
@@ -279,14 +281,15 @@ void Manager::update_energy_data() {
   _energy_data.push_back(energy);
 }
 
-void Manager::update_client_metrics()
-{
-    /* First update tell all clients to update their perf data and energy measurements */
-    update_perf_data();
-    update_energy_data();
+void Manager::update_client_metrics() {
+  /* First update tell all clients to update their perf data and energy
+   * measurements */
+  update_perf_data();
+  update_energy_data();
 
-    /* Iterate through all clients, get their current metrics and update their op-table accordingly with the metrics */
-    for (auto & [_, client]: _clients) {
-      client->UpdateCurrentMeasurement();
-    }
+  /* Iterate through all clients, get their current metrics and update their
+   * op-table accordingly with the metrics */
+  for (auto &[_, client] : _clients) {
+    client->UpdateCurrentMeasurement();
+  }
 }
