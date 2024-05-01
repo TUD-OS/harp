@@ -188,6 +188,105 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   sample_count += 1;
 }
 
+double CalculateNormalizedError(double measured, double approximated) {
+  return std::abs(measured - approximated) / std::max(measured, approximated);
+}
+
+double CalculateUtilityPowerError(double utility_current, double utility_approx,
+                                  double power_current, double power_approx) {
+  double utility_error =
+      CalculateNormalizedError(utility_current, utility_approx);
+  double power_error = CalculateNormalizedError(power_current, power_approx);
+
+  // Compute geometric mean of the two errors
+  return std::sqrt(utility_error * power_error);
+}
+
+std::optional<OperatingPoint>
+ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
+    const CPUCoreSet &core_set) {
+  GenerateApproximatedOperatingPoints();
+
+  // 1. Collect reliable operating points. If not enough (2 x config size),
+  // collect all
+  std::vector<Configuration> X_train;
+  std::vector<std::vector<double>> Y_train;
+  for (const auto &[config, res] : _ops) {
+    if (_sample_counts.at(config) >= kNumReliableMeasurements) {
+      X_train.push_back(config);
+      Y_train.push_back({res.utility, res.power});
+    }
+  }
+  int config_size = _all_configurations[0].size();
+  if (X_train.size() < config_size * 2) {
+    for (const auto &[config, res] : _ops) {
+      if (_sample_counts.at(config) < kNumReliableMeasurements) {
+        X_train.push_back(config);
+        Y_train.push_back({res.utility, res.power});
+      }
+    }
+  }
+
+  // Train Model
+  _regression->FitModel(X_train, Y_train);
+
+  // 2. Get approximation of unreliable and unmeasured operating points that
+  // fits core set
+  std::vector<Configuration> X_test;
+  for (const auto &config : _all_configurations) {
+    if (!DoesConfigurationFitCPUCoreSet(config, core_set)) {
+      continue;
+    }
+    if (!_ops.contains(config) ||
+        _sample_counts.at(config) < kNumReliableMeasurements) {
+      X_test.push_back(config);
+    }
+  }
+
+  auto Y_test = _regression->Predict(X_test);
+
+  // 3. Calculate Error and select one with the largest error
+  double max_error = 0;
+  Configuration res_config;
+  for (int i = 0; i < X_test.size(); ++i) {
+    const auto &config = X_test[i];
+    double utility_test = Y_test[i][0];
+    double power_test = Y_test[i][1];
+    double utility_current, power_current;
+    if (_ops.contains(config)) {
+      utility_current = _ops.at(config).utility;
+      power_current = _ops.at(config).power;
+    } else {
+      utility_current = _approx_ops.at(config).utility;
+      power_current = _approx_ops.at(config).power;
+    }
+    double error = CalculateUtilityPowerError(utility_current, utility_test,
+                                              power_current, power_test);
+    if (error > max_error) {
+      res_config = config;
+      max_error = error;
+    }
+  }
+
+  if (max_error > 0) {
+    OperatingPoint::Metrics metrics;
+    if (_ops.contains(res_config)) {
+      metrics = _ops.at(res_config);
+    } else {
+      metrics = _approx_ops.at(res_config);
+    }
+    return ConstructOperatingPoint(res_config, metrics);
+  } else {
+    // It is possible all points got 0 error, select any unmeasured point
+    for (auto &[config, metrics] : _approx_ops) {
+      if (DoesConfigurationFitCPUCoreSet(config, core_set)) {
+        return ConstructOperatingPoint(config, metrics);
+      }
+    }
+    return {};
+  }
+}
+
 void ThreadSetOperatingPointTable::Dump() {
   LOGGER->debug("Operating Points:\n");
   for (const auto &config : _all_configurations) {
@@ -316,6 +415,20 @@ OperatingPoint ThreadSetOperatingPointTable::ConstructOperatingPoint(
   OperatingPoint::Metrics op_metrics = res;
 
   return OperatingPoint(op_config, op_metrics);
+}
+
+bool ThreadSetOperatingPointTable::DoesConfigurationFitCPUCoreSet(
+    const Configuration &config, const CPUCoreSet &core_set) const {
+  auto config_cores = _platform.ToCPUCoreSet(ConstructCPUThreadSet(config));
+  auto config_counts = _platform.GetCoreCountPerType(config_cores);
+  auto ref_counts = _platform.GetCoreCountPerType(core_set);
+
+  for (const auto &[type, count] : config_counts) {
+    if (count > ref_counts.at(type))
+      return false;
+  }
+
+  return true;
 }
 
 void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {

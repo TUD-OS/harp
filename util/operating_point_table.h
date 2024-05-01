@@ -19,6 +19,8 @@ namespace tetris {
 
 class Platform;
 
+inline int kNumReliableMeasurements = 10;
+
 /**
  * \class OperatingPointTable
  * \brief Abstract base class for managing operating points on a platform.
@@ -77,6 +79,9 @@ public:
 
   std::vector<OperatingPoint> GetParetoFront();
 
+  virtual std::optional<OperatingPoint>
+  GetOperatingPointToMeasure(const CPUCoreSet &core_set) = 0;
+
   virtual void Dump() = 0;
 
 protected:
@@ -125,6 +130,9 @@ public:
     _update_approximated = true;
   }
 
+  std::optional<OperatingPoint>
+  GetOperatingPointToMeasure(const CPUCoreSet &core_set) override;
+
   void Dump() override;
 
 private:
@@ -149,6 +157,9 @@ private:
   OperatingPoint
   ConstructOperatingPoint(const Configuration &config,
                           const OperatingPoint::Metrics &res) const;
+
+  bool DoesConfigurationFitCPUCoreSet(const Configuration &config,
+                                      const CPUCoreSet &core_set) const;
 
   void GenerateApproximatedOperatingPoints();
 
@@ -227,6 +238,11 @@ public:
   void Clear() override {
     _ops.clear();
     _update_pareto = true;
+  }
+
+  std::optional<OperatingPoint>
+  GetOperatingPointToMeasure(const CPUCoreSet &core_set) override {
+    return {};
   }
 
   void Dump() override;
