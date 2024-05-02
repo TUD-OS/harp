@@ -19,7 +19,19 @@ namespace tetris {
 
 class Platform;
 
-inline int kNumReliableMeasurements = 10;
+inline int kExplorationPoints = 4;
+inline int kMatureReliablePoints = 5;
+inline int kReliableMeasurements = 10;
+
+enum class OperatingPointTableStage {
+  kStatic,  // No approximation, used by CustomOperatingPointTable
+  kInitial, // Initial data gathering and reliance on platform-default points
+  kExploration, // Operating point exploration and model refinement
+  kMature,      // Matured model, approximation using only reliable points
+};
+
+// Helper function to print stage
+std::ostream &operator<<(std::ostream &os, OperatingPointTableStage stage);
 
 /**
  * \class OperatingPointTable
@@ -37,29 +49,27 @@ public:
    * Constructs an operating point table.
    * \param platform The platform associated with the operating points.
    * \param measurement Indicates if measurement capabilities are enabled.
-   * \param approximation Indicates if approximation capabilities are enabled.
    */
   OperatingPointTable(const Platform &platform,
                       std::shared_ptr<OperatingPointEvaluator> evaluator,
-                      bool measurement, bool approximation)
-      : _platform(platform), _measurement(measurement),
-        _approximation(approximation), _pareto_filter{nullptr} {
+                      OperatingPointTableStage stage, bool measurement,
+                      bool approximation)
+      : _platform(platform), _stage(stage),
+        _measurement(measurement), _pareto_filter{nullptr} {
     SetOperatingPointEvaluator(std::move(evaluator));
   }
 
   virtual ~OperatingPointTable() = default;
+
+  /** Returns the current stage of the table */
+  OperatingPointTableStage Stage() const { return _stage; }
 
   /**
    * Returns if measurement functionality is enabled.
    */
   bool EnabledMeasurement() const { return _measurement; }
 
-  /**
-   * Returns if approximation functionality is enabled.
-   */
-  bool EnabledApproximation() const { return _approximation; }
-
-  virtual std::vector<OperatingPoint> GetOperatingPoints(bool approximated) = 0;
+  virtual std::vector<OperatingPoint> GetOperatingPoints() = 0;
 
   virtual void AddOperatingPoint(const OperatingPoint &op) = 0;
 
@@ -86,8 +96,8 @@ public:
 
 protected:
   const Platform &_platform;
+  OperatingPointTableStage _stage;
   bool _measurement;
-  bool _approximation;
 
   // Manage Pareto-Front Filtering
   std::shared_ptr<OperatingPointEvaluator> _evaluator;
@@ -112,8 +122,7 @@ public:
       bool measurement = true, bool approximation = true,
       double ema_alpha = 0.1);
 
-  std::vector<OperatingPoint>
-  GetOperatingPoints(bool approximated = true) override;
+  std::vector<OperatingPoint> GetOperatingPoints() override;
 
   void AddOperatingPoint(const OperatingPoint &op) override;
 
@@ -151,6 +160,11 @@ private:
 
   void GenerateAllConfigurationsLevel(std::vector<Configuration> &all,
                                       Configuration &current) const;
+
+  void EvaluateStage();
+
+  const OperatingPoint::Metrics &
+  GetOperatingPointMetrics(const Configuration &config) const;
 
   CPUThreadSet ConstructCPUThreadSet(const Configuration &config) const;
 
@@ -198,15 +212,11 @@ public:
       const Platform &platform,
       std::shared_ptr<OperatingPointEvaluator> evaluator = nullptr,
       bool measurement = false)
-      : OperatingPointTable(platform, std::move(evaluator), measurement,
+      : OperatingPointTable(platform, std::move(evaluator),
+                            OperatingPointTableStage::kStatic, measurement,
                             false) {}
 
-  std::vector<OperatingPoint>
-  GetOperatingPoints(bool approximated = false) override {
-    if (approximated) {
-      LOGGER->warning(
-          "CustomOperatingPointTable does not support approximation.");
-    }
+  std::vector<OperatingPoint> GetOperatingPoints() override {
     std::vector<OperatingPoint> res;
     for (const auto &[_, op] : _ops) {
       res.push_back(op);

@@ -4,6 +4,27 @@
 
 namespace tetris {
 
+std::ostream &operator<<(std::ostream &os, OperatingPointTableStage stage) {
+  switch (stage) {
+  case OperatingPointTableStage::kStatic:
+    os << "Static";
+    break;
+  case OperatingPointTableStage::kInitial:
+    os << "Initial";
+    break;
+  case OperatingPointTableStage::kExploration:
+    os << "Exploration";
+    break;
+  case OperatingPointTableStage::kMature:
+    os << "Mature";
+    break;
+  default:
+    os << "Unknown Stage";
+    break;
+  }
+  return os;
+}
+
 void OperatingPointTable::AddOperatingPoint(
     const ClientMessage::OperatingPointsInfo::OPData &op) {
   CPUThreadSet threads;
@@ -58,7 +79,7 @@ void OperatingPointTable::SetOperatingPointEvaluator(
 std::vector<OperatingPoint> OperatingPointTable::GetParetoFront() {
   if (_update_pareto) {
     LOGGER->debug("Updating the Pareto front of the operating points.\n");
-    auto ops = GetOperatingPoints(EnabledApproximation());
+    auto ops = GetOperatingPoints();
     _pareto = _pareto_filter->Filter(ops);
     _update_pareto = false;
   } else {
@@ -72,7 +93,8 @@ ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
     const Platform &platform,
     std::shared_ptr<OperatingPointEvaluator> evaluator, bool measurement,
     bool approximation, double ema_alpha)
-    : OperatingPointTable(platform, std::move(evaluator), measurement,
+    : OperatingPointTable(platform, std::move(evaluator),
+                          OperatingPointTableStage::kInitial, measurement,
                           approximation),
       _ema_alpha(ema_alpha), _update_approximated(false) {
 
@@ -105,38 +127,19 @@ ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
   // (This could be optimized by saving the vector statically)
   _all_configurations = GenerateAllConfigurations();
 
-  if (EnabledApproximation()) {
-    std::vector<std::string> features{"utility", "power"};
-    _regression = std::make_unique<Regression>(_num_core_thread_levels, 2, 2);
-  }
+  std::vector<std::string> features{"utility", "power"};
+  _regression = std::make_unique<Regression>(_num_core_thread_levels, 2, 2);
 }
 
-std::vector<OperatingPoint>
-ThreadSetOperatingPointTable::GetOperatingPoints(bool approximated) {
+std::vector<OperatingPoint> ThreadSetOperatingPointTable::GetOperatingPoints() {
   std::vector<OperatingPoint> res;
 
-  if (approximated && !EnabledApproximation()) {
-    LOGGER->warning("Cannot return approximated points since the "
-                    "approximation was not enabled\n");
-    approximated = false;
-  }
-
-  if (approximated) {
-    GenerateApproximatedOperatingPoints();
-  }
+  GenerateApproximatedOperatingPoints();
 
   for (const auto &config : _all_configurations) {
-    if (_ops.count(config) > 0) {
-      auto &opres = _ops.at(config);
-      auto op = ConstructOperatingPoint(config, opres);
-      res.push_back(op);
-    } else {
-      if (approximated) {
-        auto &opres = _approx_ops.at(config);
-        auto op = ConstructOperatingPoint(config, opres);
-        res.push_back(op);
-      }
-    }
+    const auto &metrics = GetOperatingPointMetrics(config);
+    auto op = ConstructOperatingPoint(config, metrics);
+    res.push_back(op);
   }
 
   return res;
@@ -160,6 +163,7 @@ void ThreadSetOperatingPointTable::AddOperatingPoint(
   _sample_counts.emplace(config, 1);
   _update_approximated = true;
   _update_pareto = true;
+  EvaluateStage();
 }
 
 void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
@@ -186,6 +190,8 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   opres.utility = alpha_eff * result.utility + (1 - alpha_eff) * opres.utility;
   opres.power = alpha_eff * result.power + (1 - alpha_eff) * opres.power;
   sample_count += 1;
+
+  EvaluateStage();
 }
 
 double CalculateNormalizedError(double measured, double approximated) {
@@ -207,20 +213,20 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
     const CPUCoreSet &core_set) {
   GenerateApproximatedOperatingPoints();
 
-  // 1. Collect reliable operating points. If not enough (2 x config size),
+  // 1. Collect reliable operating points. If not enough (kExplorationPoints),
   // collect all
   std::vector<Configuration> X_train;
   std::vector<std::vector<double>> Y_train;
   for (const auto &[config, res] : _ops) {
-    if (_sample_counts.at(config) >= kNumReliableMeasurements) {
+    if (_sample_counts.at(config) >= kReliableMeasurements) {
       X_train.push_back(config);
       Y_train.push_back({res.utility, res.power});
     }
   }
   int config_size = _all_configurations[0].size();
-  if (X_train.size() < config_size * 2) {
+  if (X_train.size() < kExplorationPoints) {
     for (const auto &[config, res] : _ops) {
-      if (_sample_counts.at(config) < kNumReliableMeasurements) {
+      if (_sample_counts.at(config) < kReliableMeasurements) {
         X_train.push_back(config);
         Y_train.push_back({res.utility, res.power});
       }
@@ -238,7 +244,7 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
       continue;
     }
     if (!_ops.contains(config) ||
-        _sample_counts.at(config) < kNumReliableMeasurements) {
+        _sample_counts.at(config) < kReliableMeasurements) {
       X_test.push_back(config);
     }
   }
@@ -273,12 +279,7 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
   }
 
   if (max_error > 0) {
-    OperatingPoint::Metrics metrics;
-    if (_ops.contains(res_config)) {
-      metrics = _ops.at(res_config);
-    } else {
-      metrics = _approx_ops.at(res_config);
-    }
+    auto metrics = GetOperatingPointMetrics(res_config);
     return ConstructOperatingPoint(res_config, metrics);
   } else {
     // It is possible all points got 0 error, select any unmeasured point
@@ -292,13 +293,17 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
 }
 
 void ThreadSetOperatingPointTable::Dump() {
-  LOGGER->debug("Operating Points:\n");
+  std::stringstream ss;
+  ss << _stage;
+  auto stage_str = ss.str();
+  LOGGER->debug("Operating Points (stage %s):\n", stage_str.c_str());
   for (const auto &config : _all_configurations) {
     if (_ops.contains(config)) {
-      const auto &metric = _ops.at(config);
-      LOGGER->debug(" - Name: %s, Count: %d, Utility: %lf, Power: %lf\n",
-                    GetConfigurationString(config).c_str(),
-                    _sample_counts.at(config), metric.utility, metric.power);
+      const auto &metric = GetOperatingPointMetrics(config);
+      LOGGER->debug(
+          " - Name: %s, Count: %d, Utility (eff.): %lf, Power (eff.): %lf\n",
+          GetConfigurationString(config).c_str(), _sample_counts.at(config),
+          metric.utility, metric.power);
     } else {
       const auto &metric = _approx_ops.at(config);
       LOGGER->debug(" - Name: %s, Approximated, Utility: %lf, Power: %lf\n",
@@ -394,6 +399,51 @@ void ThreadSetOperatingPointTable::GenerateAllConfigurationsLevel(
   }
 }
 
+void ThreadSetOperatingPointTable::EvaluateStage() {
+  int num_measured = _ops.size();
+  int num_reliable = 0;
+
+  if (num_measured < kExplorationPoints) {
+    _stage = OperatingPointTableStage::kInitial;
+    return;
+  }
+
+  for (const auto &[_, count] : _sample_counts) {
+    if (count >= kReliableMeasurements) {
+      num_reliable++;
+    }
+  }
+
+  if (num_reliable < kMatureReliablePoints) {
+    _stage = OperatingPointTableStage::kExploration;
+  } else {
+    _stage = OperatingPointTableStage::kMature;
+  }
+}
+
+const OperatingPoint::Metrics &
+ThreadSetOperatingPointTable::GetOperatingPointMetrics(
+    const Configuration &config) const {
+  switch (_stage) {
+  case OperatingPointTableStage::kInitial:
+  case OperatingPointTableStage::kExploration:
+    if (_ops.contains(config)) {
+      return _ops.at(config);
+    } else {
+      return _approx_ops.at(config);
+    }
+  case OperatingPointTableStage::kMature:
+    if (_ops.contains(config) &&
+        _sample_counts.at(config) >= kReliableMeasurements) {
+      return _ops.at(config);
+    } else {
+      return _approx_ops.at(config);
+    }
+  default:
+    throw std::runtime_error("Unknown OperatingPointTableStage");
+  }
+}
+
 CPUThreadSet ThreadSetOperatingPointTable::ConstructCPUThreadSet(
     const Configuration &config) const {
   std::map<std::string, std::vector<int>> thread_usage;
@@ -443,35 +493,39 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
   // Collect operating points for training the model
   std::vector<Configuration> X_train;
   std::vector<std::vector<double>> Y_train;
-  for (const auto &[config, res] : _ops) {
-    X_train.push_back(config);
-    Y_train.push_back({res.utility, res.power});
+  if (_stage == OperatingPointTableStage::kInitial ||
+      _stage == OperatingPointTableStage::kExploration) {
+    for (const auto &[config, res] : _ops) {
+      X_train.push_back(config);
+      Y_train.push_back({res.utility, res.power});
+    }
+  } else if (_stage == OperatingPointTableStage::kMature) {
+    for (const auto &[config, res] : _ops) {
+      if (_sample_counts.at(config) >= kReliableMeasurements) {
+        X_train.push_back(config);
+        Y_train.push_back({res.utility, res.power});
+      }
+    }
+  } else {
+    std::runtime_error("Unknown OperatingPointTableStage");
   }
 
   // Train Model
   _regression->FitModel(X_train, Y_train);
 
-  // Collect configs to approximate
-  std::vector<Configuration> X_test;
-  for (const auto &config : _all_configurations) {
-    if (!_ops.contains(config)) {
-      X_test.push_back(config);
-    }
-  }
-
   // Approximate points and store results
-  auto Y_test = _regression->Predict(X_test);
+  auto Y_test = _regression->Predict(_all_configurations);
   _approx_ops.clear();
-  for (int i = 0; i < X_test.size(); ++i) {
+  for (int i = 0; i < _all_configurations.size(); ++i) {
     OperatingPoint::Metrics res{Y_test[i][0], Y_test[i][1]};
-    _approx_ops.emplace(X_test[i], res);
+    _approx_ops.emplace(_all_configurations[i], res);
   }
 
   _update_approximated = false;
 }
 
 void CustomOperatingPointTable::Dump() {
-  auto ops = GetOperatingPoints(EnabledApproximation());
+  auto ops = GetOperatingPoints();
   LOGGER->debug("Operating Points:\n");
   for (const auto &op : ops) {
     LOGGER->debug(" - %s\n", op.ToString().c_str());

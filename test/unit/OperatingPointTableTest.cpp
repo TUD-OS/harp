@@ -91,10 +91,7 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
       20589, 125.1));
   // clang-format on
 
-  auto ops_ema = op_table.GetOperatingPoints(false);
-  EXPECT_EQ(ops_ema.size(), 15);
-
-  auto ops_approx = op_table.GetOperatingPoints(true);
+  auto ops_approx = op_table.GetOperatingPoints();
   EXPECT_EQ(ops_approx.size(), 764);
 
   int flag = 0;
@@ -134,8 +131,6 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
   op_table.AddOperatingPointMeasurement(CreateConfiguration({2, 3}),
                                         OperatingPoint::Metrics{4481, 26.2});
 
-  ops_ema = op_table.GetOperatingPoints(false);
-  EXPECT_EQ(ops_ema.size(), 16);
   ops_pareto = op_table.GetParetoFront();
   EXPECT_EQ(ops_pareto.size(), 115);
 
@@ -144,28 +139,7 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
       CreateConfiguration({0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 20}),
       OperatingPoint::Metrics{25000, 50});
 
-  ops_ema = op_table.GetOperatingPoints(false);
-  EXPECT_EQ(ops_ema.size(), 16);
-
-  int flag2 = 0;
-  for (const auto &op : ops_ema) {
-    const auto &utility = op.utility();
-    const auto &power = op.power();
-    if (op.threads() ==
-        CPUThreadSet{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 17}) {
-      flag2 |= 1 << 0;
-      EXPECT_NEAR(utility, 18510, 1);
-      EXPECT_NEAR(power, 63.55, 0.001);
-    }
-    if (op.threads() == CPUThreadSet{0, 1}) {
-      flag2 |= 1 << 1;
-      EXPECT_NEAR(utility, 4481, 1);
-      EXPECT_NEAR(power, 26.2, 0.001);
-    }
-  }
-  EXPECT_EQ(flag2, (1 << 2) - 1);
-
-  ops_approx = op_table.GetOperatingPoints(true);
+  ops_approx = op_table.GetOperatingPoints();
   EXPECT_EQ(ops_approx.size(), 764);
 
   int flag3 = 0;
