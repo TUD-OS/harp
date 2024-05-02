@@ -269,6 +269,13 @@ void Client::UpdateCurrentMeasurement() {
 }
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
+  // Check whether the new operating point allocation is different from the current one
+  if (active_op && active_op->name() == new_op.name() && active_op->threads() == new_op.threads()) {
+    new_measurements = 0;
+    LOGGER->debug("The new operating point is the same as the current one\n");
+    return;
+  }
+
   LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
                new_op.name().c_str());
   auto op_cores = _manager.GetPlatform().ToCPUCoreSet(new_op.threads());
