@@ -236,8 +236,7 @@ void Client::SelectNextOperatingPointForMeasurement() {
   auto op = op_table->GetOperatingPointToMeasure(allowed_cores);
   if (op) {
     auto busy_cores = _manager.GetPlatform().GetFullCPUCoreSet();
-    auto op_cores = _manager.GetPlatform().ToCPUCoreSet(op->threads());
-    busy_cores ^= op_cores;
+    busy_cores ^= allowed_cores;
     auto &op_allocator = _manager.GetPlatform().GetEquivResAllocator();
     auto opt_opa = op_allocator.FindEquivOP(*op, busy_cores);
 
