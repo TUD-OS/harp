@@ -269,9 +269,13 @@ void Client::UpdateCurrentMeasurement() {
 }
 
 void Client::activate_op(const OperatingPointAllocation &new_op) {
-  // Check whether the new operating point allocation is different from the current one
-  if (active_op && active_op->name() == new_op.name() && active_op->threads() == new_op.threads()) {
-    new_measurements = 0;
+  // Reset new measurements counter
+  new_measurements = 0;
+
+  // Check whether the new operating point allocation is different from the
+  // current one
+  if (active_op && active_op->name() == new_op.name() &&
+      active_op->threads() == new_op.threads()) {
     LOGGER->debug("The new operating point is the same as the current one\n");
     return;
   }
@@ -287,6 +291,14 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     throw std::runtime_error(
         "New core allocation is not within the allowed core set");
   }
+
+  auto now = std::chrono::high_resolution_clock::now();
+
+  // Close the segment in the trace logger
+  if (active_op) {
+    _manager.GetTraceLogger().LogClientMappingEnd(now, this);
+  }
+
   active_op = new_op;
 
   /* Send the new mapping information to the client so that client library knows
@@ -330,7 +342,9 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
   }
 
-  new_measurements = 0;
+  // Open the segment in the trace logger
+  _manager.GetTraceLogger().LogClientMappingBegin(now, this, *active_op);
+
   LOGGER->info(" * done\n");
 }
 

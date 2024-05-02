@@ -5,7 +5,6 @@
 
 #include <chrono>
 #include <memory>
-#include <chrono>
 #include <vector>
 
 #include "client.h"
@@ -14,8 +13,8 @@
 
 #include "util/debug_util.h"
 #include "util/platform/cpu_sets.h"
-#include "util/platform/platform.h"
 #include "util/platform/perf.h"
+#include "util/platform/platform.h"
 
 /**
  * \class Manager
@@ -73,7 +72,7 @@ public:
 
   const tetris::Platform &GetPlatform() const { return *_platform; }
 
-  const tetris::TraceLogger &GetTraceLogger() const { return *_tracelog; }
+  tetris::TraceLogger &GetTraceLogger() const { return *_tracelog; }
 
   void UpdateOperatingPointEvaluator(
       std::shared_ptr<tetris::OperatingPointEvaluator> evaluator) {
@@ -136,7 +135,8 @@ public:
   bool IsMapperMarkedForRun() const { return _run_mapper_flag; }
 
   /**
-   * \brief Update the metrics of the currently running OPs of all enabled clients.
+   * \brief Update the metrics of the currently running OPs of all enabled
+   * clients.
    */
   void update_client_metrics();
 };

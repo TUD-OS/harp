@@ -156,9 +156,6 @@ void Manager::RunMapper() {
 
   // updates the mappings
   for (auto &c : clients) {
-    if (c->active_op.has_value()) {
-      _tracelog->LogClientMappingEnd(after, c);
-    }
     if (!client_mapping.Contains(c)) {
       LOGGER->error("No mapping generated for client '%s' [%d]."
                     "Handling of such cases is not yet implemented.",
@@ -169,7 +166,6 @@ void Manager::RunMapper() {
     auto core_set = _platform->ToCPUCoreSet(op.threads());
     c->allowed_cores = core_set;
     c->activate_op(op);
-    _tracelog->LogClientMappingBegin(after, c, op);
   }
   auto end = std::chrono::high_resolution_clock::now();
 
