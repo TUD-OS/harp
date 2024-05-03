@@ -154,6 +154,44 @@ void Manager::RunMapper() {
   // print
   LOGGER->info("%s\n", client_mapping.ToString().c_str());
 
+  // Collect all core sets of the mapped applications
+  // If there remaining free cores and some applications in the initial or
+  // exploration phases, then distribute the remaining cores between them
+  std::map<Client *, CPUCoreSet> clients_cores;
+  CPUCoreSet busy_cores;
+  std::vector<Client *> clients_to_extend;
+  for (auto &c : clients) {
+    if (!client_mapping.Contains(c)) {
+      continue;
+    }
+    auto op = client_mapping.Get(c);
+    auto core_set = _platform->ToCPUCoreSet(op.threads());
+    clients_cores.emplace(c, core_set);
+    busy_cores |= core_set;
+
+    auto stage = c->op_table->Stage();
+    if (stage == OperatingPointTableStage::kInitial ||
+        stage == OperatingPointTableStage::kExploration) {
+      clients_to_extend.push_back(c);
+    }
+  }
+
+  if (clients_to_extend.size() > 0) {
+    CPUCoreSet free_cores = _platform->GetFullCPUCoreSet();
+    free_cores |= busy_cores;
+
+    auto core_list = free_cores.GetList();
+    while (core_list.size() > 0) {
+      for (auto &c : clients_to_extend) {
+        if (core_list.size() == 0)
+          break;
+        int core = core_list.back();
+        clients_cores[c].Set(core);
+        core_list.pop_back();
+      }
+    }
+  }
+
   // updates the mappings
   for (auto &c : clients) {
     if (!client_mapping.Contains(c)) {
@@ -163,8 +201,7 @@ void Manager::RunMapper() {
       throw std::runtime_error("Not yet implemented");
     }
     auto op = client_mapping.Get(c);
-    auto core_set = _platform->ToCPUCoreSet(op.threads());
-    c->allowed_cores = core_set;
+    c->allowed_cores = clients_cores.at(c);
     c->activate_op(op);
   }
   auto end = std::chrono::high_resolution_clock::now();
