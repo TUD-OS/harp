@@ -299,6 +299,10 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
   } else {
     // It is possible all points got 0 error, select any unmeasured point
     for (auto &[config, metrics] : _approx_ops) {
+      if (_ops.contains(config) &&
+          _sample_counts.at(config) >= _params.at("reliable_measurements")) {
+        continue;
+      }
       if (DoesConfigurationFitCPUCoreSet(config, core_set)) {
         return ConstructOperatingPoint(config, metrics);
       }
