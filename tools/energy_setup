@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+
+from argparse import ArgumentParser
+import warnings
+import yaml
+import sys
+import os
+import subprocess
+import shutil
+from scipy.optimize import curve_fit
+
+import matplotlib.pyplot as plt
+from numpy import arange
+
+
+def fit_func(cores, a, b):
+    return a*cores + b
+
+def fit_power_curve(results, plot=False):
+    with warnings.catch_warnings() as cw:
+        warnings.simplefilter("ignore")
+
+        xvalues = [ len(results[i]["cores"]) + len(results[i]["ht-cores"])/2 for i in results ]
+        yvalues = [ results[i]["watts"] for i in results ]
+
+        res, _ = curve_fit(fit_func, xvalues, yvalues)
+
+        if plot:
+            plt.scatter(xvalues, yvalues)
+            xline = arange(min(xvalues), max(xvalues)+1, 1)
+            yline = fit_func(xline, res[0], res[1])
+            plt.plot(xline, yline, '--', color='red')
+            plt.show()
+
+        return res[1], res[0]
+
+def run_and_measure(cpus):
+    """
+    Execute the measurement routine on the given cpu list
+    """
+    measure_s = 1
+    method = "prime"
+
+    # Run stress-ng for 'measure_s' seconds on the given cpu list and measure the corresponding energy consumption with perf
+    p = subprocess.run(["perf", "stat", "-a", "-e energy-pkg", "-e instructions", "-x,", "--",
+                        "stress-ng", "--taskset", ",".join([str(c) for c in cpus]), "-t", str(measure_s),
+                                     "-c", str(len(cpus)*2), "--cpu-method", method],
+                       capture_output=True, text=True)
+    if p.returncode != 0:
+        print(" Failure!");
+        print(p.stderr)
+        return None
+    else:
+        joules=float(p.stderr.split("\n")[0].split(",")[0])
+        ins=float(p.stderr.split("\n")[1].split(",")[0])
+        return joules, joules/measure_s, ins/measure_s
+
+def run():
+    parser = ArgumentParser()
+    parser.add_argument("-p", "--platform", help="the platform description file", required=True, metavar="YAML", dest="platform")
+    parser.add_argument("--all", help="Measure all possible configurations instead of just a limited set", action="store_true",
+                        dest="all")
+    parser.add_argument("--plot", help="Plot the resulting curve with the individual measurements", action="store_true",
+                        dest="plot")
+
+    args = parser.parse_args()
+
+    platform = args.platform
+    print("Parsing platform file '{}'".format(platform))
+
+    # Parse the platform description file
+    try:
+        with open(platform) as pd_file:
+            pd = yaml.safe_load(pd_file)
+    except IOError as e:
+        print("Can't open the platform description file: {}".fomat(e))
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print("Failure while parsing YAML file: {}".format(e))
+        sys.exit(1)
+
+    # Check first that we have proper permissions to do systemwide measurements with perf
+    if os.getuid() != 0 and os.geteuid() != 0:
+        # If we are not running as root perf_event_paranoid should be -1 to allow systemwide measurements for all users
+        with open("/proc/sys/kernel/perf_event_paranoid") as perf:
+            if perf.readline().strip() != "-1":
+                print("You need to be root to do systemwide perf measurements!")
+                print("Run the script as root or change /proc/sys/kernel/perf_event_paranoid to -1!")
+                sys.exit(1)
+
+    # Check for the necessary binaries
+    if shutil.which("perf") is None:
+        print("'perf' has to be installed!")
+        sys.exit(1)
+    if shutil.which("stress-ng") is None:
+        print("'stress-ng' has to be installed")
+        sys.exit(1)
+
+    # From the platform description file parse the available core types and construct a cpu list at which we need to measure
+    core_types = []
+    for ct in pd["core_types"]:
+        print("Found core type: '{}'".format(ct["type"]), end="")
+        if ct["threads"] == 1:
+            print(" -> w/o SMT")
+            core_types.append((ct["type"], False))
+        else:
+            print(" -> w/ SMT")
+            core_types.append((ct["type"], True))
+
+    cores = {}
+    thread_names = {}
+    for ct, _ in core_types:
+        cores[ct] = []
+
+    for c in pd["cores"]:
+        aff = []
+        for t in c["threads"]:
+            aff.append(t["affinity"])
+            thread_names[t["affinity"]] = t["name"]
+
+        cores[c["type"]].append(aff)
+
+    # Measure at the different configurations
+    print("Measuring")
+    # 1) For each core type measure at one core and all cores of that type
+    results = {}
+
+    for ct, smt in core_types:
+        print("* {} *".format(ct))
+
+        results[ct] = {}
+        if args.all:
+            cores_range = [i + 1 for i in range(len(cores[ct]))]
+        else:
+            cores_range = [1, len(cores[ct]) + 1]
+
+        if not smt:
+            for i in cores_range:
+                cs = cores[ct][:i]
+                name = ",".join([thread_names[i] for i in cs])
+                print("* {} ->".format(name), end="", flush=True)
+                joules, watts, ips = run_and_measure(cs)
+                print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
+                results[ct][name] = {"watts": watts, "ips": ips, "cores": cs }
+        else:
+            for i, ci in enumerate(cores_range):
+                # 1) all x cores HT off
+                cs = [c[0] for c in cores[ct][:ci]]
+                name = ",".join([thread_names[i] for i in cs])
+                print("* {} ->".format(name), end="", flush=True)
+                joules, watts, ips = run_and_measure(cs)
+                print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
+                results[ct][name] = {"watts": watts, "ips": ips, "cores": cs , "ht-cores": []}
+
+                # 2) all x cores HT on
+                cs = [t for c in cores[ct][:ci] for t in c]
+                name = ",".join([thread_names[i] for i in cs])
+                print("* {} ->".format(name), end="", flush=True)
+                joules, watts, ips = run_and_measure(cs)
+                print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
+                results[ct][name] = {"watts": watts, "ips": ips, "ht-cores": cs, "cores": [] }
+
+                # 3) all x cores HT on + all other y cores HT off
+                for cj in cores_range[i+1:]:
+                    ht_cs = [t for c in cores[ct][:ci] for t in c]
+                    cs = [c[0] for c in cores[ct][ci:cj]]
+                    name = ",".join([thread_names[i] for i in cs + ht_cs])
+                    print("* {} ->".format(name), end="", flush=True)
+                    joules, watts, ips = run_and_measure(cs + ht_cs)
+                    print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
+                    results[ct][name] = {"watts": watts, "ips": ips, "cores": cs, "ht-cores": ht_cs }
+
+    # 2) Combine core types with each other)
+    if len(core_types) > 1:
+        combined = {}
+        print("* Combined *")
+        for i, ct1 in enumerate(core_types):
+            for ct2, smt2 in core_types[i+1:]:
+                ct1, smt1 = ct1
+
+                for m1 in results[ct1]:
+                    for m2 in results[ct2]:
+                        cores = results[ct1][m1]["cores"] + results[ct2][m2]["cores"] 
+                        ht_cores = results[ct1][m1]["ht-cores"] + results[ct2][m2]["ht-cores"]
+
+                        name = ",".join(thread_names[c] for c in cores + ht_cores)
+                        print("* {} ->".format(name), end="", flush=True)
+                        joules, watts, ips = run_and_measure(cores + ht_cores)
+                        print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
+                        combined[name] = { "watts": watts, "ips": ips, "cores": cores, "ht-cores": ht_cores}
+
+    # Fit the resulting curves
+    print("\nFitting results:")
+    for ct, smt in core_types:
+        base, coefficients = fit_power_curve(results[ct], args.plot)
+
+        print("{} ({}) --> Base: {}, Coefficient: {}".format(ct, "w/" if smt else "w/o", base, coefficients))
+
+    if len(core_types) > 1:
+        base, _ = fit_power_curve(combined, args.plot)
+        print("Combined --> Base: {}".format(base))
+
+
+if __name__ == "__main__":
+    run()
