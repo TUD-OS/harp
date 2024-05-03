@@ -217,6 +217,11 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
   // collect all
   std::vector<Configuration> X_train;
   std::vector<std::vector<double>> Y_train;
+
+  // Add zero point
+  X_train.push_back(Configuration(_num_core_thread_levels));
+  Y_train.push_back({0, 0});
+
   for (const auto &[config, res] : _ops) {
     if (_sample_counts.at(config) >= kReliableMeasurements) {
       X_train.push_back(config);
@@ -493,6 +498,11 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
   // Collect operating points for training the model
   std::vector<Configuration> X_train;
   std::vector<std::vector<double>> Y_train;
+
+  // Add a zero point
+  X_train.push_back(Configuration(_num_core_thread_levels));
+  Y_train.push_back({0, 0});
+
   if (_stage == OperatingPointTableStage::kInitial ||
       _stage == OperatingPointTableStage::kExploration) {
     for (const auto &[config, res] : _ops) {

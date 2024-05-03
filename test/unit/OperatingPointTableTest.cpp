@@ -101,30 +101,30 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
     const auto &power = op.power();
     if (op.threads() == CPUThreadSet{0, 1}) {
       flag |= 1 << 0;
-      EXPECT_NEAR(utility, 4056, 1);
-      EXPECT_NEAR(power, -1.054, 0.001);
+      EXPECT_NEAR(utility, 1055, 1);
+      EXPECT_NEAR(power, 3.695, 0.001);
     }
     if (op.threads() == CPUThreadSet{0}) {
       flag |= 1 << 1;
-      EXPECT_NEAR(utility, 3626, 1);
-      EXPECT_NEAR(power, 2.257, 0.001);
+      EXPECT_NEAR(utility, 1010, 1);
+      EXPECT_NEAR(power, 6.399, 0.001);
     }
     if (op.threads() == CPUThreadSet{16}) {
       flag |= 1 << 2;
-      EXPECT_NEAR(utility, 3937, 1);
-      EXPECT_NEAR(power, 3.492, 0.001);
+      EXPECT_NEAR(utility, 1487, 1);
+      EXPECT_NEAR(power, 7.371, 0.001);
     }
     if (op.threads() == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
       flag |= 1 << 3;
-      EXPECT_NEAR(utility, 7311, 1);
-      EXPECT_NEAR(power, 29.770, 0.001);
+      EXPECT_NEAR(utility, 5576, 1);
+      EXPECT_NEAR(power, 32.516, 0.001);
     }
   }
 
   EXPECT_EQ(flag, (1 << 4) - 1);
 
   auto ops_pareto = op_table.GetParetoFront();
-  EXPECT_EQ(ops_pareto.size(), 2);
+  EXPECT_EQ(ops_pareto.size(), 102);
 
   // Check updating operating point table
   // P-HT=1 P-ST=0 E=0
@@ -154,23 +154,23 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
     }
     if (op.threads() == CPUThreadSet{0}) {
       flag3 |= 1 << 1;
-      EXPECT_NEAR(utility, 3982, 1);
-      EXPECT_NEAR(power, 24.227, 0.001);
+      EXPECT_NEAR(utility, 2183, 1);
+      EXPECT_NEAR(power, 13.962, 0.001);
     }
     if (op.threads() == CPUThreadSet{16}) {
       flag3 |= 1 << 2;
-      EXPECT_NEAR(utility, 4293, 1);
-      EXPECT_NEAR(power, 23.778, 0.001);
+      EXPECT_NEAR(utility, 2370, 1);
+      EXPECT_NEAR(power, 12.800, 0.001);
     }
     if (op.threads() == CPUThreadSet{0, 1, 2}) {
       flag3 |= 1 << 3;
-      EXPECT_NEAR(utility, 4702, 1);
-      EXPECT_NEAR(power, 30.200, 0.001);
+      EXPECT_NEAR(utility, 3722, 1);
+      EXPECT_NEAR(power, 24.605, 0.001);
     }
     if (op.threads() == CPUThreadSet{0, 1, 2, 3, 4, 16, 17}) {
       flag3 |= 1 << 4;
-      EXPECT_NEAR(utility, 7235, 1);
-      EXPECT_NEAR(power, 45.999, 0.001);
+      EXPECT_NEAR(utility, 7032, 1);
+      EXPECT_NEAR(power, 44.842, 0.001);
     }
   }
 
