@@ -325,20 +325,24 @@ public:
 
   std::unique_ptr<Measure> GetEnergyMeasureMethod() const {
     if (_measure_method == "perf")
-        return std::make_unique<PerfMeasure>();
+      return std::make_unique<PerfMeasure>();
     else if (_measure_method == "none")
-        return std::make_unique<NoMeasure>();
+      return std::make_unique<NoMeasure>();
     else
-        throw std::runtime_error("Unknown energy measurement method!");
+      throw std::runtime_error("Unknown energy measurement method!");
   }
 
-  uint64_t GetStaticPower() const {
-    return _static_power_mw;
+  uint64_t GetStaticPower() const { return _static_power_mw; }
+
+  const std::map<std::string, int> &GetOperatingPointTableParams() const {
+    return _optable_params;
   }
 
 private:
-  void AddCPUType(const std::string &name, int num_threads, int power_coefficient) {
-    auto cpu_type = std::make_unique<CPUType>(name, num_threads, power_coefficient);
+  void AddCPUType(const std::string &name, int num_threads,
+                  int power_coefficient) {
+    auto cpu_type =
+        std::make_unique<CPUType>(name, num_threads, power_coefficient);
     _cpu_types.insert({name, std::move(cpu_type)});
   }
 
@@ -381,6 +385,11 @@ private:
     _measure_method = measure_method;
   }
 
+  void SetOperatingPointTableParams(
+      const std::map<std::string, int> &optable_params) {
+    _optable_params = optable_params;
+  }
+
   friend class CPUCore;
   friend class YamlPlatformReader;
 
@@ -394,6 +403,8 @@ private:
 
   uint64_t _static_power_mw;
   std::string _measure_method;
+
+  std::map<std::string, int> _optable_params;
 };
 
 } /* namespace tetris */

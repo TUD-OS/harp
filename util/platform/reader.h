@@ -51,7 +51,8 @@ public:
 
     // Read energy related values (measure method and static power)
     if (platformNode["energy_measure_method"]) {
-      platform->SetEnergyMeasureMethod(platformNode["energy_measure_method"].as<std::string>());
+      platform->SetEnergyMeasureMethod(
+          platformNode["energy_measure_method"].as<std::string>());
     } else {
       platform->SetEnergyMeasureMethod("none");
     }
@@ -60,6 +61,11 @@ public:
       platform->SetStaticPower(platformNode["static_power_mw"].as<int>());
     } else {
       platform->SetStaticPower(0);
+    }
+
+    if (platformNode["optable"]) {
+      platform->SetOperatingPointTableParams(
+          platformNode["optable"].as<std::map<std::string, int>>());
     }
 
     platform->FinishConstruction();

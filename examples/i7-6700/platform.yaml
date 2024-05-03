@@ -7,6 +7,11 @@ equivalence_scheme: core-type
 energy_measure_method: perf
 static_power_mw: 15659
 
+optable:
+  exploration_points: 4
+  mature_points: 5
+  reliable_measurements: 10
+
 cores:
   - type: P-core
     threads:

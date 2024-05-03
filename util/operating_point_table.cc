@@ -25,6 +25,16 @@ std::ostream &operator<<(std::ostream &os, OperatingPointTableStage stage) {
   return os;
 }
 
+OperatingPointTable::OperatingPointTable(
+    const Platform &platform,
+    std::shared_ptr<OperatingPointEvaluator> evaluator,
+    OperatingPointTableStage stage, bool measurement, bool approximation)
+    : _platform(platform), _stage(stage),
+      _measurement(measurement), _pareto_filter{nullptr} {
+  SetOperatingPointEvaluator(std::move(evaluator));
+  _params = platform.GetOperatingPointTableParams();
+}
+
 void OperatingPointTable::AddOperatingPoint(
     const ClientMessage::OperatingPointsInfo::OPData &op) {
   CPUThreadSet threads;
@@ -223,15 +233,15 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
   Y_train.push_back({0, 0});
 
   for (const auto &[config, res] : _ops) {
-    if (_sample_counts.at(config) >= kReliableMeasurements) {
+    if (_sample_counts.at(config) >= _params.at("reliable_measurements")) {
       X_train.push_back(config);
       Y_train.push_back({res.utility, res.power});
     }
   }
   int config_size = _all_configurations[0].size();
-  if (X_train.size() < kExplorationPoints) {
+  if (X_train.size() < _params.at("exploration_points")) {
     for (const auto &[config, res] : _ops) {
-      if (_sample_counts.at(config) < kReliableMeasurements) {
+      if (_sample_counts.at(config) < _params.at("reliable_measurements")) {
         X_train.push_back(config);
         Y_train.push_back({res.utility, res.power});
       }
@@ -249,7 +259,7 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
       continue;
     }
     if (!_ops.contains(config) ||
-        _sample_counts.at(config) < kReliableMeasurements) {
+        _sample_counts.at(config) < _params.at("reliable_measurements")) {
       X_test.push_back(config);
     }
   }
@@ -408,18 +418,18 @@ void ThreadSetOperatingPointTable::EvaluateStage() {
   int num_measured = _ops.size();
   int num_reliable = 0;
 
-  if (num_measured < kExplorationPoints) {
+  if (num_measured < _params.at("exploration_points")) {
     _stage = OperatingPointTableStage::kInitial;
     return;
   }
 
   for (const auto &[_, count] : _sample_counts) {
-    if (count >= kReliableMeasurements) {
+    if (count >= _params.at("reliable_measurements")) {
       num_reliable++;
     }
   }
 
-  if (num_reliable < kMatureReliablePoints) {
+  if (num_reliable < _params.at("mature_points")) {
     _stage = OperatingPointTableStage::kExploration;
   } else {
     _stage = OperatingPointTableStage::kMature;
@@ -439,7 +449,7 @@ ThreadSetOperatingPointTable::GetOperatingPointMetrics(
     }
   case OperatingPointTableStage::kMature:
     if (_ops.contains(config) &&
-        _sample_counts.at(config) >= kReliableMeasurements) {
+        _sample_counts.at(config) >= _params.at("reliable_measurements")) {
       return _ops.at(config);
     } else {
       return _approx_ops.at(config);
@@ -511,7 +521,7 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
     }
   } else if (_stage == OperatingPointTableStage::kMature) {
     for (const auto &[config, res] : _ops) {
-      if (_sample_counts.at(config) >= kReliableMeasurements) {
+      if (_sample_counts.at(config) >= _params.at("reliable_measurements")) {
         X_train.push_back(config);
         Y_train.push_back({res.utility, res.power});
       }

@@ -19,10 +19,6 @@ namespace tetris {
 
 class Platform;
 
-inline int kExplorationPoints = 4;
-inline int kMatureReliablePoints = 5;
-inline int kReliableMeasurements = 10;
-
 enum class OperatingPointTableStage {
   kStatic,  // No approximation, used by CustomOperatingPointTable
   kInitial, // Initial data gathering and reliance on platform-default points
@@ -53,11 +49,7 @@ public:
   OperatingPointTable(const Platform &platform,
                       std::shared_ptr<OperatingPointEvaluator> evaluator,
                       OperatingPointTableStage stage, bool measurement,
-                      bool approximation)
-      : _platform(platform), _stage(stage),
-        _measurement(measurement), _pareto_filter{nullptr} {
-    SetOperatingPointEvaluator(std::move(evaluator));
-  }
+                      bool approximation);
 
   virtual ~OperatingPointTable() = default;
 
@@ -98,6 +90,9 @@ protected:
   const Platform &_platform;
   OperatingPointTableStage _stage;
   bool _measurement;
+
+  // Platform-defined parameters
+  std::map<std::string, int> _params;
 
   // Manage Pareto-Front Filtering
   std::shared_ptr<OperatingPointEvaluator> _evaluator;
