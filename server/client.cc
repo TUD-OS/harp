@@ -251,6 +251,8 @@ void Client::UpdateCurrentMeasurement() {
     return;
   }
 
+  auto stage_old = op_table->Stage();
+
   auto metrics = current_metrics();
   if (active_op && metrics) {
     // FIXME:Currently, the energy measurement may give gigantic values,
@@ -261,10 +263,20 @@ void Client::UpdateCurrentMeasurement() {
     }
   }
 
+  auto stage_new = op_table->Stage();
+
   op_table->Dump();
 
-  if (new_measurements >= 10) {
-    SelectNextOperatingPointForMeasurement();
+  // If the stage was changed mark to reschedule
+  if (stage_old != stage_new) {
+    _manager.MarkMapperForRun();
+  } else {
+    if (stage_new == OperatingPointTableStage::kInitial ||
+        stage_new == OperatingPointTableStage::kExploration) {
+      if (new_measurements >= 10) {
+        SelectNextOperatingPointForMeasurement();
+      }
+    }
   }
 }
 
