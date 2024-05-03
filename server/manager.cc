@@ -250,7 +250,20 @@ void Manager::update_energy_data() {
   auto all_energy_uj = energy.total_energy_uj - last.total_energy_uj;
   auto duration_ms =  std::chrono::duration_cast<std::chrono::milliseconds>(energy.time - last.time).count();
 
-  energy.energy.all = all_energy_uj - (_platform->GetStaticPower() * duration_ms);
+  if (last.total_energy_uj > energy.total_energy_uj) {
+    LOGGER->warning("Energy counters overflowed: %llu (LAST) vs %llu (CURRENT)\n",
+            last.total_energy_uj, energy.total_energy_uj);
+    all_energy_uj = 0;
+  }
+
+  auto static_energy_uj = _platform->GetStaticPower() * duration_ms;
+  energy.energy.all = all_energy_uj - static_energy_uj;
+
+  if (all_energy_uj < static_energy_uj) {
+    LOGGER->warning("Reported energy is lower than estimated static energy consumption: %llu (ALL) vs %llu (STATIC)\n",
+            all_energy_uj, static_energy_uj);
+    energy.energy.all = 0;
+  }
 
   double time_coefficient_sum = 0.0;
   for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
