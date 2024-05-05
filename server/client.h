@@ -103,6 +103,7 @@ public:
   std::unique_ptr<tetris::OperatingPointTable> op_table;
   std::optional<tetris::OperatingPointAllocation> active_op;
   tetris::CPUCoreSet allowed_cores;
+  tetris::OperatingPointTableStage stage_at_selection;
 
   int type;
 

@@ -202,6 +202,24 @@ void Manager::RunMapper() {
     }
     auto op = client_mapping.Get(c);
     c->allowed_cores = clients_cores.at(c);
+
+    // if client in initial or exploration stage, we should explore the space
+    auto stage = c->op_table->Stage();
+    if (stage == OperatingPointTableStage::kInitial ||
+        stage == OperatingPointTableStage::kExploration) {
+
+      auto op_explor =
+          c->op_table->GetOperatingPointToMeasure(c->allowed_cores);
+      if (op_explor) {
+        auto busy_cores = _platform->GetFullCPUCoreSet();
+        busy_cores ^= c->allowed_cores;
+        auto &op_allocator = _platform->GetEquivResAllocator();
+        auto opa = op_allocator.FindEquivOP(*op_explor, busy_cores);
+        if (opa) {
+          op = *opa;
+        }
+      }
+    }
     c->activate_op(op);
   }
   auto end = std::chrono::high_resolution_clock::now();
