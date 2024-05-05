@@ -11,8 +11,10 @@ energy_measure_method: perf
 static_power_mw: 5000
 
 optable:
-  exploration_points: 6
-  mature_points: 15
+  initial_points: 6
+  initial_measurements: 20
+  exploration_points: 15
+  exploration_measurements: 20
   reliable_measurements: 10
 
 cores:

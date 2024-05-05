@@ -287,7 +287,7 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasureExploration(
     }
   }
   int config_size = _all_configurations[0].size();
-  if (X_train.size() < _params.at("exploration_points")) {
+  if (X_train.size() < _params.at("initial_points")) {
     for (const auto &[config, res] : _ops) {
       if (_sample_counts.at(config) < _params.at("reliable_measurements")) {
         X_train.push_back(config);
@@ -470,7 +470,7 @@ void ThreadSetOperatingPointTable::EvaluateStage() {
   int num_measured = _ops.size();
   int num_reliable = 0;
 
-  if (num_measured < _params.at("exploration_points")) {
+  if (num_measured < _params.at("initial_points")) {
     _stage = OperatingPointTableStage::kInitial;
     return;
   }
@@ -481,7 +481,7 @@ void ThreadSetOperatingPointTable::EvaluateStage() {
     }
   }
 
-  if (num_reliable < _params.at("mature_points")) {
+  if (num_reliable < _params.at("exploration_points")) {
     _stage = OperatingPointTableStage::kExploration;
   } else {
     _stage = OperatingPointTableStage::kMature;
