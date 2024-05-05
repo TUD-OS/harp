@@ -192,6 +192,7 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
   if (!_ops.contains(config)) {
     _ops.emplace(config, result);
     _sample_counts.emplace(config, 1);
+    EvaluateStage();
     return;
   }
   auto &opres = _ops.at(config);
@@ -221,6 +222,53 @@ double CalculateUtilityPowerError(double utility_current, double utility_approx,
 std::optional<OperatingPoint>
 ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
     const CPUCoreSet &core_set) {
+  if (_stage == OperatingPointTableStage::kInitial) {
+    return GetOperatingPointToMeasureInitial(core_set);
+  }
+  if (_stage == OperatingPointTableStage::kExploration) {
+    return GetOperatingPointToMeasureExploration(core_set);
+  }
+  return {};
+}
+
+std::optional<OperatingPoint>
+ThreadSetOperatingPointTable::GetOperatingPointToMeasureInitial(
+    const CPUCoreSet &core_set) {
+  int res_distance = 0;
+  Configuration res_config;
+  for (const auto &config : _all_configurations) {
+    if (_ops.contains(config)) {
+      continue;
+    }
+    if (!DoesConfigurationFitCPUCoreSet(config, core_set)) {
+      continue;
+    }
+    int min_distance = INT_MAX;
+    for (const auto &[ref_config, _] : _ops) {
+      int cur_distance = 0;
+      for (int i = 0; i < _num_core_thread_levels; ++i) {
+        cur_distance += abs(config[i] - ref_config[i]);
+      }
+      if (cur_distance < min_distance) {
+        min_distance = cur_distance;
+      }
+    }
+    if (min_distance > res_distance) {
+      res_distance = min_distance;
+      res_config = config;
+    }
+  }
+
+  if (res_config.size() > 0) {
+    return ConstructOperatingPoint(res_config, {0, 0});
+  }
+
+  return {};
+}
+
+std::optional<OperatingPoint>
+ThreadSetOperatingPointTable::GetOperatingPointToMeasureExploration(
+    const CPUCoreSet &core_set) {
   GenerateApproximatedOperatingPoints();
 
   // 1. Collect reliable operating points. If not enough (kExplorationPoints),
@@ -229,8 +277,8 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasure(
   std::vector<std::vector<double>> Y_train;
 
   // Add zero point
-  X_train.push_back(Configuration(_num_core_thread_levels));
-  Y_train.push_back({0, 0});
+  // X_train.push_back(Configuration(_num_core_thread_levels));
+  // Y_train.push_back({0, 0});
 
   for (const auto &[config, res] : _ops) {
     if (_sample_counts.at(config) >= _params.at("reliable_measurements")) {

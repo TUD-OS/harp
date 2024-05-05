@@ -170,6 +170,12 @@ private:
   bool DoesConfigurationFitCPUCoreSet(const Configuration &config,
                                       const CPUCoreSet &core_set) const;
 
+  std::optional<OperatingPoint>
+  GetOperatingPointToMeasureInitial(const CPUCoreSet &core_set);
+
+  std::optional<OperatingPoint>
+  GetOperatingPointToMeasureExploration(const CPUCoreSet &core_set);
+
   void GenerateApproximatedOperatingPoints();
 
   // Exponential Moving Average parameter
