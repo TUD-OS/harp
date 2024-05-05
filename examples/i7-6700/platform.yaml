@@ -9,7 +9,7 @@ static_power_mw: 15659
 
 optable:
   exploration_points: 4
-  mature_points: 5
+  mature_points: 7
   reliable_measurements: 10
 
 cores:
