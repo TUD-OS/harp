@@ -264,7 +264,12 @@ void Client::UpdateCurrentMeasurement() {
   op_table->Dump();
 
   // If the stage was changed mark to reschedule
-  if (new_measurements >= 10) {
+  const auto optable_params =
+      _manager.GetPlatform().GetOperatingPointTableParams();
+  if (((stage_at_selection == OperatingPointTableStage::kInitial) &&
+       (new_measurements >= optable_params.at("initial_measurements"))) ||
+      ((stage_at_selection == OperatingPointTableStage::kExploration) &&
+       (new_measurements >= optable_params.at("exploration_measurements")))) {
     auto stage = op_table->Stage();
 
     if (stage != stage_at_selection) {
@@ -291,9 +296,12 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     return;
   }
 
-  LOGGER->info("Change mapping for client '%s' [%i] to %s\n", exec.c_str(), pid,
-               new_op.name().c_str());
   auto op_cores = _manager.GetPlatform().ToCPUCoreSet(new_op.threads());
+  LOGGER->info("Change mapping for client '%s' [%i] to %s (threads: %s) "
+               "[allowed_cores: %s]\n",
+               exec.c_str(), pid, new_op.name().c_str(),
+               new_op.threads().GetString().c_str(),
+               allowed_cores.GetString().c_str());
   if (!op_cores.IsSubsetOf(allowed_cores)) {
     LOGGER->error("The new allocation core set %s is not a subset of the "
                   "allowed core set %s\n",

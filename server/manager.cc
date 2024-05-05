@@ -178,7 +178,7 @@ void Manager::RunMapper() {
 
   if (clients_to_extend.size() > 0) {
     CPUCoreSet free_cores = _platform->GetFullCPUCoreSet();
-    free_cores |= busy_cores;
+    free_cores ^= busy_cores;
 
     auto core_list = free_cores.GetList();
     while (core_list.size() > 0) {
