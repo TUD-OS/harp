@@ -34,7 +34,7 @@ struct CpuTimes {
   std::vector<uint64_t> cores;
 };
 
-struct ProzessTimes {
+struct ProcessTimes {
   uint64_t all;
   std::map<pid_t, uint64_t> threads;
 };
@@ -44,7 +44,7 @@ struct CpuEnergy {
   std::vector<uint64_t> cores;
 };
 
-struct ProzessEnergy {
+struct ProcessEnergy {
   uint64_t all;
   std::map<pid_t, uint64_t> threads;
 };
@@ -60,12 +60,12 @@ struct EnergyData {
 
 struct ProcessEnergyData {
   std::chrono::high_resolution_clock::time_point time;
-  ProzessTimes raw_ctimes;
+  ProcessTimes raw_ctimes;
 
   std::map<pid_t, int> thread_core_assignment;
 
-  ProzessTimes ctimes;
-  ProzessEnergy energy;
+  ProcessTimes ctimes;
+  ProcessEnergy energy;
 };
 
 /**
