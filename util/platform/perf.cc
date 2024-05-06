@@ -40,6 +40,8 @@ static std::optional<uint64_t> start_perf(uint64_t type, uint64_t event, int pid
   pea.read_format = PERF_FORMAT_GROUP | PERF_FORMAT_ID;
   pea.type = type;
   pea.config = event;
+  pea.inherit_thread = 1;
+  pea.inherit = 1;
 
   auto tmp_fd = syscall(SYS_perf_event_open, &pea, pid, -1, group_fd, 0);
   if (tmp_fd == -1) {
