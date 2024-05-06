@@ -251,21 +251,27 @@ void Client::UpdateCurrentMeasurement() {
     return;
   }
 
+  const auto optable_params =
+      _manager.GetPlatform().GetOperatingPointTableParams();
+
   auto metrics = current_metrics();
   if (active_op && metrics) {
     // FIXME:Currently, the energy measurement may give gigantic values,
     // possible due to overflow
     if (metrics->power <= 1e11) {
-      op_table->AddOperatingPointMeasurement(active_op->base.config, *metrics);
-      new_measurements++;
+      if (drop_measurements > 0) {
+        drop_measurements--;
+      } else {
+        op_table->AddOperatingPointMeasurement(active_op->base.config,
+                                               *metrics);
+        new_measurements++;
+      }
     }
   }
 
   op_table->Dump();
 
   // If the stage was changed mark to reschedule
-  const auto optable_params =
-      _manager.GetPlatform().GetOperatingPointTableParams();
   if (((stage_at_selection == OperatingPointTableStage::kInitial) &&
        (new_measurements >= optable_params.at("initial_measurements"))) ||
       ((stage_at_selection == OperatingPointTableStage::kExploration) &&
@@ -295,6 +301,11 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
     LOGGER->debug("The new operating point is the same as the current one\n");
     return;
   }
+
+  const auto optable_params =
+      _manager.GetPlatform().GetOperatingPointTableParams();
+
+  drop_measurements = optable_params.at("drop_measurements");
 
   auto op_cores = _manager.GetPlatform().ToCPUCoreSet(new_op.threads());
   LOGGER->info("Change mapping for client '%s' [%i] to %s (threads: %s) "

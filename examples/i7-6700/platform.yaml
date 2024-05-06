@@ -8,11 +8,12 @@ energy_measure_method: perf
 static_power_mw: 15659
 
 optable:
+  drop_measurements: 5
   initial_points: 4
-  initial_measurements: 20
+  initial_measurements: 10
   exploration_points: 7
-  exploration_measurements: 20
-  reliable_measurements: 10
+  exploration_measurements: 10
+  reliable_measurements: 0
 
 cores:
   - type: P-core

@@ -112,6 +112,7 @@ private:
   std::vector<PerfData> perf_data;
   std::vector<ProcessEnergyData> energy_data;
 
+  int drop_measurements;
   int new_measurements;
 
 private:
