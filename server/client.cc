@@ -275,10 +275,13 @@ void Client::UpdateCurrentMeasurement() {
   if (((stage_at_selection == OperatingPointTableStage::kInitial) &&
        (new_measurements >= optable_params.at("initial_measurements"))) ||
       ((stage_at_selection == OperatingPointTableStage::kExploration) &&
-       (new_measurements >= optable_params.at("exploration_measurements")))) {
+       (new_measurements >= optable_params.at("exploration_measurements"))) ||
+      ((stage_at_selection == OperatingPointTableStage::kMature) &&
+       (new_measurements >= optable_params.at("mature_measurements")))) {
     auto stage = op_table->Stage();
 
-    if (stage != stage_at_selection) {
+    if (stage != stage_at_selection ||
+        stage == OperatingPointTableStage::kMature) {
       _manager.MarkMapperForRun();
     } else {
       if (stage == OperatingPointTableStage::kInitial ||

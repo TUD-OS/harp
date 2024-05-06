@@ -13,6 +13,7 @@ optable:
   initial_measurements: 10
   exploration_points: 7
   exploration_measurements: 10
+  mature_measurements: 50
   reliable_measurements: 0
 
 cores:
