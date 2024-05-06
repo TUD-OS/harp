@@ -367,15 +367,17 @@ void ThreadSetOperatingPointTable::Dump() {
   for (const auto &config : _all_configurations) {
     if (_ops.contains(config)) {
       const auto &metric = GetOperatingPointMetrics(config);
-      LOGGER->debug(
-          " - Name: %s, Count: %d, Utility (eff.): %lf, Power (eff.): %lf\n",
-          GetConfigurationString(config).c_str(), _sample_counts.at(config),
-          metric.utility, metric.power);
+      LOGGER->debug(" - Name: %s, Count: %d, Utility (10^9, eff.): %lf, Power "
+                    "(10^3, eff.): %lf\n",
+                    GetConfigurationString(config).c_str(),
+                    _sample_counts.at(config), metric.utility / 1e9,
+                    metric.power / 1e3);
     } else {
       const auto &metric = _approx_ops.at(config);
-      LOGGER->debug(" - Name: %s, Approximated, Utility: %lf, Power: %lf\n",
-                    GetConfigurationString(config).c_str(), metric.utility,
-                    metric.power);
+      LOGGER->debug(
+          " - Name: %s, Approximated, Utility (10^9): %lf, Power (10^3): %lf\n",
+          GetConfigurationString(config).c_str(), metric.utility / 1e9,
+          metric.power / 1e3);
     }
   }
 }
