@@ -1,0 +1,2 @@
+Diagnostics:
+  Suppress: [non_type_template_arg_unsupported, mem_init_not_member_or_class]
