@@ -3,7 +3,9 @@
 
 #pragma once
 
+#include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <memory>
 #include <vector>
 
@@ -44,6 +46,8 @@ private:
 
   std::unique_ptr<tetris::TraceLogger> _tracelog;
 
+  std::filesystem::path _optable_storage;
+
   tetris::perf::PerfManager _perf_manager;
   std::unique_ptr<tetris::Measure> _energy_measure;
   std::vector<EnergyData> _energy_data;
@@ -60,13 +64,28 @@ private:
 
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
-                   std::unique_ptr<tetris::BaseClientMapper> mapper)
+                   std::unique_ptr<tetris::BaseClientMapper> mapper,
+                   std::string storage_path = "")
       : _platform{std::move(platform)}, _mapper{std::move(mapper)}, _clients{},
         _run_mapper_flag{false},
         _tracelog{std::make_unique<tetris::TraceLogger>(
             std::chrono::high_resolution_clock::now())},
-        _perf_manager{} {
+        _optable_storage{storage_path}, _perf_manager{} {
     _tracelog->RegisterPlatform(*_platform);
+
+    // Check if the directory already exists
+    if (!_optable_storage.empty()) {
+      if (!std::filesystem::exists(_optable_storage)) {
+        try {
+          std::filesystem::create_directories(_optable_storage);
+        } catch (const std::filesystem::filesystem_error &e) {
+          LOGGER->error("Could not create the directory: %s\n",
+                        _optable_storage.c_str());
+          _optable_storage.clear();
+        }
+      }
+    }
+
     _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
   }
 
@@ -99,6 +118,14 @@ public:
       _tracelog->LogClientMappingEnd(now, &c);
     }
     _tracelog->DeregisterClient(&c);
+
+    if (!_optable_storage.empty()) {
+      std::string name = c.exec;
+      std::replace(name.begin(), name.end(), '/', '_');
+      name = name + ".yaml";
+      auto full_path = _optable_storage / name;
+      c.op_table->StoreToFile(full_path);
+    }
 
     _clients.erase(fd);
     MarkMapperForRun();

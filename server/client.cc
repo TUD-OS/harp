@@ -66,8 +66,6 @@ bool Client::receive_ops(const ClientMessage::OperatingPointsInfo &ops_info) {
   /* Mark the client active since we now have operating points */
   type = Type::ACTIVE;
 
-  op_table->Clear();
-
   /* Convert the protobuf mapping representation into our internal format */
   int op_size = ops_info.operating_points_size();
   for (int i = 0; i < ops_info.operating_points_size(); i++) {

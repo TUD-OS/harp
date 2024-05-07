@@ -64,6 +64,19 @@ bool Manager::client_message(int fd) try {
                      c->pid);
         _tracelog->RegisterClient(c.get());
 
+        // Check whether there is a previously store operating point table
+        if (!_optable_storage.empty()) {
+          std::string name = c->exec;
+          std::replace(name.begin(), name.end(), '/', '_');
+          name = name + ".yaml";
+          auto full_path = _optable_storage / name;
+          if (std::filesystem::exists(full_path)) {
+            LOGGER->debug("Loading OperatingPointTable from %s\n",
+                          full_path.c_str());
+            c->op_table->LoadFromFile(full_path);
+          }
+        }
+
         /* Get the perf handle for this client */
         if (auto handle = _perf_manager.open(c->pid)) {
           c->enable_perf(std::move(handle.value()));

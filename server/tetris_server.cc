@@ -37,6 +37,10 @@ void usage() {
             << "                             Defaults to \"balanced\".\n"
             << "   -t, --trace <trace_file>  path to export the trace "
                "(defaults to \"trace.json\""
+            << "   -s, --storage <dir>       path to the operating point table "
+               "storage.\n"
+            << "                             By default, it does not save and "
+               "load tables."
             << "\n";
 }
 
@@ -166,6 +170,7 @@ struct Config {
   std::string mapper_name;
   std::string objective_name;
   std::string trace_filename;
+  std::string storage_path;
 };
 
 void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
@@ -364,6 +369,15 @@ int main(int argc, char *argv[]) {
 
       i++;
       config.trace_filename = argv[i];
+    } else if (arg == "-s" || arg == "--storage") {
+      if (i + 1 >= argc) {
+        std::cerr << "Expected a storage path after " << arg << ".\n";
+        usage();
+        return 1;
+      }
+
+      i++;
+      config.storage_path = argv[i];
     } else {
       std::cerr << "Unexpected command line option: " << arg << ".\n";
       usage();
@@ -416,7 +430,7 @@ int main(int argc, char *argv[]) {
   logger = debug::Logger::get();
 
   /* Setting up the manager */
-  Manager manager{std::move(platform), std::move(mapper)};
+  Manager manager{std::move(platform), std::move(mapper), config.storage_path};
   manager.UpdateOperatingPointEvaluator(std::move(evaluator));
 
   // Setting up the server and control sockets

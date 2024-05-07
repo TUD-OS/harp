@@ -1,5 +1,9 @@
 #include "util/operating_point_table.h"
 
+#include <fstream>
+
+#include <yaml-cpp/yaml.h>
+
 #include "util/platform/platform.h"
 
 namespace tetris {
@@ -106,7 +110,7 @@ ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
     : OperatingPointTable(platform, std::move(evaluator),
                           OperatingPointTableStage::kInitial, measurement,
                           approximation),
-      _ema_alpha(ema_alpha), _update_approximated(false) {
+      _ema_alpha(ema_alpha), _update_approximated(true) {
 
   // Initialize core thread levels
   _core_threads_count = _platform.GetThreadCapacityInfo();
@@ -162,7 +166,7 @@ void ThreadSetOperatingPointTable::AddOperatingPoint(const OperatingPoint &op) {
 void ThreadSetOperatingPointTable::AddOperatingPoint(
     const OperatingPoint::Configuration &op_config,
     const OperatingPoint::Metrics &metrics) {
-  auto config = GetConfiguration(op_config);
+  auto config = GetConfiguration(op_config.threads);
   if (_ops.contains(config)) {
     LOGGER->warning("The operating point with the same configuration (%s) "
                     "was already added. Rewriting the old operating point.\n",
@@ -184,7 +188,7 @@ void ThreadSetOperatingPointTable::AddOperatingPointMeasurement(
         "OperatingPointTable does not support adding measured data");
   }
 
-  auto config = GetConfiguration(op_config);
+  auto config = GetConfiguration(op_config.threads);
 
   _update_approximated = true;
   _update_pareto = true;
@@ -384,8 +388,7 @@ void ThreadSetOperatingPointTable::Dump() {
 
 ThreadSetOperatingPointTable::Configuration
 ThreadSetOperatingPointTable::GetConfiguration(
-    const OperatingPoint::Configuration &op_config) const {
-  auto &threads = op_config.threads;
+    const CPUThreadSet &threads) const {
   auto thread_usage = _platform.GetThreadUsageInfo(threads);
 
   Configuration config(_num_core_thread_levels);
@@ -596,6 +599,127 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
   }
 
   _update_approximated = false;
+}
+
+void ThreadSetOperatingPointTable::StoreToFile(
+    const std::filesystem::path &path) {
+  YAML::Emitter out;
+
+  // Start the YAML document
+  out << YAML::BeginMap;
+
+  // Application and platform details are not supported yet
+  // out << YAML::Key << "application" << YAML::Value << "unnamed";
+  // out << YAML::Key << "platform" << YAML::Value << "raptor-lake-8P16E";
+
+  // FIXME: change to coarse-grained
+  out << YAML::Key << "type" << YAML::Value << "OMP";
+
+  // Mapping template
+  out << YAML::Key << "mapping_template";
+  out << YAML::BeginMap;
+  out << YAML::Key << "metadata";
+  out << YAML::Flow << YAML::Value;
+  out << YAML::BeginSeq << "utility"
+      << "power"
+      << "sample_count" << YAML::EndSeq;
+  out << YAML::EndMap;
+
+  // Mapping
+  out << YAML::Key << "mappings";
+  out << YAML::BeginSeq;
+  for (const auto &config : _all_configurations) {
+    if (_ops.contains(config)) {
+      out << YAML::BeginMap;
+      out << YAML::Key << "cores";
+      out << YAML::Flow << YAML::Value;
+      out << YAML::BeginSeq;
+      auto threads = ConstructCPUThreadSet(config);
+      auto cpu_threads = _platform.GetCPUThreads(threads);
+      for (const auto &c : cpu_threads) {
+        out << c->GetName();
+      }
+      out << YAML::EndSeq;
+      out << YAML::Key << "metadata";
+      out << YAML::Flow << YAML::Value << YAML::BeginSeq;
+      auto &metrics = _ops.at(config);
+      out << metrics.utility << metrics.power;
+      out << _sample_counts.at(config);
+      out << YAML::EndSeq;
+      out << YAML::EndMap;
+    }
+  }
+  out << YAML::EndSeq;
+  out << YAML::EndMap;
+
+  // Write to file
+  std::ofstream fout(path);
+  fout << out.c_str();
+}
+
+void ThreadSetOperatingPointTable::LoadFromFile(
+    const std::filesystem::path &path) {
+  // Check if the file exists
+  if (!std::filesystem::exists(path)) {
+    LOGGER->error("File does not exist: %s\n", path.c_str());
+    return;
+  }
+
+  // Open the file with a YAML parser
+  std::ifstream fin(path);
+  YAML::Node root = YAML::Load(fin);
+
+  // Check if the essential keys exist
+  if (!root["mapping_template"] || !root["mappings"]) {
+    LOGGER->error("YAML file (%s) is missing necessary sections", path.c_str());
+    return;
+  }
+
+  // Determine the order of metadata fields
+  std::vector<std::string> metadata_fields =
+      root["mapping_template"]["metadata"].as<std::vector<std::string>>();
+
+  std::set<std::string> metadata_set(metadata_fields.begin(),
+                                     metadata_fields.end());
+  std::set<std::string> required_fields{"utility", "power", "sample_count"};
+  if (metadata_set != required_fields) {
+    LOGGER->error(
+        "Metadata fields are missing or incorrect in the mapping template\n");
+    return;
+  }
+
+  // Iterate over mappings
+  for (const auto &m : root["mappings"]) {
+    std::vector<std::string> cores = m["cores"].as<std::vector<std::string>>();
+
+    CPUThreadSet threads;
+    for (const auto &core : cores) {
+      CPUThread *t = _platform.FindCPUThread(core);
+      threads.Set(t->GetID());
+    }
+
+    auto config = GetConfiguration(threads);
+
+    // Dynamically parse metadata based on the template
+    OperatingPoint::Metrics metrics;
+    int sample_count;
+    for (size_t i = 0; i < metadata_fields.size(); i++) {
+      const std::string &field = metadata_fields[i];
+      if (field == "utility") {
+        metrics.utility = m["metadata"][i].as<double>();
+      } else if (field == "power") {
+        metrics.power = m["metadata"][i].as<double>();
+      } else if (field == "sample_count") {
+        sample_count = m["metadata"][i].as<int>();
+      }
+    }
+
+    _ops.emplace(config, metrics);
+    _sample_counts.emplace(config, sample_count);
+  }
+
+  _update_approximated = true;
+  return;
 }
 
 void CustomOperatingPointTable::Dump() {

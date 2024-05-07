@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <vector>
 
@@ -13,7 +14,6 @@
 #include "util/operating_point_evaluator.h"
 #include "util/pareto.h"
 #include "util/regression.h"
-#include "util/string_util.h"
 
 namespace tetris {
 
@@ -86,6 +86,10 @@ public:
 
   virtual void Dump() = 0;
 
+  virtual void StoreToFile(const std::filesystem::path &path) = 0;
+
+  virtual void LoadFromFile(const std::filesystem::path &path) = 0;
+
 protected:
   const Platform &_platform;
   OperatingPointTableStage _stage;
@@ -139,10 +143,14 @@ public:
 
   void Dump() override;
 
+  void StoreToFile(const std::filesystem::path &path) override;
+
+  void LoadFromFile(const std::filesystem::path &path) override;
+
 private:
   using Configuration = std::vector<int>;
 
-  Configuration GetConfiguration(const OperatingPoint::Configuration &op) const;
+  Configuration GetConfiguration(const CPUThreadSet &threads) const;
 
   std::string GetConfigurationString(const Configuration &config) const;
 
@@ -257,6 +265,16 @@ public:
   }
 
   void Dump() override;
+
+  void StoreToFile(const std::filesystem::path &path) override {
+    LOGGER->warning(
+        "Storing CustomOperatingPointTable to the file is not implemented\n");
+  }
+
+  void LoadFromFile(const std::filesystem::path &path) override {
+    LOGGER->warning(
+        "Loading CustomOperatingPointTable from the file is not implemented\n");
+  }
 
 private:
   std::map<std::string, OperatingPoint> _ops;
