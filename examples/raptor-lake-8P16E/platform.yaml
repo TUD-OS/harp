@@ -8,14 +8,14 @@ core_types:
 
 equivalence_scheme: core-type
 energy_measure_method: perf
-static_power_mw: 5000
+static_power_mw: 20200
 
 optable:
-  drop_measurements: 2
+  drop_measurements: 3
   initial_points: 6
-  initial_measurements: 20
+  initial_measurements: 10
   exploration_points: 15
-  exploration_measurements: 20
+  exploration_measurements: 10
   mature_measurements: 50
   reliable_measurements: 10
 

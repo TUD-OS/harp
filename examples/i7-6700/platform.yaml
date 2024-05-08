@@ -5,7 +5,7 @@ core_types:
 
 equivalence_scheme: core-type
 energy_measure_method: perf
-static_power_mw: 15000
+static_power_mw: 13628
 
 optable:
   drop_measurements: 3
