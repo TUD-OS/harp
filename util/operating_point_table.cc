@@ -337,6 +337,12 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasureExploration(
       utility_current = _approx_ops.at(config).utility;
       power_current = _approx_ops.at(config).power;
     }
+    if (utility_current < 0 && utility_test < 0) {
+      utility_test = 0;
+    }
+    if (power_current < 0 && power_test < 0) {
+      power_test = 0;
+    }
     double error = CalculateUtilityPowerError(utility_current, utility_test,
                                               power_current, power_test);
     if (error > max_error) {
@@ -376,7 +382,7 @@ void ThreadSetOperatingPointTable::Dump() {
                     GetConfigurationString(config).c_str(),
                     _sample_counts.at(config), metric.utility / 1e9,
                     metric.power / 1e3);
-    } else {
+    } else if (_approx_ops.contains(config)) {
       const auto &metric = _approx_ops.at(config);
       LOGGER->debug(
           " - Name: %s, Approximated, Utility (10^9): %lf, Power (10^3): %lf\n",

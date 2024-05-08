@@ -267,8 +267,6 @@ void Client::UpdateCurrentMeasurement() {
     }
   }
 
-  op_table->Dump();
-
   // If the stage was changed mark to reschedule
   if (((stage_at_selection == OperatingPointTableStage::kInitial) &&
        (new_measurements >= optable_params.at("initial_measurements"))) ||
@@ -277,6 +275,8 @@ void Client::UpdateCurrentMeasurement() {
       ((stage_at_selection == OperatingPointTableStage::kMature) &&
        (new_measurements >= optable_params.at("mature_measurements")))) {
     auto stage = op_table->Stage();
+
+    op_table->Dump();
 
     if (stage != stage_at_selection ||
         stage == OperatingPointTableStage::kMature) {
