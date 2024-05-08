@@ -14,7 +14,7 @@ optable:
   drop_measurements: 3
   initial_points: 6
   initial_measurements: 10
-  exploration_points: 15
+  exploration_points: 20
   exploration_measurements: 10
   mature_measurements: 50
   reliable_measurements: 10
