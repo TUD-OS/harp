@@ -281,8 +281,8 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasureExploration(
   std::vector<std::vector<double>> Y_train;
 
   // Add zero point
-  // X_train.push_back(Configuration(_num_core_thread_levels));
-  // Y_train.push_back({0, 0});
+  X_train.push_back(Configuration(_num_core_thread_levels));
+  Y_train.push_back({0, 0});
 
   for (const auto &[config, res] : _ops) {
     if (_sample_counts.at(config) >= _params.at("reliable_measurements")) {
@@ -566,10 +566,6 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
   std::vector<Configuration> X_train;
   std::vector<std::vector<double>> Y_train;
 
-  // Add a zero point
-  X_train.push_back(Configuration(_num_core_thread_levels));
-  Y_train.push_back({0, 0});
-
   if (_stage == OperatingPointTableStage::kInitial ||
       _stage == OperatingPointTableStage::kExploration) {
     for (const auto &[config, res] : _ops) {
@@ -585,6 +581,12 @@ void ThreadSetOperatingPointTable::GenerateApproximatedOperatingPoints() {
     }
   } else {
     std::runtime_error("Unknown OperatingPointTableStage");
+  }
+
+  if (X_train.size() == 0) {
+    // Add a zero point
+    X_train.push_back(Configuration(_num_core_thread_levels));
+    Y_train.push_back({0, 0});
   }
 
   // Train Model
@@ -718,7 +720,8 @@ void ThreadSetOperatingPointTable::LoadFromFile(
     _sample_counts.emplace(config, sample_count);
   }
 
-  _update_approximated = true;
+  GenerateApproximatedOperatingPoints();
+  EvaluateStage();
   return;
 }
 
