@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 
-from client_py.feature import Feature
-from client_py.mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ClientResponse, ServerMessage, ServerResponse
+
+from pytetrisclient.feature import Feature
+from pytetrisclient.mappingFeature import MappingFeature
 
 
 class Client(ABC):

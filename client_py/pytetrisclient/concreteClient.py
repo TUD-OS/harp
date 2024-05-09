@@ -3,15 +3,16 @@ import os
 import socket
 import threading
 
-from client_py.client import Client
-from client_py.mappingFeature import MappingFeature
-from client_py.push_message_listener import PushMessageListener
-from client_py.utils.protobufUtil import ProtobufUtil
-from client_py.utils.yamlMappingReader import YamlMappingReader
-from client_py.utils.yamlPlatformReader import YamlPlatformReader
-# from mappingFeature import MappingFeature
 from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest, RegistrationResponse, ClientResponse, \
     ServerMessage
+
+from pytetrisclient.client import Client
+from pytetrisclient.mappingFeature import MappingFeature
+from pytetrisclient.push_message_listener import PushMessageListener
+from pytetrisclient.utils.protobufUtil import ProtobufUtil
+from pytetrisclient.utils.yamlMappingReader import YamlMappingReader
+from pytetrisclient.utils.yamlPlatformReader import YamlPlatformReader
+# from mappingFeature import MappingFeature
 
 
 class ConcreteClient(Client):

@@ -1,6 +1,6 @@
 import yaml
 
-from client_py.utils.platform import Platform
+from pytetrisclient.utils.platform import Platform
 
 
 class YamlPlatformReader:

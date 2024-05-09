@@ -1,6 +1,6 @@
 import yaml
 
-from client_py.utils.mapping import Mapping
+from pytetrisclient.utils.mapping import Mapping
 
 
 class YamlMappingReader:

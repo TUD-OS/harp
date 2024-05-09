@@ -2,9 +2,10 @@ import socket
 import threading
 from typing import Dict
 
-from client_py.feature import Feature
-from client_py.utils.protobufUtil import ProtobufUtil
 from proto.tetris_pb2 import ServerMessage, ClientResponse
+
+from pytetrisclient.feature import Feature
+from pytetrisclient.utils.protobufUtil import ProtobufUtil
 
 
 class PushMessageListener:
