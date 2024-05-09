@@ -140,12 +140,12 @@ def run():
 
         if not smt:
             for i in cores_range:
-                cs = cores[ct][:i]
+                cs = [c[0] for c in cores[ct][:i]]
                 name = ",".join([thread_names[i] for i in cs])
                 print("* {} ->".format(name), end="", flush=True)
                 joules, watts, ips = run_and_measure(cs)
                 print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
-                results[ct][name] = {"watts": watts, "ips": ips, "cores": cs }
+                results[ct][name] = {"watts": watts, "ips": ips, "cores": cs, "ht-cores": [] }
         else:
             for i, ci in enumerate(cores_range):
                 # 1) all x cores HT off
@@ -179,8 +179,8 @@ def run():
         combined = {}
         print("* Combined *")
         for i, ct1 in enumerate(core_types):
-            for ct2, smt2 in core_types[i+1:]:
-                ct1, smt1 = ct1
+            for ct2, _ in core_types[i+1:]:
+                ct1, _ = ct1
 
                 for m1 in results[ct1]:
                     for m2 in results[ct2]:
@@ -192,6 +192,7 @@ def run():
                         joules, watts, ips = run_and_measure(cores + ht_cores)
                         print(" {} J - {} W - {} MIPS".format(joules, watts, ips/10**9))
                         combined[name] = { "watts": watts, "ips": ips, "cores": cores, "ht-cores": ht_cores}
+
 
     # Fit the resulting curves
     print("\nFitting results:")
