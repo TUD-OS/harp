@@ -1,0 +1,31 @@
+application: raptor-lake-new2/results-binpack-pareto.csv
+mapping_template:
+  metadata:
+  - utility
+  - power
+  - nr_threads
+mappings:
+- cores:
+  - E00
+  metadata:
+  - 16716.724504254875
+  - 9119283138.187489
+  - 1
+  name: mapping0
+- cores:
+  - P0_0
+  metadata:
+  - 20601.63123551066
+  - 10033269185.340405
+  - 1
+  name: mapping1
+- cores:
+  - P0_0
+  - P0_1
+  metadata:
+  - 23293.9803764927
+  - 11677426952.676563
+  - 2
+  name: mapping2
+platform: raptor-lake-8P16E
+type: OMP
