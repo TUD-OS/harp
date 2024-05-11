@@ -12,8 +12,9 @@ class YamlMappingReader:
         with open(file_path, "r") as file:
             data = yaml.safe_load(file)
             app_name = data["application"]
+            metadata_order = data.get("mapping_template", {}).get("metadata", [])
 
-            if data["mappings"]:
+            if "mappings" in data:
                 for mapping_data in data["mappings"]:
                     name = mapping_data["name"]
                     threads = mapping_data["cores"]
@@ -21,12 +22,15 @@ class YamlMappingReader:
                     execution_time = mapping_data["metadata"][0]
                     energy = mapping_data["metadata"][1]
 
+                    # Create a dictionary for metadata using the specified order
+                    metadata_dict = {}
+                    for index, metadata_field in enumerate(metadata_order):
+                        metadata_dict[metadata_field] = mapping_data["metadata"][index]
+
                     mapping = Mapping(
                         name=name,
                         thread_affinities=cpu_ids,
-                        exec_time=execution_time,
-                        energy=energy,
+                        characteristics=metadata_dict,
                     )
                     mappings_list.append(mapping)
-
         return mappings_list, app_name

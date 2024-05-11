@@ -3,28 +3,29 @@ from dataclasses import dataclass
 
 @dataclass
 class Mapping:
-    def __init__(self,
-                 name,
-                 thread_affinities,
-                 exec_time,
-                 energy,
-                 ):
+    def __init__(self, name, thread_affinities, characteristics):
         self.name = name
-        self.characteristics = {
-            "execution_time": exec_time,
-            "energy": energy,
-        }
-        self.cpu_ids = thread_affinities
+        self.characteristics = characteristics.copy()
+        self.cpu_ids = thread_affinities.copy()
+
+    def copy():
+        return Mapping(self.name, self.cpu_ids, characteristics)
+
+    def convert(conv_map):
+        cpu_ids = self.cpu_ids.copy()
+        for i in range(len(cpu_ids)):
+            if cpu_ids[i] in conv_map:
+                cpu_ids[i] = conv_map[cpu_ids[i]]
+        return Mapping(self.name, cpu_ids, characteristics)
 
     def __str__(self) -> str:
         return (
             f"Mapping(name={self.name}, "
             f"thread_affinities={self.cpu_ids}, "
-            f"exec_time={self.characteristics['execution_time']}, "
-            f"energy={self.characteristics['energy']})"
+            f"characteristics={self.characteristics})"
         )
 
-    '''
+    """
         self.thread_map = {k: int(v) for k, v in threads}
         self.region_map = {k: [{k2: int(v2)} for k2, v2 in v] for k, v in regions.items()}
         self.cpus = CPUThreadSet()  # Placeholder for CPUThreadSet instantiation
@@ -62,4 +63,4 @@ class Mapping:
 
     def __repr__(self) -> str:
         return self.__str__()
-    '''
+    """

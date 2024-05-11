@@ -9,6 +9,7 @@ from proto.tetris_pb2 import ClientMessage, ServerResponse, RegistrationRequest,
 from pytetrisclient.client import Client
 from pytetrisclient.mappingFeature import MappingFeature
 from pytetrisclient.push_message_listener import PushMessageListener
+from pytetrisclient.utils.mapping import Mapping
 from pytetrisclient.utils.protobufUtil import ProtobufUtil
 from pytetrisclient.utils.yamlMappingReader import YamlMappingReader
 from pytetrisclient.utils.yamlPlatformReader import YamlPlatformReader
@@ -17,10 +18,15 @@ from pytetrisclient.utils.yamlPlatformReader import YamlPlatformReader
 
 class ConcreteClient(Client):
 
-    def __init__(self, server_socket_path, platform_desc_path, mapping_path):
+    def __init__(self, server_socket_path, platform_desc_path, mapping_path, mapping_coarse_grained):
         super().__init__()
         self._managed = False
         self._logger = logging.getLogger('ConcreteClient')
+        self._mapping_coarse_grained = mapping_coarse_grained
+
+        if not self._mapping_coarse_grained:
+            self._logger.warning("Fine-graned mappings are not fully supported.")
+
         self._push_message_listener = PushMessageListener(self.__get_push_listener_socket_path(), self)
 
         try:
@@ -62,14 +68,14 @@ class ConcreteClient(Client):
 
     @staticmethod
     def __add_mappings_to_client_message(mappings, msg):
+        ops_info = ClientMessage.OperatingPointsInfo()
         for mapping in mappings:
-            op = msg.ops_info.operating_points.add()
+            op = ops_info.operating_points.add()
             op.identifier = mapping.name
             op.cpu_ids.extend(mapping.cpu_ids)
-            for name, value in mapping.characteristics.items():
-                characteristic = op.characteristics.add()
-                characteristic.name = name
-                characteristic.value = value
+            op.utility = mapping.characteristics.get("utility", 0.0)
+            op.power = mapping.characteristics.get("power", 0.0)
+        msg.ops_info.CopyFrom(ops_info)
 
     @staticmethod
     def __get_push_listener_socket_path():
@@ -106,25 +112,40 @@ class ConcreteClient(Client):
         response = ClientResponse()
         response.type = ClientResponse.Type.ERROR
 
-        if hasattr(msg, 'activated_op_info'):
-            active_op = msg.activated_op_info
-            map_id = active_op.identifier
-            print(f" * Got mapping update from server: {map_id}")
+        if msg.type == ServerMessage.ACTIVATE_CUSTOM_OP:
+            if msg.HasField('activated_op_info'):
+                active_op = msg.activated_op_info
+                map_id = active_op.identifier
+                print(f" * Got mapping update from server: {map_id}")
 
-            conv_map = {conv.cpu_id_from: conv.cpu_id_to for conv in active_op.cpu_convs}
+                conv_map = {conv.cpu_id_from: conv.cpu_id_to for conv in active_op.cpu_convs}
 
-            # Search for the mapping with the given map_id
-            mapping = next((m for m in self._mappings if m.name == map_id), None)
+                # Search for the mapping with the given map_id
+                mapping = next((m for m in self._mappings if m.name == map_id), None)
 
-            if mapping:
-                self._active_mapping = mapping
-                print(f" -> Active mapping {self._active_mapping.name}")
+                if mapping:
+                    self._active_mapping = mapping.convert(conv_map)
+                    print(f" -> Active mapping {self._active_mapping.name}")
+
+                    # Tell the features to react to the new mapping
+                    for feature in self._mapping_features:
+                        feature.mapping_update(self._active_mapping, conv_map)
+
+                    response.type = ClientResponse.Type.ACKNOWLEDGE
+        elif msg.type == ServerMessage.ACTIVATE_CPUS:
+            if msg.HasField('activated_cpus'):
+                cpu_ids = list(msg.activated_cpus.cpu_ids)
+                name = str(cpu_ids)
+                mapping = Mapping(name, cpu_ids, {})
 
                 # Tell the features to react to the new mapping
                 for feature in self._mapping_features:
-                    feature.mapping_update(self._active_mapping, conv_map)
+                    feature.mapping_update(mapping, {})
 
                 response.type = ClientResponse.Type.ACKNOWLEDGE
+        else:
+            self._logger.error("Unknown server message type.")
+
 
         return response
 
@@ -133,6 +154,10 @@ class ConcreteClient(Client):
 
         request.pid = os.getpid()
         request.exec = app_name
+        if self._mapping_coarse_grained:
+            request.mapping_type = RegistrationRequest.COARSE_GRAINED
+        else:
+            request.mapping_type = RegistrationRequest.FINE_GRAINED
 
         try:
             ProtobufUtil.send(self._tetris_server_connection, request)
