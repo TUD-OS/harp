@@ -24,24 +24,26 @@ const static int MAXEVENTS = 100;
 debug::LoggerPtr logger;
 
 void usage() {
-  std::cout << "usage: tetrisserver [-h] [-p platform] [-o objective] [-t "
-               "trace_file]\n"
-            << "\n"
-            << "Options:\n"
-            << "   -h, --help                show this help message.\n"
-            << "   -p, --platform <name>     specify the platform.\n"
-            << "   -m, --mapper <name>       specify the mapper (BF, LR). "
-               "Defaults to BF.\n"
-            << "   -o, --obj <objective>     specify the objective "
-               "(energy, balanced, performance). \n"
-            << "                             Defaults to \"balanced\".\n"
-            << "   -t, --trace <trace_file>  path to export the trace "
-               "(defaults to \"trace.json\""
-            << "   -s, --storage <dir>       path to the operating point table "
-               "storage.\n"
-            << "                             By default, it does not save and "
-               "load tables."
-            << "\n";
+  std::cout
+      << "usage: tetrisserver [-h] [-p platform] [-o objective] [-t "
+         "trace_file]\n"
+      << "\n"
+      << "Options:\n"
+      << "   -h, --help                show this help message.\n"
+      << "   -p, --platform <name>     specify the platform.\n"
+      << "   -m, --mapper <name>       specify the mapper (BF, LR). "
+         "Defaults to LR.\n"
+      << "   -o, --obj <objective>     specify the objective "
+         "(energy, balanced, performance). \n"
+      << "                             Defaults to \"balanced\".\n"
+      << "   -t, --trace <trace_file>  path to export the trace "
+         "(defaults to \"trace.json\"\n"
+      << "   -s, --storage <dir>       path to the operating point table "
+         "storage.\n"
+      << "                             By default, it does not save and "
+         "load tables.\n"
+      << "   --no-measure              disable perf and energy measurements.\n"
+      << "\n";
 }
 
 /**
@@ -171,6 +173,7 @@ struct Config {
   std::string objective_name;
   std::string trace_filename;
   std::string storage_path;
+  bool enable_measurement;
 };
 
 void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
@@ -307,6 +310,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
 int main(int argc, char *argv[]) {
   /* Parsing command line arguments. */
   Config config;
+  config.enable_measurement = true;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg{argv[i]};
@@ -378,6 +382,9 @@ int main(int argc, char *argv[]) {
 
       i++;
       config.storage_path = argv[i];
+    } else if (arg == "--no-measure") {
+      i++;
+      config.enable_measurement = false;
     } else {
       std::cerr << "Unexpected command line option: " << arg << ".\n";
       usage();
@@ -391,19 +398,23 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  /* We need to run as root or have a proper perf_event_paranoid set to get the
-   * power and performance traces of the other applications */
-  if (getuid() != 0 && geteuid() != 0) {
-    std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
-    int value;
-    perf_paranoa >> value;
-    if (value != -1) {
-      std::cerr << "You need to run this program as root or change /proc/sys/kernel/perf_event_paranoid to -1!" << std::endl;
+  if (config.enable_measurement) {
+    /* We need to run as root or have a proper perf_event_paranoid set to get
+     * the power and performance traces of the other applications */
+    if (getuid() != 0 && geteuid() != 0) {
+      std::ifstream perf_paranoa("/proc/sys/kernel/perf_event_paranoid");
+      int value;
+      perf_paranoa >> value;
+      if (value != -1) {
+        std::cerr << "You need to run this program as root or change "
+                     "/proc/sys/kernel/perf_event_paranoid to -1!"
+                  << std::endl;
+      }
     }
   }
 
   if (config.mapper_name.empty()) {
-    config.mapper_name = "BF";
+    config.mapper_name = "LR";
   }
 
   if (config.objective_name.empty()) {
@@ -430,7 +441,8 @@ int main(int argc, char *argv[]) {
   logger = debug::Logger::get();
 
   /* Setting up the manager */
-  Manager manager{std::move(platform), std::move(mapper), config.storage_path};
+  Manager manager{std::move(platform), std::move(mapper),
+                  config.enable_measurement, config.storage_path};
   manager.UpdateOperatingPointEvaluator(std::move(evaluator));
 
   // Setting up the server and control sockets
@@ -457,8 +469,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (!setup_perf_timer()) {
-    return 1;
+  if (config.enable_measurement) {
+    if (!setup_perf_timer()) {
+      return 1;
+    }
   }
 
   /* The event loop */

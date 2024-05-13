@@ -48,8 +48,7 @@ public:
    */
   OperatingPointTable(const Platform &platform,
                       std::shared_ptr<OperatingPointEvaluator> evaluator,
-                      OperatingPointTableStage stage, bool measurement,
-                      bool approximation);
+                      OperatingPointTableStage stage, bool measurement);
 
   virtual ~OperatingPointTable() = default;
 
@@ -222,8 +221,7 @@ public:
       std::shared_ptr<OperatingPointEvaluator> evaluator = nullptr,
       bool measurement = false)
       : OperatingPointTable(platform, std::move(evaluator),
-                            OperatingPointTableStage::kStatic, measurement,
-                            false) {}
+                            OperatingPointTableStage::kStatic, measurement) {}
 
   std::vector<OperatingPoint> GetOperatingPoints() override {
     std::vector<OperatingPoint> res;

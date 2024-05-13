@@ -46,8 +46,9 @@ void Client::HandleRegistrationRequest(const tetris::RegistrationRequest &req) {
   const auto &mapping_type = req.mapping_type();
   if (mapping_type == RegistrationRequest::COARSE_GRAINED) {
     mapping_coarse_grained = true;
-    op_table =
-        std::make_unique<ThreadSetOperatingPointTable>(_manager.GetPlatform());
+    bool measurement = _manager.EnabledMeasurement();
+    op_table = std::make_unique<ThreadSetOperatingPointTable>(
+        _manager.GetPlatform(), nullptr, measurement);
   } else if (mapping_type == RegistrationRequest::FINE_GRAINED) {
     mapping_coarse_grained = false;
     op_table =

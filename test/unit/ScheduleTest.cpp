@@ -87,7 +87,7 @@ protected:
 
   virtual void SetUp() {
     SmallOdroidTest::SetUp();
-    manager = std::make_unique<Manager>(std::move(platform), nullptr);
+    manager = std::make_unique<Manager>(std::move(platform), nullptr, false);
     // Adding a sample client for use in tests
     auto [client, ops] = GetClientOP0();
     clients.push_back(client);

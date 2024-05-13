@@ -48,7 +48,8 @@ private:
 
   std::filesystem::path _optable_storage;
 
-  tetris::perf::PerfManager _perf_manager;
+  bool _enable_measurement;
+  std::unique_ptr<tetris::perf::PerfManager> _perf_manager;
   std::unique_ptr<tetris::Measure> _energy_measure;
   std::vector<EnergyData> _energy_data;
 
@@ -65,12 +66,13 @@ private:
 public:
   explicit Manager(std::unique_ptr<tetris::Platform> platform,
                    std::unique_ptr<tetris::BaseClientMapper> mapper,
-                   std::string storage_path = "")
+                   bool enable_measurement, std::string storage_path = "")
       : _platform{std::move(platform)}, _mapper{std::move(mapper)}, _clients{},
         _run_mapper_flag{false},
         _tracelog{std::make_unique<tetris::TraceLogger>(
             std::chrono::high_resolution_clock::now())},
-        _optable_storage{storage_path}, _perf_manager{} {
+        _optable_storage{storage_path}, _enable_measurement{enable_measurement},
+        _perf_manager{} {
     _tracelog->RegisterPlatform(*_platform);
 
     // Check if the directory already exists
@@ -86,12 +88,17 @@ public:
       }
     }
 
-    _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
+    if (enable_measurement) {
+      _perf_manager = std::make_unique<tetris::perf::PerfManager>();
+      _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
+    }
   }
 
   const tetris::Platform &GetPlatform() const { return *_platform; }
 
   tetris::TraceLogger &GetTraceLogger() const { return *_tracelog; }
+
+  bool EnabledMeasurement() const { return _enable_measurement; }
 
   void UpdateOperatingPointEvaluator(
       std::shared_ptr<tetris::OperatingPointEvaluator> evaluator) {

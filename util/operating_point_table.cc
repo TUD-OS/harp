@@ -32,7 +32,7 @@ std::ostream &operator<<(std::ostream &os, OperatingPointTableStage stage) {
 OperatingPointTable::OperatingPointTable(
     const Platform &platform,
     std::shared_ptr<OperatingPointEvaluator> evaluator,
-    OperatingPointTableStage stage, bool measurement, bool approximation)
+    OperatingPointTableStage stage, bool measurement)
     : _platform(platform), _stage(stage),
       _measurement(measurement), _pareto_filter{nullptr} {
   SetOperatingPointEvaluator(std::move(evaluator));
@@ -108,8 +108,7 @@ ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
     std::shared_ptr<OperatingPointEvaluator> evaluator, bool measurement,
     bool approximation, double ema_alpha)
     : OperatingPointTable(platform, std::move(evaluator),
-                          OperatingPointTableStage::kInitial, measurement,
-                          approximation),
+                          OperatingPointTableStage::kInitial, measurement),
       _ema_alpha(ema_alpha), _update_approximated(true) {
 
   // Initialize core thread levels
@@ -148,12 +147,19 @@ ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
 std::vector<OperatingPoint> ThreadSetOperatingPointTable::GetOperatingPoints() {
   std::vector<OperatingPoint> res;
 
-  GenerateApproximatedOperatingPoints();
+  if (EnabledMeasurement()) {
+    GenerateApproximatedOperatingPoints();
 
-  for (const auto &config : _all_configurations) {
-    const auto &metrics = GetOperatingPointMetrics(config);
-    auto op = ConstructOperatingPoint(config, metrics);
-    res.push_back(op);
+    for (const auto &config : _all_configurations) {
+      const auto &metrics = GetOperatingPointMetrics(config);
+      auto op = ConstructOperatingPoint(config, metrics);
+      res.push_back(op);
+    }
+  } else {
+    for (const auto &[config, metrics] : _ops) {
+      auto op = ConstructOperatingPoint(config, metrics);
+      res.push_back(op);
+    }
   }
 
   return res;
@@ -478,6 +484,10 @@ void ThreadSetOperatingPointTable::GenerateAllConfigurationsLevel(
 }
 
 void ThreadSetOperatingPointTable::EvaluateStage() {
+  if (!EnabledMeasurement()) {
+    _stage = OperatingPointTableStage::kMature;
+    return;
+  }
   int num_measured = _ops.size();
   int num_reliable = 0;
 

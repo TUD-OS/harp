@@ -50,7 +50,7 @@ protected:
 
   virtual void SetUp() {
     RaptorLakeTest::SetUp();
-    manager = std::make_unique<Manager>(std::move(platform), nullptr);
+    manager = std::make_unique<Manager>(std::move(platform), nullptr, false);
     ReadOperatingPoints();
   }
 

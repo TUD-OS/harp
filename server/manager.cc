@@ -77,9 +77,11 @@ bool Manager::client_message(int fd) try {
           }
         }
 
-        /* Get the perf handle for this client */
-        if (auto handle = _perf_manager.open(c->pid)) {
-          c->enable_perf(std::move(handle.value()));
+        if (_enable_measurement) {
+          /* Get the perf handle for this client */
+          if (auto handle = _perf_manager->open(c->pid)) {
+            c->enable_perf(std::move(handle.value()));
+          }
         }
 
         /* Construct and send the server's registration response */
