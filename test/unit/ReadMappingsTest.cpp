@@ -50,14 +50,14 @@ TEST(MappingReaderTest, ReadMappingDirectoryRaptorTest) {
   auto app_mappings = mapping_reader.read_mapping_directory(test_directory);
 
   // Check the number of applications for which mappings have been read
-  EXPECT_EQ(app_mappings.size(), 10);
+  EXPECT_EQ(app_mappings.size(), 17);
 
   // Check the number of mappings read for the OpenMP applications
   EXPECT_EQ(app_mappings.count("ep.C"), 1);
-  EXPECT_EQ(app_mappings["ep.C"].size(), 93);
+  EXPECT_EQ(app_mappings["ep.C"].size(), 284);
 
   EXPECT_EQ(app_mappings.count("mg.C"), 1);
-  EXPECT_EQ(app_mappings["mg.C"].size(), 50);
+  EXPECT_EQ(app_mappings["mg.C"].size(), 41);
 
   EXPECT_EQ(app_mappings.count("sp.B"), 1);
   EXPECT_EQ(app_mappings["sp.B"].size(), 164);
