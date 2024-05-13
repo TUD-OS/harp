@@ -14,7 +14,7 @@ class YamlMappingReader:
             app_name = data["application"]
             metadata_order = data.get("mapping_template", {}).get("metadata", [])
 
-            if "mappings" in data:
+            if "mappings" in data and data["mappings"] is not None:
                 for mapping_data in data["mappings"]:
                     name = mapping_data["name"]
                     threads = mapping_data["cores"]
