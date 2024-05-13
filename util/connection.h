@@ -148,17 +148,25 @@ class Connection : public Lockable<Connection>
             throw std::runtime_error{"Connection not initialized."};
         }
 
-        ssize_t size = ::read(_fd, &data, sizeof(data));
-        if (size == -1) {
-            if (errno == EAGAIN && !_blocking)
-                return InState::DONE;
+        char *d = static_cast<char*>(malloc(sizeof(data)));
+        ssize_t read_d = 0;
 
-            throw std::runtime_error{"Read failed."};
-        } else if (size == 0) {
-            return InState::CLOSED;
-        } else if (size != sizeof(data)) {
-            throw std::runtime_error{"Failed to read complete data!"};
-        }
+        do {
+            ssize_t size = ::read(_fd, d+read_d, sizeof(data)-read_d);
+            if (size == -1) {
+                if (errno == EAGAIN && !_blocking)
+                    return InState::DONE;
+
+                throw std::runtime_error{"Read failed."};
+            } else if (size == 0) {
+                return InState::CLOSED;
+            }
+
+            read_d += size;
+        } while (read_d < sizeof(data));
+
+        memcpy(&data, d, sizeof(data));
+        free(d);
 
         return _blocking ? InState::DONE : InState::MORE;
     }
@@ -172,19 +180,22 @@ class Connection : public Lockable<Connection>
         InState read_state = read(vector_size);
         if (!_blocking && (read_state != InState::MORE))
             return read_state;
-        // Resize the vector.
-        data.resize(vector_size);
+
         // Read the vector through the socket.
-        ssize_t size = ::read(_fd, data.data(), data.size());
-        if (size == -1) {
-            if (errno == EAGAIN && !_blocking)
-                return InState::DONE;
-            throw std::runtime_error{"Read failed."};
-        } else if (size == 0) {
-            return InState::CLOSED;
-        } else if (size != data.size()) {
-            throw std::runtime_error{"Failed to read complete data!"};
-        }
+        data.resize(vector_size);
+        ssize_t read_d = 0;
+        do {
+            ssize_t size = ::read(_fd, data.data()+read_d, data.size()-read_d);
+            if (size == -1) {
+                if (errno == EAGAIN && !_blocking)
+                    return InState::DONE;
+                throw std::runtime_error{"Read failed."};
+            } else if (size == 0) {
+                return InState::CLOSED;
+            }
+
+            read_d += size;
+        } while (read_d < data.size());
 
         return _blocking ? InState::DONE : InState::MORE;
     }
