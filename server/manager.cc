@@ -337,7 +337,18 @@ void Manager::update_energy_data() {
 
   double time_coefficient_sum = 0.0;
   for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
-      time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
+      bool smt_core = false;
+
+      if (energy.ctimes.cores[i] != 0) {
+        for (auto &t : _platform->FindCPUThread(i)->GetSiblings()) {
+          if (energy.ctimes.cores[t->GetID()] != 0)
+            smt_core = true;
+        }
+      }
+      if (smt_core)
+        time_coefficient_sum += energy.ctimes.cores[i] * static_cast<double>(_platform->FindCPUThread(i)->GetPowerCoefficient())/2;
+      else
+        time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
   }
   for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
       energy.energy.cores.push_back((energy.energy.all * energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient()) / time_coefficient_sum);
