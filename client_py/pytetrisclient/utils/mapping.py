@@ -9,14 +9,14 @@ class Mapping:
         self.cpu_ids = thread_affinities.copy()
 
     def copy(self):
-        return Mapping(self.name, self.cpu_ids, characteristics)
+        return Mapping(self.name, self.cpu_ids, self.characteristics)
 
     def convert(self, conv_map):
         cpu_ids = self.cpu_ids.copy()
         for i in range(len(cpu_ids)):
             if cpu_ids[i] in conv_map:
                 cpu_ids[i] = conv_map[cpu_ids[i]]
-        return Mapping(self.name, cpu_ids, characteristics)
+        return Mapping(self.name, cpu_ids, self.characteristics)
 
     def __str__(self) -> str:
         return (
