@@ -106,6 +106,33 @@ class Client {
         return result;
     }
 
+    std::map<int, bool> get_running()
+    {
+        /* Return for each thread the ipc-class as determined by Intel TD hardware component */
+        std::map<int, bool> result;
+
+        std::stringstream path;
+        path << "/proc/" << _pid << "/task/";
+
+        for (const auto & entry : std::filesystem::directory_iterator(path.str())) {
+            std::fstream stat_file(entry.path() / "stat");
+            auto tid = std::stod(entry.path().filename().string());
+
+            if (stat_file.is_open()) {
+                std::string stat_line;
+                std::getline(stat_file, stat_line);
+                stat_file.close();
+
+                auto elements = string_util::split(stat_line, ' ');
+                result[tid] = elements[2] == "R";
+            } else {
+                result[tid] = false;
+            }
+        }
+
+        return result;
+    }
+
     std::map<int, int> get_cores()
     {
         /* Return for each thread the current core that it is running on */
@@ -140,7 +167,7 @@ double calc_global_ipc(const std::map<int, std::vector<int>> &cpu_tid_assignment
         const std::map<int, std::map<int, unsigned long>> &tid_ipc_per_core,
         int target_tid, int target_cpu)
 {
-    double sum = 1;
+    double sum = 0;
     unsigned long cnt = 0;
 
     for (auto &[cpu, tids] : cpu_tid_assignment) {
@@ -162,15 +189,17 @@ double calc_global_ipc(const std::map<int, std::vector<int>> &cpu_tid_assignment
         }
     }
 
-    return std::pow(sum, 1/static_cast<double>(cnt));
+    return sum;
 }
 
 class Manager {
    private:
     using IPCInfo = std::map<int, unsigned long>;
+    using TDScores = std::map<int, int>;
 
     std::map<int, ClientPtr> _clients;
     std::map<int, IPCInfo> _cpu_ipc_scores;
+    std::map<int, TDScores> _client_tdscores;
 
     bool _needs_reschedule;
 
@@ -183,12 +212,15 @@ class Manager {
                 std::string line;
                 std::getline(ipc_scores, line);
 
+                if (line.size() == 0)
+                    break;
+
                 auto elements = string_util::split(line, " ");
                 auto cpu = elements[0];
                 IPCInfo cpu_scores;
                 for (int i = 1; i < elements.size(); ++i) {
                     auto score = elements[i];
-                    cpu_scores[i] = std::stoul(score);
+                    cpu_scores[i-1] = std::stoul(score);
                 }
                 _cpu_ipc_scores[std::stod(cpu.substr(3))] = cpu_scores;
             }
@@ -252,7 +284,8 @@ class Manager {
                     if (protobuf_util::Send(cl->_connection->locked(), response) != Connection::OutState::DONE)
                         logger->error("Failed to acknowledge the new-thread message\n");
 
-                    needs_reschedule();
+                    _client_tdscores[fd] = cl->get_td_scores();
+                  //  needs_reschedule();
                 }
             } else {
                   /* The client is fully registered, however, we ignore messages */
@@ -286,10 +319,61 @@ class Manager {
             logger->debug("Unknown client disconnected\n");
         } else {
             logger->debug("Client %s [%d] disconnected\n", c->second->exec().c_str(), c->second->pid());
-            _clients.erase(c);
+            _client_tdscores.erase(fd);
+            _clients.erase(fd);
         }
 
         needs_reschedule();
+    }
+
+    void check_td_scores()
+    {
+        std::map<int, TDScores> new_tdscores;
+        bool reschedule_needed = false;
+
+        for (auto &[cid, c] : _clients) {
+            if (c->pid() == -1)
+                continue;
+
+            new_tdscores[cid] = c->get_td_scores();
+        }
+
+        if (new_tdscores.size() != _client_tdscores.size()) {
+            reschedule_needed = true;
+        } else {
+            for (auto &[cid, oldscores] : _client_tdscores) {
+                if (reschedule_needed)
+                    break;
+
+                if (!new_tdscores.contains(cid)) {
+                    reschedule_needed = true;
+                    break;
+                }
+
+                auto newscores = new_tdscores[cid];
+                if (newscores.size() != oldscores.size()) {
+                    reschedule_needed = true;
+                    break;
+                }
+
+                for (auto &[tid, score] : oldscores) {
+                    if (!newscores.contains(tid)) {
+                        reschedule_needed = true;
+                        break;
+                    }
+
+                    if (score != newscores[tid]) {
+                        reschedule_needed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        _client_tdscores = new_tdscores;
+
+        if (reschedule_needed)
+            needs_reschedule();
     }
 
     void reschedule()
@@ -299,9 +383,21 @@ class Manager {
 
         /* 1) Get from all clients the tid -> ipcc information */
         std::map<int, int> ipcc_all;
-        for (auto &[_, c] : _clients) {
-            auto client_ipcc = c->get_td_scores();
+        for (auto &[_, client_ipcc] : _client_tdscores) {
             ipcc_all.insert(client_ipcc.begin(), client_ipcc.end());
+        }
+
+        /* Remove all threads from this list that are not running */
+        for (auto &[_, c] : _clients) {
+            if (c->pid() == -1)
+                continue;
+
+            for (auto &[tid, running] : c->get_running()) {
+                if (!running) {
+                    logger->debug("Ignoring sleeping thread %d\n", tid);
+                    ipcc_all.erase(tid);
+                }
+            }
         }
 
         /* 2) Save for each tid the ipc per core , also calculate the SF (speedup factor) for each tid*/
@@ -593,13 +689,12 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
             break;
           }
 
-          logger->info("Received a signal (%i)\n", siginfo.ssi_signo);
-
           switch (siginfo.ssi_signo) {
           case SIGALRM:
-            manager.needs_reschedule();
+            manager.check_td_scores();
             break;
           default:
+            logger->info("Received a signal (%i)\n", siginfo.ssi_signo);
             done = 1;
           }
         }
