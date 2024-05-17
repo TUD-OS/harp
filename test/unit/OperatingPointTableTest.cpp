@@ -123,7 +123,7 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
 
   EXPECT_EQ(flag, (1 << 4) - 1);
 
-  auto ops_pareto = op_table.GetParetoFront();
+  auto ops_pareto = op_table.GetParetoFront(false);
   EXPECT_EQ(ops_pareto.size(), 2);
 
   // Check updating operating point table
@@ -131,7 +131,7 @@ TEST_F(RaptorLakeOperatingPointTableTest, OperatingPointTable) {
   op_table.AddOperatingPointMeasurement(CreateConfiguration({2, 3}),
                                         OperatingPoint::Metrics{4481, 26.2});
 
-  ops_pareto = op_table.GetParetoFront();
+  ops_pareto = op_table.GetParetoFront(false);
   EXPECT_EQ(ops_pareto.size(), 115);
 
   // P-HT=5 P-ST=1 E=2
