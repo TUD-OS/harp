@@ -8,23 +8,23 @@ mappings:
 - cores:
   - E00
   metadata:
-  - 16916.154242742607
   - 9168395906.459438
+  - 16916.154242742607
   - 1
   name: mapping0
 - cores:
   - P0_0
   metadata:
-  - 20661.31485434357
   - 10083784272.344406
+  - 20661.31485434357
   - 1
   name: mapping1
 - cores:
   - P0_0
   - P0_1
   metadata:
-  - 23286.21160611141
   - 11450821374.566296
+  - 23286.21160611141
   - 2
   name: mapping2
 platform: raptor-lake-8P16E
