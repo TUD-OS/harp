@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-fractal-pareto.csv
+application: fractal
 mapping_template:
   metadata:
   - utility

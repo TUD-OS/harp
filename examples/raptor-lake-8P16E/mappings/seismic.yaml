@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-seismic-pareto.csv
+application: seismic
 mapping_template:
   metadata:
   - utility

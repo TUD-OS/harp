@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-bt.C-pareto.csv
+application: bt.C
 mapping_template:
   metadata:
   - utility

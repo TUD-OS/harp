@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-mg.C-pareto.csv
+application: mg.C
 mapping_template:
   metadata:
   - utility

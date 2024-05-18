@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-primes-pareto.csv
+application: primes
 mapping_template:
   metadata:
   - utility

@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-binpack2-pareto.csv
+application: binpack2
 mapping_template:
   metadata:
   - utility

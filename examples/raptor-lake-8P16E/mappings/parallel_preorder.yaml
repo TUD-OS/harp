@@ -1,4 +1,4 @@
-application: raptor-lake-new2/results-parallel_preorder-pareto.csv
+application: parallel_preorder
 mapping_template:
   metadata:
   - utility
