@@ -386,16 +386,21 @@ class Manager {
         for (auto &[_, client_ipcc] : _client_tdscores) {
             ipcc_all.insert(client_ipcc.begin(), client_ipcc.end());
         }
-
-        /* Remove all threads from this list that are not running */
+        /* 1b) Get from all clients the tid -> core information and remove threads that are sleeping */
+        std::map<int, int> cores_all;
         for (auto &[_, c] : _clients) {
             if (c->pid() == -1)
                 continue;
+
+            for (auto &[tid, core] : c->get_cores()) {
+                cores_all[tid] = core;
+            }
 
             for (auto &[tid, running] : c->get_running()) {
                 if (!running) {
                     logger->debug("Ignoring sleeping thread %d\n", tid);
                     ipcc_all.erase(tid);
+                    cores_all.erase(tid);
                 }
             }
         }
@@ -442,8 +447,10 @@ class Manager {
             std::sort(cores.begin(), cores.end(), 
                     [&](int core1, int core2) -> bool { return tid_ipc_per_core[tid][core1] > tid_ipc_per_core[tid][core2]; });
 
-            int best_core = cores.front();
-            double best_score = 0;
+            /* Start with the currently used core to minimize thread movement */
+            int best_core = cores_all[tid];
+            double best_score = calc_global_ipc(cpu_tid_assignment, tid_ipc_per_core, tid, best_core);
+
             for (auto core : cores) {
                 auto cur_score = calc_global_ipc(cpu_tid_assignment, tid_ipc_per_core, tid, core);
 
@@ -453,7 +460,11 @@ class Manager {
                 }
             }
 
-            logger->debug("Assigning %d to %d (Score: %lf)\n", tid, best_core, best_score);
+            if (best_core == cores_all[tid])
+                logger->debug("Leaving %d at %d (Score: %lf)\n", tid, best_core, best_score);
+            else
+                logger->debug("Moving %d to %d (Score: %lf)\n", tid, best_core, best_score);
+
             cpu_tid_assignment[best_core].push_back(tid);
         }
 

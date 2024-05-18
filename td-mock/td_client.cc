@@ -20,6 +20,7 @@ class TDClient : public Client {
         memset(exec, 0, sizeof(exec));
         readlink("/proc/self/exe", exec, sizeof(exec));
         request.set_exec(exec);
+        request.set_mapping_type(RegistrationRequest::COARSE_GRAINED);
 
         // Send the command.
         try {
