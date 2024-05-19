@@ -74,8 +74,12 @@ bool Client::receive_ops(const ClientMessage::OperatingPointsInfo &ops_info) {
     op_table->AddOperatingPoint(cur);
   }
 
-  LOGGER->info(" -> Received %d operating points from client %d\n", op_size,
-               pid);
+  auto stage = op_table->Stage();
+  std::stringstream ss;
+  ss << stage;
+  auto stage_str = ss.str();
+  LOGGER->info(" -> Received %d operating points from client %d (Stage %s)\n", op_size,
+               pid, stage_str.c_str());
   _manager.MarkMapperForRun();
 
   return true;

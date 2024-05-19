@@ -60,10 +60,6 @@ bool Manager::client_message(int fd) try {
       } else {
         c->HandleRegistrationRequest(request);
 
-        LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(),
-                     c->pid);
-        _tracelog->RegisterClient(c.get());
-
         // Check whether there is a previously store operating point table
         if (!_optable_storage.empty()) {
           std::string name = c->exec;
@@ -76,6 +72,14 @@ bool Manager::client_message(int fd) try {
             c->op_table->LoadFromFile(full_path);
           }
         }
+
+        auto stage = c->op_table->Stage();
+        std::stringstream ss;
+        ss << stage;
+        auto stage_str = ss.str();
+        LOGGER->info(" -> The client registered! '%s' [%d] (Stage %s)\n", c->exec.c_str(),
+                     c->pid, stage_str.c_str());
+        _tracelog->RegisterClient(c.get());
 
         if (_enable_measurement) {
           /* Get the perf handle for this client */
