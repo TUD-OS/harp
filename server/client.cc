@@ -311,7 +311,9 @@ void Client::activate_op(const OperatingPointAllocation &new_op) {
   const auto optable_params =
       _manager.GetPlatform().GetOperatingPointTableParams();
 
-  drop_measurements = optable_params.at("drop_measurements");
+  if (_manager.EnabledMeasurement()) {
+    drop_measurements = optable_params.at("drop_measurements");
+  }
 
   auto op_cores = _manager.GetPlatform().ToCPUCoreSet(new_op.threads());
   LOGGER->info("Change mapping for client '%s' [%i] to %s (threads: %s) "
