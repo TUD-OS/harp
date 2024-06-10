@@ -75,6 +75,7 @@ install(FILES
   ${CMAKE_SOURCE_DIR}/util/lock_util.h
   ${CMAKE_SOURCE_DIR}/util/mapping.h
   ${CMAKE_SOURCE_DIR}/util/path_util.h
+  ${CMAKE_SOURCE_DIR}/util/string_util.h
   ${CMAKE_SOURCE_DIR}/util/socket.h
   ${CMAKE_SOURCE_DIR}/util/tetris.h
   ${CMAKE_SOURCE_DIR}/util/util.h
