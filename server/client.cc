@@ -16,10 +16,12 @@
 
 using namespace tetris;
 
+const constexpr int UTILITY_FEATURE_ID = 1;
+
 Client::Client(const ConnectionPtr &conn, Manager &manager)
     : connection{conn}, exec{}, pid{-1}, mapping_coarse_grained{false},
       op_table{}, active_op{}, type{Type::PASSIV}, perf_handle{}, perf_data{},
-      new_measurements{0}, _manager{manager} {}
+      new_measurements{0}, _manager{manager}, _has_client_utility{false} {}
 
 Client::~Client() {
   if (pid != -1)
@@ -122,6 +124,43 @@ void Client::update_perf_data(
   perf_data.push_back(cur);
 }
 
+bool Client::has_client_utility() const
+{
+    return _has_client_utility;
+}
+
+void Client::update_client_utility(std::chrono::high_resolution_clock::time_point tp)
+{
+  /* Request an utility measurement from the client */
+  ServerMessage msg{};
+
+  msg.set_feature_id(UTILITY_FEATURE_ID);
+
+  msg.set_type(ServerMessage::UTILITY_UPDATE);
+  LOGGER->info(" -> Requesting utility update from client\n");
+
+  try {
+    Connection conn{push_path()};
+    ClientResponse response;
+
+    protobuf_util::Send(conn.locked(), msg);
+    protobuf_util::Receive(conn.locked(), response);
+
+    if (response.type() == ClientResponse::UTILITY_RETRY) {
+      LOGGER->info(" -> No update on the client's utility available - Retrying later\n");
+    } else if (response.type() != ClientResponse::UTILITY_UPDATE) {
+      LOGGER->warning(" -! Client didn't respond accordingly the message!\n");
+    } else {
+      if (!response.has_utility())
+          LOGGER->warning(" -! Client didn't include utility measure!\n");
+      else
+        _client_utility.push_back(response.utility());
+    }
+  } catch (std::exception &e) {
+    LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
+  }
+}
+
 void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
   ProcessEnergyData proc_energy;
   proc_energy.time = sw_energy.time;
@@ -222,6 +261,7 @@ std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics() {
   if (energy_data.size() < 2 || perf_data.size() < 2)
     return std::nullopt;
 
+  /* TODO: set the proper feature ID */
   tetris::OperatingPoint::Metrics res;
 
   /* Calculate power in mW */
@@ -229,8 +269,12 @@ std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics() {
   res.power = energy_measurement.energy.all / std::chrono::duration<double, std::milli>(energy_measurement.update_interval).count();
 
   /* Calculate utility in instructions per second (IPS) */
-  auto perf_measurement = perf_data.back();
-  res.utility = perf_measurement.diff["Instructions"] / std::chrono::duration<double>(perf_measurement.update_interval).count();
+  if (!_has_client_utility) {
+    auto perf_measurement = perf_data.back();
+    res.utility = perf_measurement.diff["Instructions"] / std::chrono::duration<double>(perf_measurement.update_interval).count();
+  } else {
+    res.utility = _client_utility.back();
+  }
 
   return res;
 }
@@ -401,7 +445,13 @@ ServerResponse Client::handle_message(const ClientMessage &msg) {
   case ClientMessage::OPTIMIZATION_TARGET:
     break;
   case ClientMessage::FEATURE_SUBSCRIBE:
-    break;
+    if (msg.has_feature_info() && msg.feature_info().type() == ClientMessage::FeatureInfo::UTILITY_MEASURE) {
+      _has_client_utility = true;
+
+      response.set_type(ServerResponse::FEATURE_ACKNOWLEDGE);
+      auto ack_info = response.mutable_feature_ack_info();
+      ack_info->set_id(UTILITY_FEATURE_ID);
+    }
   }
 
   return response;

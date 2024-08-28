@@ -22,7 +22,7 @@ message ClientMessage {
     enum Type {                     // The message types
         OPERATING_POINTS = 1;       // Register all operation points for the client
         OPTIMIZATION_TARGET = 2;    // Change optimization target for the client
-        FEATURE_SUBSCRIBE = 3;      // Register as an application feature with the server
+        FEATURE_SUBSCRIBE = 3;      // Register an application feature with the server
     }
     required Type type = 1;
 
@@ -41,9 +41,7 @@ message ClientMessage {
 
     message FeatureInfo {           // Additional data for the FEATURE_SUBSCRIBE message
         enum FeatureType {          // The type of the feature that we want to register
-            MOVABLE_THREADS = 1;    // The application supports moving individual threads around
-            SCALE_APPLICATION = 2;  // The application can dynamically scale its number of threads at runtime
-            APPLICATION_PROGRESS = 3;   // The application will report its own progress to the TETRiS server
+            UTILITY_MEASURE = 1;    // The application will provide its own utility measurement
         }
         required FeatureType type =1;
     }
@@ -69,13 +67,14 @@ message ServerResponse {
 message ServerMessage {
     required uint32 feature_id = 1; // The ID of the feature which should handle this message
 
-    enum Type {                       // The message types
-        ACTIVATE_CUSTOM_OP = 1;       // Inform the client about the activated operation point (for fine-grained mapping types)
-        ACTIVATE_CPUS = 2;            // Inform the client about the active CPUS (for coarse-grained mapping types)
+    enum Type {                     // The message types
+        ACTIVATE_CUSTOM_OP = 1;     // Inform the client about the activated operation point (for fine-grained mapping types)
+        ACTIVATE_CPUS = 2;          // Inform the client about the active CPUS (for coarse-grained mapping types)
+        UTILITY_UPDATE = 3;         // Get latest utility measurements from the client when feature UTILITY_MEASURE is active
     }
     required Type type = 2;
 
-    message OperatingPointAllocation {    // The information of the activated operation point
+    message OperatingPointAllocation {          // The information of the activated operation point
         required string identifier = 1;         // The name of the operation point/mapping that should be activated
 
         message CPUConversion {                 // The conversion map that should be used when activating the mapping
@@ -86,8 +85,8 @@ message ServerMessage {
     }
     optional OperatingPointAllocation activated_op_info = 3;
 
-    message CPUAllocation {                  // The information of the activate operating point
-        repeated uint32 cpu_ids = 1;         // The list of CPU affinities to activate
+    message CPUAllocation {                     // The information of the activate operating point
+        repeated uint32 cpu_ids = 1;            // The list of CPU affinities to activate
     }
     optional CPUAllocation activated_cpus = 4;
 }
@@ -120,6 +119,10 @@ message ClientResponse {
     enum Type {
         ERROR = 1;                  // Generic error when processing the message
         ACKNOWLEDGE = 2;            // Generic acknowledge of messages
+        UTILITY_UPDATE = 3;         // Respond to the server with the latest utility measure
+        UTILITY_RETRY = 4;          // Respond to the server, that no utility measurements are available
     }
     required Type type = 1;
+
+    optional double utility = 2;
 }

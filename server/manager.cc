@@ -19,14 +19,7 @@ using ClientPtr = std::unique_ptr<Client>;
 /**
  * \brief Handles the incoming message from a client.
  *
- * This function processes incoming messages from a client. Based on the type of
- * the message, the following actions are performed:
- *   - TETRIS_NEW_CLIENT: Registering a new client.
- *   - TETRIS_NEW_THREAD: Registering a new thread for an existing client.
- *   - DPM_SUBSCRIBE: Subscribing a client to Dynamic Process Mananger (DPM).
- *   - DPM_SEND_APPLICATION_THREAD_ID: Registering application thread IDs from a
- * client. In all cases, a message is sent back to the client to acknowledge the
- * received request.
+ * This function processes incoming messages from a client.
  *
  * If any error occurs during the processing of the message, the function will
  * log an error message and close the connection to the client.
@@ -257,6 +250,9 @@ void Manager::update_perf_data() {
 
   for (auto &[cid, c] : _clients) {
     c->update_perf_data(now);
+
+    if (c->has_client_utility())
+        c->update_client_utility(now);
   }
 }
 
