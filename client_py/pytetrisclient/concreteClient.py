@@ -82,14 +82,27 @@ class ConcreteClient(Client):
         return f"/tmp/tetris_push_listener_{os.getpid()}"
 
     def bind(self, feature):
-        # to implement if needed
-        # but not in use atm.
-        raise NotImplementedError("Implement method if needed!")
+        if not self._managed:
+            return
+
+        feature.accept(self)
+
+        try:
+            if feature.need_handshake():
+                fid = feature.handshake()
+
+                self._push_message_listener.add_subscriber(fid, feature)
+        except RuntimeError as e:
+            self._logger.warning("Feature handshake failed: {}\n".format(e))
 
     def send(self, msg: ClientMessage) -> ServerResponse:
-        # to implement if needed
-        # but not in use atm.
-        raise NotImplementedError("Implement method if needed!")
+        protobufUtil.send(self._tetris_server_connection, msg)
+
+        response = ServerResponse()
+        protobufUtil.receive(self._tetris_server_connection, response)
+
+        return response
+
 
     def bind_mapping_feature(self, feature: MappingFeature):
         if not self._managed:
