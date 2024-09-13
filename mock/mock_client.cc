@@ -47,9 +47,10 @@ MockClient::~MockClient() {
         auto [f_time, f_energy, f_perf] = _energy_perf_measurments.front();
         auto [b_time, b_energy, b_perf] = _energy_perf_measurments.back();
 
-        _logger->info("time;energy;ips\n%lu;%llu;%lf\n",
+        _logger->info("time;energy;instr;ips\n%lu;%llu;%llu;%lf\n",
                 std::chrono::duration<double, std::milli>(b_time - f_time).count(),
                 b_energy - f_energy, 
+                b_perf["Instructions"] - f_perf["Instructions"],
                 (b_perf["Instructions"] - f_perf["Instructions"]) / std::chrono::duration<double>(b_time - f_time).count());
     }
 }

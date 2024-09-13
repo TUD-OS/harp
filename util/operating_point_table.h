@@ -78,7 +78,7 @@ public:
   void SetOperatingPointEvaluator(
       std::shared_ptr<OperatingPointEvaluator> evaluator);
 
-  std::vector<OperatingPoint> GetParetoFront();
+  std::vector<OperatingPoint> GetParetoFront(bool normalize_utility);
 
   virtual std::optional<OperatingPoint>
   GetOperatingPointToMeasure(const CPUCoreSet &core_set) = 0;
@@ -100,8 +100,9 @@ protected:
   // Manage Pareto-Front Filtering
   std::shared_ptr<OperatingPointEvaluator> _evaluator;
   std::unique_ptr<ParetoFrontFilter<OperatingPoint>> _pareto_filter;
-  std::vector<OperatingPoint> _pareto; // Store the current Pareto front
-  bool _update_pareto;                 // Flag to update
+  std::vector<OperatingPoint> _pareto;      // Store the current Pareto front
+  std::vector<OperatingPoint> _pareto_norm; // Store the current Pareto front
+  bool _update_pareto;                      // Flag to update
 };
 
 /**

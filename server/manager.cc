@@ -19,14 +19,7 @@ using ClientPtr = std::unique_ptr<Client>;
 /**
  * \brief Handles the incoming message from a client.
  *
- * This function processes incoming messages from a client. Based on the type of
- * the message, the following actions are performed:
- *   - TETRIS_NEW_CLIENT: Registering a new client.
- *   - TETRIS_NEW_THREAD: Registering a new thread for an existing client.
- *   - DPM_SUBSCRIBE: Subscribing a client to Dynamic Process Mananger (DPM).
- *   - DPM_SEND_APPLICATION_THREAD_ID: Registering application thread IDs from a
- * client. In all cases, a message is sent back to the client to acknowledge the
- * received request.
+ * This function processes incoming messages from a client.
  *
  * If any error occurs during the processing of the message, the function will
  * log an error message and close the connection to the client.
@@ -60,10 +53,6 @@ bool Manager::client_message(int fd) try {
       } else {
         c->HandleRegistrationRequest(request);
 
-        LOGGER->info(" -> The client registered! '%s' [%d]\n", c->exec.c_str(),
-                     c->pid);
-        _tracelog->RegisterClient(c.get());
-
         // Check whether there is a previously store operating point table
         if (!_optable_storage.empty()) {
           std::string name = c->exec;
@@ -76,6 +65,14 @@ bool Manager::client_message(int fd) try {
             c->op_table->LoadFromFile(full_path);
           }
         }
+
+        auto stage = c->op_table->Stage();
+        std::stringstream ss;
+        ss << stage;
+        auto stage_str = ss.str();
+        LOGGER->info(" -> The client registered! '%s' [%d] (Stage %s)\n", c->exec.c_str(),
+                     c->pid, stage_str.c_str());
+        _tracelog->RegisterClient(c.get());
 
         if (_enable_measurement) {
           /* Get the perf handle for this client */
@@ -253,6 +250,9 @@ void Manager::update_perf_data() {
 
   for (auto &[cid, c] : _clients) {
     c->update_perf_data(now);
+
+    if (c->has_client_utility())
+        c->update_client_utility(now);
   }
 }
 
@@ -337,7 +337,18 @@ void Manager::update_energy_data() {
 
   double time_coefficient_sum = 0.0;
   for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
-      time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
+      bool smt_core = false;
+
+      if (energy.ctimes.cores[i] != 0) {
+        for (auto &t : _platform->FindCPUThread(i)->GetSiblings()) {
+          if (energy.ctimes.cores[t->GetID()] != 0)
+            smt_core = true;
+        }
+      }
+      if (smt_core)
+        time_coefficient_sum += energy.ctimes.cores[i] * static_cast<double>(_platform->FindCPUThread(i)->GetPowerCoefficient())/2;
+      else
+        time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
   }
   for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
       energy.energy.cores.push_back((energy.energy.all * energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient()) / time_coefficient_sum);

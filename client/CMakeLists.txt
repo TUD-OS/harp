@@ -10,7 +10,7 @@ add_library(client_internal OBJECT
         push_message_listener.cc
         features/movable_threads.cc
         features/scalable_application.cc
-        features/application_progress.cc
+        features/utility_measure.cc
         ${PROTO_OUTPUT_SOURCES}
         ${CMAKE_SOURCE_DIR}/util/path_util.cc
         ${CMAKE_SOURCE_DIR}/util/util.cc
@@ -75,6 +75,7 @@ install(FILES
   ${CMAKE_SOURCE_DIR}/util/lock_util.h
   ${CMAKE_SOURCE_DIR}/util/mapping.h
   ${CMAKE_SOURCE_DIR}/util/path_util.h
+  ${CMAKE_SOURCE_DIR}/util/string_util.h
   ${CMAKE_SOURCE_DIR}/util/socket.h
   ${CMAKE_SOURCE_DIR}/util/tetris.h
   ${CMAKE_SOURCE_DIR}/util/util.h
@@ -92,6 +93,6 @@ install(FILES
 install(FILES
   ${CMAKE_SOURCE_DIR}/client/features/movable_threads.h
   ${CMAKE_SOURCE_DIR}/client/features/scalable_application.h
-  ${CMAKE_SOURCE_DIR}/client/features/application_progress.h
+  ${CMAKE_SOURCE_DIR}/client/features/utility_measure.h
   DESTINATION include/tetris/features
 )

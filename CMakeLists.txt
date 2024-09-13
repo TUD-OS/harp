@@ -53,6 +53,7 @@ add_subdirectory(client_legacy)
 add_subdirectory(server)
 #add_subdirectory(controller)
 add_subdirectory(mock)
+add_subdirectory(td-mock)
 
 enable_testing()
 set(TEST_SOURCE_DIRECTORY test)

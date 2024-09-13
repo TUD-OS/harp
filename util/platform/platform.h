@@ -74,6 +74,8 @@ public:
 
   int GetID() { return _id; }
 
+  std::vector<CPUThread*> GetSiblings() const;
+
 private:
   CPUCore &_core;
   std::string _name;
@@ -101,7 +103,7 @@ public:
   const CPUType &GetType() const { return _type; }
   int GetID() const { return _id; }
 
-  std::vector<CPUThread *> GetCPUThreads() {
+  std::vector<CPUThread *> GetCPUThreads() const {
     std::vector<CPUThread *> res;
     for (auto &t : _threads) {
       res.push_back(t.get());

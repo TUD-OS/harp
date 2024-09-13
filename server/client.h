@@ -112,6 +112,9 @@ private:
   std::vector<PerfData> perf_data;
   std::vector<ProcessEnergyData> energy_data;
 
+  bool _has_client_utility;;
+  std::vector<double> _client_utility;
+
   int drop_measurements;
   int new_measurements;
 
@@ -153,6 +156,10 @@ public:
   void update_perf_data(std::chrono::high_resolution_clock::time_point tp);
 
   void update_energy_data(EnergyData &systemwide, uint64_t duration_ms);
+
+  bool has_client_utility() const;
+
+  void update_client_utility(std::chrono::high_resolution_clock::time_point tp);
 
   std::optional<tetris::OperatingPoint::Metrics> current_metrics();
 

@@ -1,5 +1,5 @@
-#ifndef __APPLICATION_PROGRESS_H__
-#define __APPLICATION_PROGRESS_H__
+#ifndef __UTILITY_MEASURE_H__
+#define __UTILITY_MEASURE_H__
 
 #pragma once
 
@@ -8,20 +8,22 @@
 #include "proto/tetris.pb.h"
 #include "util/debug_util.h"
 
+#include <vector>
+
 namespace tetris {
 
-class ApplicationProgress : public Feature
+class UtilityMeasure : public Feature
 {
    private:
     debug::LoggerPtr _logger;
 
-    float _progress;
+    std::vector<float> _utility_measures;
 
    public:
     /* Constructor and Destructor */
-    ApplicationProgress();
+    UtilityMeasure();
 
-    virtual ~ApplicationProgress();
+    virtual ~UtilityMeasure();
 
    public:
     /* Feature interface */
@@ -33,11 +35,9 @@ class ApplicationProgress : public Feature
 
    public:
     /* Public feature interface */
-    void update_progress(float progress)
-    {
-        _progress = progress;
-        _logger->debug("Updated application progress to %f\n", progress);
-    }
+    void update_utility(float utility);
+
+    void clear_utility();
 };
 
 } /* namespace tetris */

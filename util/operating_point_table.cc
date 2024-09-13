@@ -90,17 +90,44 @@ void OperatingPointTable::SetOperatingPointEvaluator(
   _update_pareto = true;
 }
 
-std::vector<OperatingPoint> OperatingPointTable::GetParetoFront() {
+std::vector<OperatingPoint>
+OperatingPointTable::GetParetoFront(bool normalize_utility) {
   if (_update_pareto) {
     LOGGER->debug("Updating the Pareto front of the operating points.\n");
     auto ops = GetOperatingPoints();
     _pareto = _pareto_filter->Filter(ops);
+
+    // Normalize the utility
+    double max_utility = -1;
+    for (auto &op : _pareto) {
+      if (op.utility() > max_utility) {
+        max_utility = op.utility();
+      }
+    }
+
+    _pareto_norm.clear();
+
+    for (auto &op : _pareto) {
+      OperatingPoint::Configuration config(op.config);
+      OperatingPoint::Metrics metrics(op.metrics);
+
+      if (max_utility > 0) {
+        metrics.utility = metrics.utility / max_utility;
+      }
+      _pareto_norm.emplace_back(config, metrics);
+    }
+
     _update_pareto = false;
   } else {
     LOGGER->debug("Returning the previously filtered Pareto front of the "
                   "operating points.\n");
   }
-  return _pareto;
+
+  if (normalize_utility) {
+    return _pareto_norm;
+  } else {
+    return _pareto;
+  }
 }
 
 ThreadSetOperatingPointTable::ThreadSetOperatingPointTable(
