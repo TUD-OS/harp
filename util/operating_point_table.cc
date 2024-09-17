@@ -308,6 +308,44 @@ ThreadSetOperatingPointTable::GetOperatingPointToMeasureExploration(
     const CPUCoreSet &core_set) {
   GenerateApproximatedOperatingPoints();
 
+  // Heuristic I. Select points with negative approximated values
+  {
+    double max_error = 0;
+    Configuration res_negative;
+
+    for (const auto &config : _all_configurations) {
+      if (!DoesConfigurationFitCPUCoreSet(config, core_set)) {
+        continue;
+      }
+      if (!_ops.contains(config) ||
+          _sample_counts.at(config) < _params.at("reliable_measurements")) {
+        double utility = _approx_ops.at(config).utility;
+        double power = _approx_ops.at(config).power;
+
+        double sqr_err_utility = 0;
+        double sqr_err_power = 0;
+        if (utility < 0) {
+          sqr_err_utility = utility * utility;
+        }
+        if (power < 0) {
+          sqr_err_power = power * power;
+        }
+        double error = std::sqrt(sqr_err_utility + sqr_err_power);
+        if (error > max_error) {
+          max_error = error;
+          res_negative = config;
+        }
+      }
+    }
+
+    if (max_error > 0) {
+      auto metrics = GetOperatingPointMetrics(res_negative);
+      return ConstructOperatingPoint(res_negative, metrics);
+    }
+  }
+
+  // Heuristic II. Comparing two regression models
+  //
   // 1. Collect reliable operating points. If not enough (kExplorationPoints),
   // collect all
   std::vector<Configuration> X_train;
