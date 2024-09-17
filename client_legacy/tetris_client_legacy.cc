@@ -480,10 +480,10 @@ void GOMP_parallel (void (*fn) (void*), void *data, unsigned int num_threads, un
     real_func = reinterpret_cast<real_func_t>(dlsym(RTLD_NEXT, "GOMP_parallel"));
 
     if (real_func) {
-        auto num_threads = scalable_app ? scalable_app->current_scale() : 0;
-        if (num_threads != 0) {
+        auto scale_threads = scalable_app ? scalable_app->current_scale() : 0;
+        if (scale_threads != 0) {
             /* Call the function with our internal parallel thread count if already set */
-            unsigned int own_num_threads = num_threads;
+            unsigned int own_num_threads = scale_threads;
             real_func(fn, data, own_num_threads, flags);
         } else {
             /* Otherwise use the given num_threads as parallel thread count */
