@@ -162,6 +162,11 @@ void Client::update_client_utility(std::chrono::high_resolution_clock::time_poin
 }
 
 void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
+  if (pid == -1) {
+      LOGGER->debug("Client not properly initialized for energy update!\n");
+      return;
+  }
+
   ProcessEnergyData proc_energy;
   proc_energy.time = sw_energy.time;
 
@@ -260,8 +265,9 @@ void Client::update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
 std::optional<tetris::OperatingPoint::Metrics> Client::current_metrics() {
   if (energy_data.size() < 2 || perf_data.size() < 2)
     return std::nullopt;
+  if (_has_client_utility && _client_utility.size() < 1)
+    return std::nullopt;
 
-  /* TODO: set the proper feature ID */
   tetris::OperatingPoint::Metrics res;
 
   /* Calculate power in mW */
@@ -294,7 +300,7 @@ void Client::SelectNextOperatingPointForMeasurement() {
 }
 
 void Client::UpdateCurrentMeasurement() {
-  if (!op_table->EnabledMeasurement()) {
+  if (!op_table || !op_table->EnabledMeasurement()) {
     return;
   }
 
@@ -303,16 +309,12 @@ void Client::UpdateCurrentMeasurement() {
 
   auto metrics = current_metrics();
   if (active_op && metrics) {
-    // FIXME:Currently, the energy measurement may give gigantic values,
-    // possible due to overflow
-    if (metrics->power <= 1e11) {
-      if (drop_measurements > 0) {
-        drop_measurements--;
-      } else {
-        op_table->AddOperatingPointMeasurement(active_op->base.config,
+    if (drop_measurements > 0) {
+      drop_measurements--;
+    } else {
+      op_table->AddOperatingPointMeasurement(active_op->base.config,
                                                *metrics);
-        new_measurements++;
-      }
+      new_measurements++;
     }
   }
 
