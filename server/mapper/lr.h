@@ -45,7 +45,7 @@ private:
    * the conference on Design, Automation & Test in Europe (DATE '14).
    */
   std::tuple<std::map<std::string, double>, std::vector<const OperatingPoint *>>
-  SolveDualOptimizationProblem();
+  SolveDualOptimizationProblem(int max_rounds);
 
   std::vector<int>
   SortClients(const std::map<std::string, double> &lambda,
