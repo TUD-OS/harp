@@ -1,4 +1,5 @@
 #include "lr.h"
+#include <stdexcept>
 
 std::string LambdaToString(const std::map<std::string, double> &lambda) {
   std::vector<std::string> elems;
@@ -40,7 +41,7 @@ LagrangianRelaxationMapper::MinimizeDualFunctionClient(
 }
 
 std::tuple<std::map<std::string, double>, std::vector<const OperatingPoint *>>
-LagrangianRelaxationMapper::SolveDualOptimizationProblem() {
+LagrangianRelaxationMapper::SolveDualOptimizationProblem(int max_rounds) {
   // Initialize lambda
   std::map<std::string, double> lambda{};
   for (auto &[core_type, _] : _platform_cores_count) {
@@ -48,7 +49,7 @@ LagrangianRelaxationMapper::SolveDualOptimizationProblem() {
   }
   std::vector<const OperatingPoint *> min_ops(_clients.size(), nullptr);
 
-  for (int round = 1; round <= _max_rounds; ++round) {
+  for (int round = 1; round <= max_rounds; ++round) {
     bool changed = false;
 
     double total_value = 0.0;
@@ -167,6 +168,9 @@ std::vector<const OperatingPoint *> LagrangianRelaxationMapper::SelectOPs(
   std::vector<const OperatingPoint *> res(_clients.size(), nullptr);
   for (auto i : order) {
     const OperatingPoint *op = SelectClientOP(cores_count, lambda, i);
+    if (!op)
+        throw MappingFailure{"Failed to find client OP"};
+
     res[i] = op;
     for (auto &[core_type, core_count] : op->core_counts()) {
       cores_count[core_type] -= core_count;
@@ -197,10 +201,23 @@ LagrangianRelaxationMapper::GenerateClientMapping(std::vector<Client *> clients,
   // Filter Pareto-front for each client
   _client_ops = GetClientsParetoFront(_clients);
 
-  auto [lambda, lr_ops] = SolveDualOptimizationProblem();
+  int max_rounds = _max_rounds;
+  while (true) {
+      auto [lambda, lr_ops] = SolveDualOptimizationProblem(max_rounds);
 
-  std::vector<const OperatingPoint *> ops = SelectOPs(lambda, lr_ops);
+      try {
+        std::vector<const OperatingPoint *> ops = SelectOPs(lambda, lr_ops);
 
-  return ToClientMapping(_clients, ops, _blocked);
+        return ToClientMapping(_clients, ops, _blocked);
+      } catch(MappingFailure &e) {
+        if (max_rounds >= 10*_max_rounds) {
+            /* Bail if we can't find a mapping with 10x the usual LR steps */
+            throw std::runtime_error("Can't find solution with LR!");
+        }
+
+        max_rounds = max_rounds + _max_rounds;
+        LOGGER->warning("Finding solution failed, retrying with %d LR steps\n", max_rounds);
+      }
+  }
 }
 } // namespace tetris

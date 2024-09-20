@@ -36,6 +36,8 @@ bool Manager::client_message(int fd) try {
   bool done = false;
   bool close = false;
 
+  LOGGER->debug("Reading message for client %d\n", fd);
+
   while (!done) {
     if (c->pid == -1) {
       /* The client is not yet fully registered with the server. Until now we
@@ -45,6 +47,9 @@ bool Manager::client_message(int fd) try {
 
       if (res == Connection::InState::DONE) {
         /* We are done processing. So return. */
+        done = true;
+      } else if (res == Connection::InState::AGAIN) {
+        LOGGER->debug("Message was incomplete for client %d\n", fd);
         done = true;
       } else if (res == Connection::InState::CLOSED) {
         /* We are done processing and the remote site closed the connection */
@@ -97,6 +102,9 @@ bool Manager::client_message(int fd) try {
 
       if (res == Connection::InState::DONE) {
         /* We are done processing. So return. */
+        done = true;
+      } else if (res == Connection::InState::AGAIN) {
+        LOGGER->debug("Message was incomplete for client %d\n", fd);
         done = true;
       } else if (res == Connection::InState::CLOSED) {
         /* We are done processing and the remote site closed the connection */

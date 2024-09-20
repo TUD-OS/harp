@@ -24,7 +24,8 @@ class Connection : public Lockable<Connection>
     enum class InState {
         MORE = 1,
         DONE = 2,
-        CLOSED = 3
+        CLOSED = 3,
+        AGAIN = 4
     };
 
     enum class OutState {
@@ -147,15 +148,22 @@ class Connection : public Lockable<Connection>
         if (_fd == -1) {
             throw std::runtime_error{"Connection not initialized."};
         }
+        static char *d = nullptr;
+        static ssize_t read_d = 0;
 
-        char *d = static_cast<char*>(malloc(sizeof(data)));
-        ssize_t read_d = 0;
+        if (read_d == 0) {
+            d = static_cast<char*>(malloc(sizeof(data)));
+        }
 
         do {
             ssize_t size = ::read(_fd, d+read_d, sizeof(data)-read_d);
             if (size == -1) {
-                if (errno == EAGAIN && !_blocking)
-                    return InState::DONE;
+                if (errno == EAGAIN && !_blocking) {
+                    if (read_d != 0)
+                        return InState::AGAIN;
+                    else
+                        return InState::DONE;
+                }
 
                 throw std::runtime_error{"Read failed."};
             } else if (size == 0) {
@@ -167,6 +175,7 @@ class Connection : public Lockable<Connection>
 
         memcpy(&data, d, sizeof(data));
         free(d);
+        read_d = 0;
 
         return _blocking ? InState::DONE : InState::MORE;
     }
@@ -175,27 +184,42 @@ class Connection : public Lockable<Connection>
         if (_fd == -1) {
             throw std::runtime_error{"Connection not initialized."};
         }
-        // Read the vector size through the socket.
-        uint32_t vector_size = 0;
-        InState read_state = read(vector_size);
-        if (!_blocking && (read_state != InState::MORE))
-            return read_state;
+        static std::vector<uint8_t> d;
+        static ssize_t read_d = 0;
+
+        if (read_d == 0) {
+             // Read the vector size through the socket.
+            uint32_t vector_size = 0;
+            InState read_state = read(vector_size);
+            if (!_blocking && (read_state != InState::MORE))
+                return read_state;
+
+            d.clear();
+            d.resize(vector_size);
+        }
 
         // Read the vector through the socket.
-        data.resize(vector_size);
-        ssize_t read_d = 0;
         do {
-            ssize_t size = ::read(_fd, data.data()+read_d, data.size()-read_d);
+            ssize_t size = ::read(_fd, d.data()+read_d, d.size()-read_d);
             if (size == -1) {
-                if (errno == EAGAIN && !_blocking)
-                    return InState::DONE;
+                if (errno == EAGAIN && !_blocking) {
+                    if (read_d != 0)
+                        return InState::AGAIN;
+                    else
+                        return InState::DONE;
+                }
+
                 throw std::runtime_error{"Read failed."};
             } else if (size == 0) {
                 return InState::CLOSED;
             }
 
             read_d += size;
-        } while (read_d < data.size());
+        } while (read_d < d.size());
+
+        /* Copy the content from our intermediate buffer over to the actual buffer */
+        data = std::move(d);
+        read_d = 0;
 
         return _blocking ? InState::DONE : InState::MORE;
     }

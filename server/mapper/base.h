@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <stdexcept>
 
 #include "server/client.h"
 #include "server/client_mapping.h"
@@ -12,6 +13,11 @@
 #include "util/platform/cpu_sets.h"
 
 namespace tetris {
+
+class MappingFailure : public std::runtime_error {
+   public:
+    MappingFailure(const std::string& msg) : std::runtime_error(msg) {}
+};
 
 /**
  * An abstract class defining the interface for a Mapper.

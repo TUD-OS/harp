@@ -267,6 +267,9 @@ class Manager {
                 if (res == Connection::InState::DONE) {
                     /* We are done processing. So return. */
                     done = true;
+                } else if (res == Connection::InState::AGAIN) {
+                    LOGGER->debug("Message was incomplete for client %d\n", fd);
+                    done = true;
                 } else if (res == Connection::InState::CLOSED) {
                     /* We are done processing and the remote site closed the connection */
                     close = true;
@@ -294,6 +297,9 @@ class Manager {
 
                 if (res == Connection::InState::DONE) {
                     /* We are done processing. So return. */
+                    done = true;
+                } else if (res == Connection::InState::AGAIN) {
+                    LOGGER->debug("Message was incomplete for client %d\n", fd);
                     done = true;
                 } else if (res == Connection::InState::CLOSED) {
                     /* We are done processing and the remote site closed the connection */
@@ -711,7 +717,7 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
         }
       } else if (cur->events & EPOLLIN) {
         /* Some client tried to send us data. */
-        logger->debug("The client sent a message\n");
+        logger->debug("The client sent a message (%d)\n");
 
         if (manager.client_message(cur->data.fd)) {
           manager.client_disconnect(cur->data.fd);
@@ -726,7 +732,7 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
     }
 
     manager.reschedule();
-  }
+    }
 }
 
 int main(int argc, char *argv[]) {

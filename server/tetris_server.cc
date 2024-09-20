@@ -287,7 +287,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
         }
       } else if (cur->events & EPOLLIN) {
         /* Some client tried to send us data. */
-        logger->debug("Received a client message\n");
+        logger->debug("Received a client message (%d)\n", cur->data.fd);
 
         if (manager.client_message(cur->data.fd)) {
           manager.client_disconnect(cur->data.fd);
