@@ -46,6 +46,9 @@ bool Manager::client_message(int fd) try {
       if (res == Connection::InState::DONE) {
         /* We are done processing. So return. */
         done = true;
+      } else if (res == Connection::InState::AGAIN) {
+        LOGGER->debug("Message was incomplete for client %d\n", fd);
+        done = true;
       } else if (res == Connection::InState::CLOSED) {
         /* We are done processing and the remote site closed the connection */
         close = true;
@@ -97,6 +100,9 @@ bool Manager::client_message(int fd) try {
 
       if (res == Connection::InState::DONE) {
         /* We are done processing. So return. */
+        done = true;
+      } else if (res == Connection::InState::AGAIN) {
+        LOGGER->debug("Message was incomplete for client %d\n", fd);
         done = true;
       } else if (res == Connection::InState::CLOSED) {
         /* We are done processing and the remote site closed the connection */

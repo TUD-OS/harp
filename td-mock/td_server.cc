@@ -267,6 +267,9 @@ class Manager {
                 if (res == Connection::InState::DONE) {
                     /* We are done processing. So return. */
                     done = true;
+                } else if (res == Connection::InState::AGAIN) {
+                    LOGGER->debug("Message was incomplete for client %d\n", fd);
+                    done = true;
                 } else if (res == Connection::InState::CLOSED) {
                     /* We are done processing and the remote site closed the connection */
                     close = true;
@@ -294,6 +297,9 @@ class Manager {
 
                 if (res == Connection::InState::DONE) {
                     /* We are done processing. So return. */
+                    done = true;
+                } else if (res == Connection::InState::AGAIN) {
+                    LOGGER->debug("Message was incomplete for client %d\n", fd);
                     done = true;
                 } else if (res == Connection::InState::CLOSED) {
                     /* We are done processing and the remote site closed the connection */
