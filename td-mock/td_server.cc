@@ -717,7 +717,7 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
         }
       } else if (cur->events & EPOLLIN) {
         /* Some client tried to send us data. */
-        logger->debug("The client sent a message\n");
+        logger->debug("The client sent a message (%d)\n");
 
         if (manager.client_message(cur->data.fd)) {
           manager.client_disconnect(cur->data.fd);
@@ -732,7 +732,7 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
     }
 
     manager.reschedule();
-  }
+    }
 }
 
 int main(int argc, char *argv[]) {

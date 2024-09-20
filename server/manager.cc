@@ -36,6 +36,8 @@ bool Manager::client_message(int fd) try {
   bool done = false;
   bool close = false;
 
+  LOGGER->debug("Reading message for client %d\n", fd);
+
   while (!done) {
     if (c->pid == -1) {
       /* The client is not yet fully registered with the server. Until now we
