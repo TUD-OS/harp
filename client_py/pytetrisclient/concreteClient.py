@@ -96,10 +96,10 @@ class ConcreteClient(Client):
             self._logger.warning("Feature handshake failed: {}\n".format(e))
 
     def send(self, msg: ClientMessage) -> ServerResponse:
-        protobufUtil.send(self._tetris_server_connection, msg)
+        ProtobufUtil.send(self._tetris_server_connection, msg)
 
         response = ServerResponse()
-        protobufUtil.receive(self._tetris_server_connection, response)
+        ProtobufUtil.receive(self._tetris_server_connection, response)
 
         return response
 

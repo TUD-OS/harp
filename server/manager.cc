@@ -327,6 +327,10 @@ void Manager::update_energy_data() {
   /* 2b: Attribute the measured energy to the individual CPUs respecting their power coefficient */
   auto all_energy_uj = energy.total_energy_uj - last.total_energy_uj;
   auto duration_ms =  std::chrono::duration_cast<std::chrono::milliseconds>(energy.time - last.time).count();
+  if (duration_ms == 0) {
+      LOGGER->warning("No time has passed since last update - Ignoring! (%llu ms)\n", duration_ms);
+      return;
+  }
 
   if (last.total_energy_uj > energy.total_energy_uj) {
     LOGGER->warning("Energy counters overflowed: %llu (LAST) vs %llu (CURRENT)\n",
@@ -363,7 +367,7 @@ void Manager::update_energy_data() {
   }
 
   LOGGER->debug("Current energy consumption: Total: %llu uJ --> %llu uJ (%llu mW) since last update\n",
-          energy.total_energy_uj, energy.energy.all, energy.energy.all / duration_ms);
+          energy.total_energy_uj, energy.energy.all, duration_ms > 0 ? energy.energy.all / duration_ms : energy.energy.all);
   /*
   LOGGER->debug("Per Core values:\n");
   for (int i = 0; i < energy.ctimes.cores.size(); ++i)

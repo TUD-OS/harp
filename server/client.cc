@@ -153,8 +153,11 @@ void Client::update_client_utility(std::chrono::high_resolution_clock::time_poin
     } else {
       if (!response.has_utility())
           LOGGER->warning(" -! Client didn't include utility measure!\n");
-      else
-        _client_utility.push_back(response.utility());
+      else {
+        auto utility = response.utility();
+        LOGGER->debug(" => Client utility: %f\n", utility);
+        _client_utility.push_back(utility);
+      }
     }
   } catch (std::exception &e) {
     LOGGER->error(" -! Sending failed with an error: %s\n", e.what());

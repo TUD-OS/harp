@@ -1,6 +1,6 @@
 import logging
 
-from proto.tetris_pb2 import ClientMessage, ServerResponse, ClientResponse, ServerMessage, FeatureInfo
+from proto.tetris_pb2 import ClientMessage, ServerResponse, ClientResponse, ServerMessage
 
 from pytetrisclient.client import Client
 from pytetrisclient.utils.protobufUtil import ProtobufUtil
@@ -9,7 +9,7 @@ from pytetrisclient.feature import Feature
 
 class UtilityMeasure(Feature):
     def __init__(self):
-        super()._init__()
+        super().__init__()
 
         self._utility_measures = list()
 
@@ -31,10 +31,7 @@ class UtilityMeasure(Feature):
     def handshake(self):
         msg = ClientMessage()
         msg.type = ClientMessage.FEATURE_SUBSCRIBE
-
-        feature_info = FeatureInfo()
-        feature_info.type = FeatureInfo.UTILITY_MEASURE
-        msg.feature_info = feature_info
+        msg.feature_info.type = ClientMessage.FeatureInfo.UTILITY_MEASURE
 
         response = self._client.send(msg)
 
