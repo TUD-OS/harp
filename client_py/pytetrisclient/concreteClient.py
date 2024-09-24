@@ -18,7 +18,7 @@ from pytetrisclient.utils.yamlPlatformReader import YamlPlatformReader
 
 class ConcreteClient(Client):
 
-    def __init__(self, server_socket_path, platform_desc_path, mapping_path, mapping_coarse_grained):
+    def __init__(self, server_socket_path, platform_desc_path, mapping_path, mapping_coarse_grained, name=None):
         super().__init__()
         self._managed = False
         self._logger = logging.getLogger('ConcreteClient')
@@ -45,7 +45,7 @@ class ConcreteClient(Client):
 
             self._tetris_server_connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._tetris_server_connection.connect(server_socket_path)
-            self._managed = self.register_client(app_name)
+            self._managed = self.register_client(name if name else app_name)
 
             # print(self._managed)
             if self._managed:
