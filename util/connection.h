@@ -212,16 +212,13 @@ class Connection : public Lockable<Connection>
             throw std::runtime_error{"Connection not initialized."};
         }
 
-        if (_read_d == 0) {
+        if (_size_d == 0) {
              // Read the vector size through the socket.
             uint32_t vector_size = 0;
             auto result = ::read(_fd, &vector_size, sizeof(vector_size));
             if (result == -1) {
                 if (!_blocking) {
-                    if (errno == EAGAIN)
-                        return InState::AGAIN;
-                    else
-                        return InState::MORE;
+                    return InState::DONE;
                 }
 
                 throw std::runtime_error("Read failed.");
@@ -229,7 +226,7 @@ class Connection : public Lockable<Connection>
                 return InState::CLOSED;
             }
 
-            _data = static_cast<char*>(malloc(sizeof(vector_size)));
+            _data = static_cast<char*>(malloc(vector_size));
             _size_d = vector_size;
         } else {
             LOGGER->debug("Continuing incomplete message %d/%d (%d missing)\n", _read_d, _size_d, _size_d-_read_d);
@@ -240,11 +237,8 @@ class Connection : public Lockable<Connection>
             ssize_t size = ::read(_fd, _data+_read_d, _size_d-_read_d);
             if (size == -1) {
                 if (errno == EAGAIN && !_blocking) {
-                    if (_read_d != 0) {
-                        LOGGER->debug("Incomplete message %d/%d read\n", _read_d, _size_d);
-                        return InState::AGAIN;
-                    } else
-                        return InState::MORE;
+                    LOGGER->debug("Incomplete message %d/%d read\n", _read_d, _size_d);
+                    return InState::AGAIN;
                 }
 
                 throw std::runtime_error{"Read failed."};
