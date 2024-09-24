@@ -7,6 +7,7 @@
 #include "lock_util.h"
 #include "path_util.h"
 #include "tetris.h"
+#include "debug_util.h"
 #include "util.h"
 
 #include <cstring>
@@ -38,6 +39,11 @@ class Connection : public Lockable<Connection>
     sockaddr_un     _sock;
     bool            _blocking;
 
+    /* Buffers used for incomplete read operations */
+    ssize_t         _read_d;
+    ssize_t         _size_d;
+    char*           _data;
+
     void close()
     {
         if (_fd == -1)
@@ -49,28 +55,39 @@ class Connection : public Lockable<Connection>
 
    public:
     Connection() :
-        _fd{-1}, _sock{}, _blocking{true}
+        _fd{-1}, _sock{}, _blocking{true}, _read_d{0}, _size_d{0}, _data{nullptr}
     {}
 
     explicit Connection(const std::string& sock_path) :
-        _fd{-1}, _sock{}, _blocking{true}
+        _fd{-1}, _sock{}, _blocking{true}, _read_d{0}, _size_d{0}, _data{nullptr}
     {
         connect(sock_path);
     }
 
     Connection(int fd, const sockaddr_un& sock, bool blocking=true) :
-        _fd{fd}, _sock{sock}, _blocking{blocking}
+        _fd{fd}, _sock{sock}, _blocking{blocking}, _read_d{0}, _size_d{0}, _data{nullptr}
     {}
 
     Connection(const Connection&) = delete;
     Connection(Connection&& o) :
-        _fd{o._fd}, _sock{o._sock}, _blocking{o._blocking}
+        _fd{o._fd}, _sock{o._sock}, _blocking{o._blocking}, _read_d{o._read_d},
+        _size_d{o._size_d}, _data{o._data}
     {
         o._fd = -1;
+        o._read_d = 0;
+        o._size_d = 0;
+        o._data = nullptr;
     }
 
     ~Connection()
     {
+        if (_read_d) {
+            free(_data);
+            _read_d = 0;
+            _size_d = 0;
+            _data = nullptr;
+        }
+
         close();
     }
 
@@ -82,8 +99,14 @@ class Connection : public Lockable<Connection>
         _fd = o._fd;
         _sock = o._sock;
         _blocking = o._blocking;
+        _read_d = o._read_d;
+        _size_d = o._size_d;
+        _data = o._data;
 
         o._fd = -1;
+        o._read_d = 0;
+        o._size_d = 0;
+        o._data = nullptr;
 
         return *this;
     }
@@ -148,20 +171,22 @@ class Connection : public Lockable<Connection>
         if (_fd == -1) {
             throw std::runtime_error{"Connection not initialized."};
         }
-        static char *d = nullptr;
-        static ssize_t read_d = 0;
 
-        if (read_d == 0) {
-            d = static_cast<char*>(malloc(sizeof(data)));
+        if (_read_d == 0) {
+            _data = static_cast<char*>(malloc(sizeof(data)));
+            _size_d = sizeof(data);
+        } else {
+            LOGGER->debug("Continuing incomplete message %d/%d (%d missing)\n", _read_d, _size_d, _size_d-_read_d);
         }
 
         do {
-            ssize_t size = ::read(_fd, d+read_d, sizeof(data)-read_d);
+            ssize_t size = ::read(_fd, _data+_read_d, _size_d-_read_d);
             if (size == -1) {
                 if (errno == EAGAIN && !_blocking) {
-                    if (read_d != 0)
+                    if (_read_d != 0) {
+                        LOGGER->debug("Incomplete message %d/%d read\n", _read_d, _size_d);
                         return InState::AGAIN;
-                    else
+                    } else
                         return InState::DONE;
                 }
 
@@ -170,12 +195,14 @@ class Connection : public Lockable<Connection>
                 return InState::CLOSED;
             }
 
-            read_d += size;
-        } while (read_d < sizeof(data));
+            _read_d += size;
+        } while (_read_d < _size_d);
 
-        memcpy(&data, d, sizeof(data));
-        free(d);
-        read_d = 0;
+        memcpy(&data, _data, _size_d);
+        free(_data);
+        _read_d = 0;
+        _size_d = 0;
+        _data = nullptr;
 
         return _blocking ? InState::DONE : InState::MORE;
     }
@@ -184,29 +211,40 @@ class Connection : public Lockable<Connection>
         if (_fd == -1) {
             throw std::runtime_error{"Connection not initialized."};
         }
-        static std::vector<uint8_t> d;
-        static ssize_t read_d = 0;
 
-        if (read_d == 0) {
+        if (_read_d == 0) {
              // Read the vector size through the socket.
             uint32_t vector_size = 0;
-            InState read_state = read(vector_size);
-            if (!_blocking && (read_state != InState::MORE))
-                return read_state;
+            auto result = ::read(_fd, &vector_size, sizeof(vector_size));
+            if (result == -1) {
+                if (!_blocking) {
+                    if (errno == EAGAIN)
+                        return InState::AGAIN;
+                    else
+                        return InState::MORE;
+                }
 
-            d.clear();
-            d.resize(vector_size);
+                throw std::runtime_error("Read failed.");
+            } else if (result == 0) {
+                return InState::CLOSED;
+            }
+
+            _data = static_cast<char*>(malloc(sizeof(vector_size)));
+            _size_d = vector_size;
+        } else {
+            LOGGER->debug("Continuing incomplete message %d/%d (%d missing)\n", _read_d, _size_d, _size_d-_read_d);
         }
 
         // Read the vector through the socket.
         do {
-            ssize_t size = ::read(_fd, d.data()+read_d, d.size()-read_d);
+            ssize_t size = ::read(_fd, _data+_read_d, _size_d-_read_d);
             if (size == -1) {
                 if (errno == EAGAIN && !_blocking) {
-                    if (read_d != 0)
+                    if (_read_d != 0) {
+                        LOGGER->debug("Incomplete message %d/%d read\n", _read_d, _size_d);
                         return InState::AGAIN;
-                    else
-                        return InState::DONE;
+                    } else
+                        return InState::MORE;
                 }
 
                 throw std::runtime_error{"Read failed."};
@@ -214,12 +252,16 @@ class Connection : public Lockable<Connection>
                 return InState::CLOSED;
             }
 
-            read_d += size;
-        } while (read_d < d.size());
+            _read_d += size;
+        } while (_read_d < _size_d);
 
         /* Copy the content from our intermediate buffer over to the actual buffer */
-        data = std::move(d);
-        read_d = 0;
+        data.clear();
+        data.insert(data.begin(), _data, _data+_read_d);
+        free(_data);
+        _read_d = 0;
+        _size_d = 0;
+        _data = nullptr;
 
         return _blocking ? InState::DONE : InState::MORE;
     }
