@@ -92,7 +92,7 @@ bool Manager::client_message(int fd) try {
 
         if (protobuf_util::Send(conn->locked(), response) !=
             Connection::OutState::DONE)
-          LOGGER->error("Failed to acknowledge the new-thread message\n");
+          LOGGER->error("Failed to acknowledge the registration message\n");
       }
     } else {
       /* The client is fully registered, receive the message and let
@@ -115,7 +115,7 @@ bool Manager::client_message(int fd) try {
         auto response = c->handle_message(msg);
         if (protobuf_util::Send(conn->locked(), response) !=
             Connection::OutState::DONE)
-          LOGGER->error("Failed to acknowledge the new-thread message\n");
+          LOGGER->error("Failed to acknowledge the client message\n");
       }
     }
   }
