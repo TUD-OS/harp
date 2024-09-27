@@ -200,6 +200,7 @@ void __attribute__((constructor)) setup(void)
         std::string platform_path = getenv("TETRIS_PLATFORM");
         std::string mapping_path = getenv("TETRIS_MAPPING");
         std::string libs_path = getenv("TETRIS_LIBS");
+        bool ignore_tetris = getenv("TETRIS_IGNORE") != nullptr;
 
         /* Initialize all the features */
         movable_threads = std::make_unique<tetris::MovableThreads>();
@@ -233,7 +234,7 @@ void __attribute__((constructor)) setup(void)
             logger->info("->> Managed by TETRIS <<-\n");
 
             /* Register with TETRiS that this client supports movable threads */
-            if (movable_threads) {
+            if (movable_threads && !ignore_tetris) {
                 logger->info("->> Register as application with movable threads\n");
                 tetris_client->bind(movable_threads.get());
 
@@ -241,7 +242,7 @@ void __attribute__((constructor)) setup(void)
                 movable_threads->register_thread(getpid());
             }
 
-            if (scalable_app) {
+            if (scalable_app && !ignore_tetris) {
                 logger->info("->> Register as scalable application\n");
                 tetris_client->bind(scalable_app.get());
             }
