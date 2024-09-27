@@ -51,6 +51,7 @@ bool MovableThreads::register_thread(pid_t tid, const std::string& name)
         auto it = std::find_if(_threads.begin(), _threads.end(), [tid](const ThreadInfo& t) { return t.tid == tid; });
         if (it != _threads.end()) {
             it->name = name;
+            it->named = true;
 
             /* Sort the thread list, so that named threads are always at the beginning */
             std::sort(_threads.begin(), _threads.end(), [](const auto &t1, const auto &t2) { return t1.named; });
