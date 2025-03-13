@@ -48,75 +48,32 @@ The client reacts to multiple environment variables:
 With this environment variable you can control how much information the TETRiS
 client library outputs. Possible values are DEBUG, INFO, WARNING and ERROR.
 
-#### TETRIS_MAPPING_TYPE
+#### TETRIS_PLATFORM (required)
 
-This environment variable will tell TETRiS in which way the clients should be pinned
-to the associated CPUs. If this variable is set to 'DYNAMIC', no pinning should be
-used for the client threads but instead the threads should be left movable. Only the
-list of available CPUs will be limited to the ones that the selected mapping contains.
-If this variable is not set or the value 'STATIC' is used, TETRiS will pin the client
-threads to the exact CPUs as defined in the selected mapping.
+The path to the platform file which the TETRiS library should use. This has to be
+the same as the one provided to the TETRiS-server.
 
-#### TETRIS_COMPARE_CRITERIA
+#### TETRIS_MAPPING (required)
 
-With this environment variable one can choose which characteristic of a mapping should
-be compared when searching for the best possible mapping on the server. This option can
-be changed per application that is executed. If omitted, execution time will be used as
-comparison characteristic.
+The path to the mapping file for the application. This can also be an empty file.
+In this case, TETRiS will automatically generate the mapping database by itself.
 
-#### TETRIS_COMPARE_MORE_IS_BETTER
+#### TETRIS_LIBS (required)
 
-If not set, the TETRiS server will assume that smaller values for the mapping characteristic
-are better than larger ones. Hence the server will always prefer the mapping for the
-application with the smallest value in the compare characteristic. With this environment
-variable one can change this behavior to more is better.
+Base directory of the scaler libraries that TETRiS uses to auto-scale various applications.
 
-#### TETRIS_FILTER_CRITERIA
+#### TETRIS_IGNORE
 
-With this environment variable you can influence which mappings available for the TETRiS server
-are actually considered for the application. Hence, one can filter out mappings that don't match
-the given criteria. The syntax to define the filter is as follows:
-
-    {mapping characteristic}{compare operator}{value}
-
-Valid examples can look like the following:
-
-    energyConsumption<2000          or
-    totalExecutionTime<=100
-
-Spaces at the beginning, end and around the compare operator are striped away. Currently supported
-compare operators are: '<', '<=', '>', '>=', '==', '=', '!='
-
-The given filter criteria is a positive criteria. This means, that only mappings that fulfill this
-criteria are considered for the application.
-
-#### TETRIS_PREFERRED_MAPPING
-
-This environmental variable can be used to force the server to use one particular
-mapping. The value of this variable should be the name of the preferred mapping.
+Used for overhead measurements. When this environment variable is set, the TETRiS library will
+ignore all resource allocation messages from the TETRiS server, thus falling back to Linux' default
+resource management.
 
 
-## Control Interface
+## Creating your own TETRiS Client
 
-### Signals
-
-In addition to only managing the various clients that connect to the TETRiS server, the server also
-reacts to various signals that are sent to it. At the moment, the following reactions exist:
-
-#### SIGUSR1
-
-Upon a SIGUSR1 signal, the TETRiS server will reload its mapping database. Accordingly, if mappings
-change in the meantime (new applications are installed, …), the TETRiS server will now know about
-them. However, be aware that already running and managed applications are not remapped according to
-the new mapping database.
-
-#### SIGUSR2
-
-Upon a SIGUSR2 signal, the TETRiS server will output information about the applications that it
-currently manages. This information contains which mapping is currently used for the client and
-where its threads are currently mapped.
-
-### tetrisctl
-
-tetrisctl is an additional binary that can be used to send various commands to the TETRiS server.
-See the tetrisctl binary help for more information about which commands are supported.
+It is also possible to write your custom-tailored TETRiS client for one particular application. In this
+case, one need to link the application against the libtetris library, instantiate an instance of the 
+`tetris::ConcreteClient` class and supply all the necessary features (subclasses of `tetris::Feature` or
+`tetris::MappingFeature`) by binding them to the client instance. Registered features need to react to
+resource allocation messages and can adjust the application accordingly or even add additional characteristics
+to the mapping information.
