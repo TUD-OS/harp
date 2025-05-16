@@ -151,10 +151,13 @@ void Client::update_client_utility(std::chrono::high_resolution_clock::time_poin
     } else if (response.type() != ClientResponse::UTILITY_UPDATE) {
       LOGGER->warning(" -! Client didn't respond accordingly the message!\n");
     } else {
-      if (!response.has_utility())
-          LOGGER->warning(" -! Client didn't include utility measure!\n");
-      else
-        _client_utility.push_back(response.utility());
+      if (!response.has_utility()) {
+        LOGGER->warning(" -! Client didn't include utility measure!\n");
+      } else {
+        auto utility = response.utility();
+        LOGGER->debug(" => Client utility: %f\n", utility);
+        _client_utility.push_back(utility);
+      }
     }
   } catch (std::exception &e) {
     LOGGER->error(" -! Sending failed with an error: %s\n", e.what());
@@ -331,6 +334,9 @@ void Client::UpdateCurrentMeasurement() {
 
     if (stage != stage_at_selection ||
         stage == OperatingPointTableStage::kMature) {
+      if (stage == OperatingPointTableStage::kMature && stage != stage_at_selection)
+          LOGGER->info("Client '%s' [%d] reached stage Mature\n", exec.c_str(), pid);
+
       _manager.MarkMapperForRun();
     } else {
       if (stage == OperatingPointTableStage::kInitial ||

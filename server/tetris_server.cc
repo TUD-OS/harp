@@ -122,7 +122,7 @@ bool setup_perf_timer() {
 
   /* Arm the timer */
   its.it_value.tv_sec = 0;
-  its.it_value.tv_nsec = 500000000; /* 500 ms */
+  its.it_value.tv_nsec = 50000000; /* 50 ms */
   its.it_interval.tv_sec = its.it_value.tv_sec;
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
@@ -276,7 +276,7 @@ void manage_event_loop(int epoll_fd, int server_fd, int control_fd, int sig_fd,
             manager.GetTraceLogger().ExportToFile(config.trace_filename);
             break;
           case SIGUSR2:
-            manager.print_mappings();
+            manager.dump_mappings();
             break;
           case SIGALRM:
             manager.update_client_metrics();

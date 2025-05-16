@@ -153,9 +153,9 @@ public:
   bool client_message(int fd);
 
   /**
-   * \brief Prints the currently active mappings for all clients.
+   * \brief Dump the current state of the operating table of the client
    */
-  void print_mappings();
+  void dump_mappings();
 
   /**
    * \brief Note that we have to generate a new client mapping due to changed

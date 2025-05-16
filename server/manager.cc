@@ -128,22 +128,19 @@ bool Manager::client_message(int fd) try {
   return true;
 }
 
-void Manager::print_mappings() {
-  auto &allocator = _platform->GetEquivResAllocator();
-  std::cout << "Currently active mappings:" << std::endl
-            << "==========================" << std::endl;
-  for (const auto &[name, client] : _clients) {
-    std::cout << "Client '" << client->exec << "' [" << client->pid
-              << "] (ID: " << name << ")" << std::endl;
-    if (client->active_op.has_value()) {
-      std::cout << "-> mapping: " << client->active_op->name() << " ["
-                << allocator.GetEquivClassName(*(client->active_op)) << "]"
-                << std::endl;
-    } else {
-      std::cout << "-> mapping: none" << std::endl;
+void Manager::dump_mappings() {
+  for (auto &[cid, c] : _clients) {
+    if (c->pid == -1)
+        continue;
+
+    if (!_optable_storage.empty()) {
+      auto name = c->exec;
+      std::replace(name.begin(), name.end(), '/','_');
+      name = name + ".yaml";
+      auto full_path = _optable_storage / name;
+      c->op_table->StoreToFile(full_path);
     }
   }
-  std::cout << "======= END OF LIST =======" << std::endl;
 }
 
 void Manager::RunMapper() {
@@ -327,6 +324,10 @@ void Manager::update_energy_data() {
   /* 2b: Attribute the measured energy to the individual CPUs respecting their power coefficient */
   auto all_energy_uj = energy.total_energy_uj - last.total_energy_uj;
   auto duration_ms =  std::chrono::duration_cast<std::chrono::milliseconds>(energy.time - last.time).count();
+  if (duration_ms == 0) {
+    LOGGER->warning("No time has passed since last update - Ignoring! (%llu ms)\n", duration_ms);
+    return;
+  }
 
   if (last.total_energy_uj > energy.total_energy_uj) {
     LOGGER->warning("Energy counters overflowed: %llu (LAST) vs %llu (CURRENT)\n",
