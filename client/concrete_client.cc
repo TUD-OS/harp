@@ -204,19 +204,22 @@ ClientResponse ConcreteClient::handle(const ServerMessage &msg) {
       }
 
       // Construct the mapping object manually
-      Mapping mapping(*_platform);
-      mapping.name = "[" + string_util::join(cpu_ids, ",") + "]";
+      auto mapping = std::make_unique<Mapping>(*_platform);
+      mapping->name = "[" + string_util::join(cpu_ids, ",") + "]";
 
       for (const auto &c : cpu_ids) {
-        mapping.thread_map.emplace("thread" + std::to_string(c), c);
+        mapping->thread_map.emplace("thread" + std::to_string(c), c);
       }
-      mapping.cpus = threads;
+      mapping->cpus = threads;
 
-      std::map<int, int> conv_map;
+      /* Store, that this is now our new mapping */
+      _active_mapping = std::move(mapping);
+
       /* Tell the features to react to the new mapping */
       for (const auto &feature : _mapping_features) {
-        feature->mapping_update(mapping, conv_map);
+        feature->mapping_update(*_active_mapping, {});
       }
+
       response.set_type(ClientResponse::ACKNOWLEDGE);
     } else {
       _logger->error("Expected 'activated_cpus' field but not found\n");

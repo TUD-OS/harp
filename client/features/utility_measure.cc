@@ -34,8 +34,7 @@ ClientResponse UtilityMeasure::handle(const ServerMessage &msg)
 
     if (_utility_measures.size() > 0) {
         response.set_type(ClientResponse::UTILITY_UPDATE);
-    
-         response.set_utility(_utility_measures.back());
+        response.set_utility(_utility_measures.back());
     } else {
         response.set_type(ClientResponse::UTILITY_RETRY);
     }
