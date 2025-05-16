@@ -93,20 +93,24 @@ class Client {
     void update_metrics()
     {
         if (_has_utility) {
-            /* Get utility metrics from the client if the client registered the feature */
-            ServerMessage msg;
-            Connection conn{push_listener_path()};
+            try {
+                /* Get utility metrics from the client if the client registered the feature */
+                ServerMessage msg;
+                Connection conn{push_listener_path()};
 
-            msg.set_feature_id(UTILITY_FEATURE_ID);
-            msg.set_type(ServerMessage::UTILITY_UPDATE);
+                msg.set_feature_id(UTILITY_FEATURE_ID);
+                msg.set_type(ServerMessage::UTILITY_UPDATE);
 
-            protobuf_util::Send(conn.locked(), msg);
+                protobuf_util::Send(conn.locked(), msg);
 
-            ClientResponse response{};
-            protobuf_util::Receive(conn.locked(), response);
+                ClientResponse response{};
+                protobuf_util::Receive(conn.locked(), response);
 
-            if (response.type() != ClientResponse::UTILITY_UPDATE && response.has_utility()) {
-                _utility.push_back(response.utility());
+                if (response.type() == ClientResponse::UTILITY_UPDATE && response.has_utility()) {
+                    _utility.push_back(response.utility());
+                }
+            } catch (std::exception &e) {
+                logger->warning("Updating utility failed\n");
             }
         }
     }
@@ -269,7 +273,7 @@ class Manager {
                 instructions = perf_data["Instructions"];
             }
 
-            if (cl->_has_utility) {
+            if (cl->_has_utility && cl->_utility.size() != 0) {
                 double sum = 0;
                 for (auto &val : cl->_utility)
                     sum += val;
