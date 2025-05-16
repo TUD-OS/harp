@@ -1,8 +1,9 @@
 #include <exception>
 #include <filesystem>
 #include <stdexcept>
-
 #include <memory>
+#include <chrono>
+
 #include <signal.h>
 #include <sstream>
 #include <sys/epoll.h>
@@ -14,6 +15,8 @@
 #include "util/string_util.h"
 #include "util/protobuf_util.h"
 #include "util/connection.h"
+#include "util/platform/perf.h"
+#include "util/platform/energy.h"
 
 
 using namespace tetris;
@@ -21,6 +24,8 @@ using namespace tetris;
 /***
  * Global variables
  ***/
+
+const constexpr int UTILITY_FEATURE_ID = 1;
 
 const static int MAXEVENTS = 100;
 debug::LoggerPtr logger;
@@ -35,6 +40,11 @@ class Client {
     int _pid;
     std::string _exec;
     ConnectionPtr _connection;
+    bool _has_utility;
+    std::vector<double> _utility;
+    tetris::perf::HandlePtr _perf;
+    std::chrono::high_resolution_clock::time_point _start_tp;
+    uint64_t _start_energy;
 
     friend class Manager;
 
@@ -52,42 +62,21 @@ class Client {
 
    public:
     Client(ConnectionPtr connection) :
-        _pid{-1}, _exec{}, _connection{connection}
+        _pid{-1}, _exec{}, _connection{connection}, _has_utility{false}, _utility{}, _perf{},
+        _start_tp{}, _start_energy{}
     {}
 
-    void pid(int p)
+    void send_mapping(const std::vector<int> &cpus)
     {
-        _pid = p;
-
-        /* Also update the push_listener_path */
-    }
-
-    int pid() const
-    {
-        return _pid;
-    }
-
-    std::string exec() const
-    {
-        return _exec;
-    }
-
-    void exec(const std::string e)
-    {
-        _exec = e;
-    }
-
-    void send_mapping(const std::vector<std::string> &cpus)
-    {
-        MockServerMessage msg;
+        ServerMessage msg;
         Connection conn{push_listener_path()};
         logger->info("Sending client '%s' [%d] mapping info\n", _exec.c_str(), _pid);
 
-        msg.set_type(MockServerMessage::ACTIVATE_OP);
-        auto op_info = msg.mutable_activated_op_info();
+        msg.set_type(ServerMessage::ACTIVATE_CPUS);
+        auto cpus_info = msg.mutable_activated_cpus();
 
-        for (auto c : cpus) {
-            op_info->add_cpus(c);
+        for (const auto &c : cpus) {
+            cpus_info->add_cpu_ids(c);
         }
 
         protobuf_util::Send(conn.locked(), msg);
@@ -99,6 +88,26 @@ class Client {
             logger->warning("Client failed to acknowledge message!\n");
         }
     }
+
+    void update_metrics()
+    {
+        if (_has_utility) {
+            /* Get utility metrics from the client if the client registered the feature */
+            ServerMessage msg;
+            Connection conn{push_listener_path()};
+
+            msg.set_type(ServerMessage::UTILITY_UPDATE);
+
+            protobuf_util::Send(conn.locked(), msg);
+
+            ClientResponse response{};
+            protobuf_util::Receive(conn.locked(), response);
+
+            if (response.type() != ClientResponse::UTILITY_UPDATE && response.has_utility()) {
+                _utility.push_back(response.utility());
+            }
+        }
+    }
 };
 
 using ClientPtr = std::shared_ptr<Client>;
@@ -107,17 +116,22 @@ using PlatformPtr = std::unique_ptr<Platform>;
 class Manager {
    private:
     std::map<int, ClientPtr> _clients;
-    std::vector<std::string> _available_cpus;
+    std::vector<int> _available_cpus;
     PlatformPtr _platform;
+    perf::PerfManager _perf_manager;
+    std::unique_ptr<Measure> _energy_measure;
+
 
    public:
     Manager(std::unique_ptr<Platform>&& platform, const std::vector<std::string> &cpu_list)
-        : _clients{}, _available_cpus{}, _platform(std::move(platform))
+        : _clients{}, _available_cpus{}, _platform(std::move(platform)), _perf_manager{}, _energy_measure{}
     {
+        _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
+
         for (auto c : cpu_list) {
             auto cptr = _platform->FindCPUThread(c);
             if (cptr) {
-                _available_cpus.push_back(c);
+                _available_cpus.push_back(cptr->GetID());
                 logger->debug("Enabling CPU %s (%d)\n", c.c_str(), cptr->GetID());
             } else {
                 logger->warning("Unknown CPU %s specified -- ignoring\n", c.c_str());
@@ -127,7 +141,7 @@ class Manager {
         if (_available_cpus.size() == 0) {
             logger->debug("All CPUs are enabled!\n");
             for (const auto &c : _platform->GetCPUThreads()) {
-                _available_cpus.push_back(c.second->GetName());
+                _available_cpus.push_back(c.second->GetID());
             }
         } else {
             logger->debug("Using CPUs: %s\n", string_util::join(_available_cpus, ",").c_str());
@@ -175,6 +189,11 @@ class Manager {
                 } else {
                     cl->_pid = request.pid();
                     cl->_exec = request.exec();
+                    if (auto handle = _perf_manager.open(cl->_pid)) {
+                        cl->_perf = std::move(handle.value());
+                    }
+                    cl->_start_tp = std::chrono::high_resolution_clock::now();
+                    cl->_start_energy = _energy_measure->read();
 
                     logger->info(" -> The client registered! '%s' [%d]\n", cl->_exec.c_str(), cl->_pid);
 
@@ -183,7 +202,7 @@ class Manager {
                     response.set_id(fd);
 
                     if (protobuf_util::Send(cl->_connection->locked(), response) != Connection::OutState::DONE)
-                        logger->error("Failed to acknowledge the new-thread message\n");
+                        logger->error("Failed to acknowledge the registration message\n");
 
                     /* Directly inform the client about the preferred mapping */
                     cl->send_mapping(_available_cpus);
@@ -202,7 +221,22 @@ class Manager {
                     done = true;
                 } else {
                     ServerResponse response{};
-                    response.set_type(ServerResponse::ERROR);
+                    response.set_type(ServerResponse::ACKNOWLEDGE);
+
+                    switch (msg.type()) {
+                    case ClientMessage::OPERATING_POINTS:
+                      break;
+                    case ClientMessage::OPTIMIZATION_TARGET:
+                      break;
+                    case ClientMessage::FEATURE_SUBSCRIBE:
+                      if (msg.has_feature_info() && msg.feature_info().type() == ClientMessage::FeatureInfo::UTILITY_MEASURE) {
+                        cl->_has_utility = true;
+  
+                        response.set_type(ServerResponse::FEATURE_ACKNOWLEDGE);
+                        auto ack_info = response.mutable_feature_ack_info();
+                        ack_info->set_id(UTILITY_FEATURE_ID);
+                      }
+                    }
 
                     protobuf_util::Send(cl->_connection->locked(), response);
                 }
@@ -218,9 +252,48 @@ class Manager {
         if (c == _clients.end()) {
             logger->debug("Unknown client disconnected\n");
         } else {
-            logger->debug("Client %s [%d] disconnected\n", c->second->exec().c_str(), c->second->pid());
+            logger->info("Client %s [%d] disconnected\n", c->second->_exec.c_str(), c->second->_pid);
+
+            /* Get all the interesting statistics from the client and output it to the log */
+
+            auto cl = c->second;
+
+            auto total_ms = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - cl->_start_tp);
+            auto energy = _energy_measure->read() - cl->_start_energy;
+
+            uint64_t instructions = 0;
+            if (cl->_perf) {
+                auto perf_data = cl->_perf->read();
+                instructions = perf_data["Instructions"];
+            }
+
+            if (cl->_has_utility) {
+                double sum = 0;
+                for (auto &val : cl->_utility)
+                    sum += val;
+
+                auto utility = sum / cl->_utility.size();
+
+                logger->info("time;energy;instruction;ips;utility\n%lf;%llu;%llu;%lf;%lf\n",
+                    total_ms.count(), energy, instructions, instructions/total_ms.count()*1000, utility);
+            } else {
+                logger->info("time;energy;instruction;ips\n%lf;%llu;%llu;%lf\n",
+                    total_ms.count(), energy, instructions, instructions/total_ms.count()*1000);
+            }
+
+
+            /* Now erase the client */
             _clients.erase(c);
         }
+    }
+
+    void update_client_metrics()
+    {
+        /* Call the client to update its metrics (only applies for clients with UTILITY_FEEDBACK) */
+        for (auto &[_, c] : _clients) {
+            c->update_metrics();
+        }
+
     }
 };
 
@@ -280,6 +353,7 @@ int setup_signal_handling() {
   sigaddset(&sigmask, SIGTERM);
   sigaddset(&sigmask, SIGUSR1);
   sigaddset(&sigmask, SIGUSR2);
+  sigaddset(&sigmask, SIGALRM);
 
   /* First block the signals. */
   sigprocmask(SIG_BLOCK, &sigmask, nullptr);
@@ -287,6 +361,43 @@ int setup_signal_handling() {
   /* And create a signal fd where these signals are managed. */
   int sig_fd = signalfd(-1, &sigmask, SFD_NONBLOCK);
   return sig_fd;
+}
+
+/**
+ * \brief Setup the repeating timer for reading out the perf updates for the clients
+ **/
+bool setup_perf_timer() {
+  timer_t timerid;
+  struct sigevent sev;
+  struct itimerspec its;
+
+  /* Prepare and create the timer signal */
+  sev.sigev_notify = SIGEV_SIGNAL;
+  sev.sigev_signo = SIGALRM;
+  sev.sigev_value.sival_ptr = &timerid;
+
+  int ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
+  if (ret == -1) {
+      std::cerr << "Failed to create timer" << std::endl
+                << strerror(errno) << std::endl;
+      return false;
+  }
+
+  /* Arm the timer */
+  its.it_value.tv_sec = 1;  /* 1 sec */
+  its.it_value.tv_nsec = 0;
+  its.it_interval.tv_sec = its.it_value.tv_sec;
+  its.it_interval.tv_nsec = its.it_value.tv_nsec;
+
+  ret = timer_settime(timerid, 0, &its, NULL);
+  if (ret == -1) {
+      std::cerr << "Failed to arm timer" << std::endl
+                << strerror(errno) << std::endl;
+
+      return false;
+  }
+
+  return true;
 }
 
 /**
@@ -393,11 +504,6 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
               break;
             }
           }
-
-          /* Control connection are usually single shot. So just open this
-           * connection and directly read out the data */
-
-          /* TODO: Handle control messages */
         }
       } else if (cur->data.fd == sig_fd) {
         /* There was a signal delivered to this process. */
@@ -418,6 +524,9 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
           logger->info("Received a signal (%i)\n", siginfo.ssi_signo);
 
           switch (siginfo.ssi_signo) {
+          case SIGALRM:
+            manager.update_client_metrics();
+            break;
           default:
             done = 1;
           }
@@ -533,6 +642,10 @@ int main(int argc, char *argv[]) {
   int epoll_fd = setup_epoll({server_fd, control_fd, sig_fd});
   if (epoll_fd == -1) {
     return 1;
+  }
+
+  if (!setup_perf_timer()) {
+      return 1;
   }
 
   /* The event loop */

@@ -1,15 +1,6 @@
 set_source_files_properties(
         ${PROTO_OUTPUT_SOURCES} PROPERTIES GENERATED TRUE)
 
-add_library(tetrismockclient SHARED
-        mock_client.cc
-        mock_message_listener.cc
-        mock_library.cc
-    )
-target_link_libraries(tetrismockclient client_internal ${Protobuf_LIBRARIES} yaml-cpp)
-add_dependencies(tetrismockclient generated_proto)
-add_dependencies(tetrismockclient tetrisclient)
-
 # Add the mock server library target
 add_library(tetrismockserverlib STATIC
     ${PROTO_OUTPUT_SOURCES}

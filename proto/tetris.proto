@@ -91,29 +91,6 @@ message ServerMessage {
     optional CPUAllocation activated_cpus = 4;
 }
 
-message MockServerMessage {
-    enum Type {
-        ACTIVATE_OP = 1;
-        ACTIVATE_MAPPING = 2;
-    }
-    required Type type = 1;
-
-    message MockOperatingPoint {
-        repeated string cpus = 1;
-    }
-    optional MockOperatingPoint activated_op_info = 2;
-
-    message MockMapping {
-        message ThreadAllocation {
-            required string name = 1;
-            required string cpu = 2;
-        }
-
-        repeated ThreadAllocation thread_map = 1;
-    }
-    optional MockMapping activated_mapping_info = 3;
-}
-
 // Responses from the client to the server upon server messages
 message ClientResponse {
     enum Type {
