@@ -72,6 +72,7 @@ class Client {
         Connection conn{push_listener_path()};
         logger->info("Sending client '%s' [%d] mapping info\n", _exec.c_str(), _pid);
 
+        msg.set_feature_id(0);
         msg.set_type(ServerMessage::ACTIVATE_CPUS);
         auto cpus_info = msg.mutable_activated_cpus();
 
@@ -96,6 +97,7 @@ class Client {
             ServerMessage msg;
             Connection conn{push_listener_path()};
 
+            msg.set_feature_id(UTILITY_FEATURE_ID);
             msg.set_type(ServerMessage::UTILITY_UPDATE);
 
             protobuf_util::Send(conn.locked(), msg);
