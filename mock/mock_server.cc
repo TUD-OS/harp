@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <memory>
 #include <chrono>
+#include <fstream>
 
 #include <signal.h>
 #include <sstream>
@@ -35,6 +36,48 @@ using ConnectionPtr = std::shared_ptr<Connection>;
 /***
  * Support Classes
  ***/
+struct CpuTimes {
+  uint64_t all;
+  std::vector<uint64_t> cores;
+};
+
+struct ProcessTimes {
+  uint64_t all;
+  std::map<pid_t, uint64_t> threads;
+};
+
+struct CpuEnergy {
+  uint64_t all;
+  std::vector<uint64_t> cores;
+};
+
+struct ProcessEnergy {
+  uint64_t all;
+  uint64_t power;
+  std::map<pid_t, uint64_t> threads;
+};
+
+struct EnergyData {
+  std::chrono::high_resolution_clock::time_point time;
+  uint64_t total_energy_uj;
+  CpuTimes raw_ctimes;
+
+  CpuTimes ctimes;
+  CpuEnergy energy;
+};
+
+struct ProcessEnergyData {
+  std::chrono::high_resolution_clock::time_point time;
+  std::chrono::high_resolution_clock::duration update_interval;
+  ProcessTimes raw_ctimes;
+
+  std::map<pid_t, int> thread_core_assignment;
+
+  ProcessTimes ctimes;
+  ProcessEnergy energy;
+};
+
+
 class Client {
    private:
     int _pid;
@@ -45,6 +88,7 @@ class Client {
     tetris::perf::HandlePtr _perf;
     std::chrono::high_resolution_clock::time_point _start_tp;
     uint64_t _start_energy;
+    std::vector<ProcessEnergyData> _energy_data;
 
     friend class Manager;
 
@@ -92,66 +136,226 @@ class Client {
 
     void update_metrics()
     {
-        if (_has_utility) {
-            try {
-                /* Get utility metrics from the client if the client registered the feature */
-                ServerMessage msg;
-                Connection conn{push_listener_path()};
+        if (!_has_utility)
+            return;
 
-                msg.set_feature_id(UTILITY_FEATURE_ID);
-                msg.set_type(ServerMessage::UTILITY_UPDATE);
+        try {
+            /* Get utility metrics from the client if the client registered the feature */
+            ServerMessage msg;
+            Connection conn{push_listener_path()};
 
-                protobuf_util::Send(conn.locked(), msg);
+            msg.set_feature_id(UTILITY_FEATURE_ID);
+            msg.set_type(ServerMessage::UTILITY_UPDATE);
 
-                ClientResponse response{};
-                protobuf_util::Receive(conn.locked(), response);
+            protobuf_util::Send(conn.locked(), msg);
 
-                if (response.type() == ClientResponse::UTILITY_UPDATE && response.has_utility()) {
-                    _utility.push_back(response.utility());
-                }
-            } catch (std::exception &e) {
-                logger->warning("Updating utility failed\n");
+            ClientResponse response{};
+            protobuf_util::Receive(conn.locked(), response);
+
+            if (response.type() == ClientResponse::UTILITY_UPDATE && response.has_utility()) {
+                _utility.push_back(response.utility());
             }
+        } catch (std::exception &e) {
+            logger->warning("Updating utility failed\n");
         }
+    }
+
+    void update_energy_data(EnergyData &sw_energy, uint64_t duration_ms) {
+      if (_pid == -1) {
+          logger->debug("Client not properly initialized for energy update!\n");
+          return;
+      }
+
+      ProcessEnergyData proc_energy;
+      proc_energy.time = sw_energy.time;
+
+      /* In order to partially account the energy to the current client we need to
+       * get utime and stime as well as core assignments for the threads of the
+       * corresponding process */
+
+      /* 1. Get the total utime and stime of the process */
+      {
+        std::stringstream path;
+        path << "/proc/" << _pid << "/stat";
+        std::ifstream stat(path.str());
+        if (!stat.is_open()) {
+          logger->warning("Can't open /proc/%d/stat for per process cputime statistics\n", _pid);
+          return;
+        }
+
+        /* The first line in this file contains the interesting information for us */
+        std::string stat_line;
+        std::getline(stat, stat_line);
+        stat.close();
+
+        /* The format of this file is defined in the Linux kernel documentation. Since
+         * we are interested in user-time and system-time, we need the elements 13 and
+         * 14.
+         */
+        auto elements = string_util::split(stat_line, ' ');
+        proc_energy.raw_ctimes.all =  std::stoull(elements[13]) + std::stoull(elements[14]);
+      }
+      /* 2. Get the per thread utime and stime as well as core assignments */
+      {
+        std::stringstream path;
+        path << "/proc/" << _pid << "/task/";
+        for (const auto & entry : std::filesystem::directory_iterator(path.str())) {
+          std::ifstream thread_stat(entry.path() / "stat");
+          if (!thread_stat.is_open()) {
+            logger->warning("Failed to open stat file in %s\n", entry.path().c_str());
+            continue;
+          }
+
+          std::string stat_line;
+          std::getline(thread_stat, stat_line);
+          thread_stat.close();
+
+          /* The format of the stat file is the same as before, hence again we are
+           * interested in element 13 and 14. The last core assingment of the thread
+           * is saved in element 38 of this list */
+          auto elements = string_util::split(stat_line, ' ');
+          auto tid = std::stod(elements[0]);
+          proc_energy.raw_ctimes.threads[tid] = std::stoull(elements[13]) + std::stoull(elements[14]);
+          proc_energy.thread_core_assignment[tid] = std::stod(elements[38]);
+        }
+      }
+
+      /* 3. Calculate the amount of time the client executed since the last update.
+       *    If there is no previous update, assume that all the time was executed 
+       *    in this period. */
+      if (_energy_data.size() > 0) {
+        auto last = _energy_data.back();
+        proc_energy.update_interval = proc_energy.time - last.time;
+
+        proc_energy.ctimes.all = util::ctime_to_ms(proc_energy.raw_ctimes.all - last.raw_ctimes.all);
+        for (auto &[tid, raw_time] : proc_energy.raw_ctimes.threads) {
+          if (last.raw_ctimes.threads.contains(tid))
+            proc_energy.ctimes.threads[tid] = util::ctime_to_ms(raw_time - last.raw_ctimes.threads[tid]);
+          else
+            proc_energy.ctimes.threads[tid] = util::ctime_to_ms(proc_energy.raw_ctimes.threads[tid]);
+        }
+      } else {
+        proc_energy.ctimes.all = util::ctime_to_ms(proc_energy.raw_ctimes.all);
+        for (auto &[tid, raw_time] : proc_energy.raw_ctimes.threads)
+          proc_energy.ctimes.threads[tid] = util::ctime_to_ms(raw_time);
+      }
+
+      /* 4. Now attribute the energy proportional to the time the thread executed on
+       * the individual cores */
+      uint64_t sum_threads = 0;
+      for (auto &[tid, core] : proc_energy.thread_core_assignment) {
+        auto thread_energy = sw_energy.ctimes.cores[core] != 0 ? (sw_energy.energy.cores[core] * proc_energy.ctimes.threads[tid]) / sw_energy.ctimes.cores[core] : 0;
+        sum_threads += thread_energy;
+        proc_energy.energy.threads[tid] = thread_energy;
+      }
+      proc_energy.energy.all = sum_threads;
+      proc_energy.energy.power = sum_threads / duration_ms;
+
+      logger->debug("Client %s [%d] has the following energy data: %llu uJ with %llu ms active --> %llu mW\n",
+              _exec.c_str(), _pid, proc_energy.energy.all, proc_energy.ctimes.all, proc_energy.energy.power);
+      for (auto &[tid, thread_energy] : proc_energy.energy.threads) {
+        logger->debug(" => Thread %d (Core %d): %llu uJ with %llu ms active --> %llu mW\n",
+                tid, proc_energy.thread_core_assignment[tid], thread_energy, proc_energy.ctimes.threads[tid],
+                proc_energy.ctimes.threads[tid] != 0 ? thread_energy / proc_energy.ctimes.threads[tid] : 0);
+      }
+
+      _energy_data.push_back(proc_energy);
     }
 };
 
 using ClientPtr = std::shared_ptr<Client>;
 using PlatformPtr = std::unique_ptr<Platform>;
 
+class AppAssignments {
+   private:
+    struct Assignment{
+        std::string app;
+        std::vector<std::string> cpus;
+    };
+
+    std::vector<Assignment> _assignments;
+    std::unique_ptr<Assignment> _default;
+
+    std::vector<int> convert_cpus(const std::vector<std::string> &cpulist, Platform *p)
+    {
+        std::vector<int> result;
+
+        if (cpulist.empty()) {
+            for (const auto &c : p->GetCPUThreads()) {
+                result.push_back(c.second->GetID());
+            }
+        } else {
+            for (const auto &c : cpulist) {
+                auto cptr = p->FindCPUThread(c);
+                if (cptr) {
+                    result.push_back(cptr->GetID());
+                    logger->debug("Enabling CPU %s (%d)\n", c.c_str(), cptr->GetID());
+                } else {
+                    logger->warning("Unknown CPU %s specified -- ignoring\n", c.c_str());
+                }
+            }
+        }
+        return result;
+    }
+
+   public:
+    AppAssignments() = default;
+    AppAssignments(const AppAssignments& o) = delete;
+    AppAssignments(AppAssignments &&o) : _assignments{std::move(o._assignments)}, _default{std::move(o._default)}
+    {}
+
+    void add_one(const std::string &name, const std::vector<std::string> &cpulist)
+    {
+        _assignments.emplace_back(name, cpulist);
+    }
+
+    void add_all(const std::vector<std::string> &cpulist)
+    {
+        _default = std::make_unique<Assignment>("", cpulist);
+    }
+
+    bool empty() const
+    {
+        return !_default && _assignments.empty();
+    }
+
+    std::vector<int> get_cpus(const std::string &name, Platform *p)
+    {
+        /* Find the exact app assignment */
+        for (auto &a : _assignments) {
+            /* assume that the given name is findable somewhere inside the real application name */
+            if (name.find(a.app) != std::string::npos) {
+                logger->debug("Found assignment for %s\n", name.c_str());
+                return convert_cpus(a.cpus, p);
+            }
+        }
+
+        /* We have no specific app assignment found, check for an all assignment */
+        if (_default) {
+            logger->debug("Using 'all' assignment for %s\n", name.c_str());
+            return convert_cpus(_default->cpus, p);
+        }
+
+        /* We did not find any assignment for this APP, log an ERROR and return an ALL CPU assignment */
+        logger->error("Could not find assignment for %s!\n", name.c_str());
+        return convert_cpus({}, p);
+    }
+};
+
 class Manager {
    private:
     std::map<int, ClientPtr> _clients;
-    std::vector<int> _available_cpus;
     PlatformPtr _platform;
     perf::PerfManager _perf_manager;
     std::unique_ptr<Measure> _energy_measure;
-
+    AppAssignments _assignments;
+    std::vector<EnergyData> _energy_data;
 
    public:
-    Manager(std::unique_ptr<Platform>&& platform, const std::vector<std::string> &cpu_list)
-        : _clients{}, _available_cpus{}, _platform(std::move(platform)), _perf_manager{}, _energy_measure{}
+    Manager(std::unique_ptr<Platform>&& platform, AppAssignments &&assignments)
+        : _clients{}, _assignments{std::move(assignments)}, _platform(std::move(platform)), _perf_manager{}, _energy_measure{}
     {
         _energy_measure = std::move(_platform->GetEnergyMeasureMethod());
-
-        for (auto c : cpu_list) {
-            auto cptr = _platform->FindCPUThread(c);
-            if (cptr) {
-                _available_cpus.push_back(cptr->GetID());
-                logger->debug("Enabling CPU %s (%d)\n", c.c_str(), cptr->GetID());
-            } else {
-                logger->warning("Unknown CPU %s specified -- ignoring\n", c.c_str());
-            }
-        }
-
-        if (_available_cpus.size() == 0) {
-            logger->debug("All CPUs are enabled!\n");
-            for (const auto &c : _platform->GetCPUThreads()) {
-                _available_cpus.push_back(c.second->GetID());
-            }
-        } else {
-            logger->debug("Using CPUs: %s\n", string_util::join(_available_cpus, ",").c_str());
-        }
     }
 
     void client_connect(int fd, ConnectionPtr conn)
@@ -210,8 +414,11 @@ class Manager {
                     if (protobuf_util::Send(cl->_connection->locked(), response) != Connection::OutState::DONE)
                         logger->error("Failed to acknowledge the registration message\n");
 
+                    /* Get the CPU assignment for this client */
+                    auto cpus = _assignments.get_cpus(cl->_exec, _platform.get());
+
                     /* Directly inform the client about the preferred mapping */
-                    cl->send_mapping(_available_cpus);
+                    cl->send_mapping(cpus);
                 }
             } else {
                   /* The client is fully registered, however, we ignore messages */
@@ -261,7 +468,6 @@ class Manager {
             logger->info("Client %s [%d] disconnected\n", c->second->_exec.c_str(), c->second->_pid);
 
             /* Get all the interesting statistics from the client and output it to the log */
-
             auto cl = c->second;
 
             auto total_ms = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - cl->_start_tp);
@@ -287,6 +493,13 @@ class Manager {
                     total_ms.count(), energy, instructions, instructions/total_ms.count()*1000);
             }
 
+            /* Get the average power from the client and output as well */
+            double avg_power = 0.0;
+            int n = 0;
+            for (const auto &edata : cl->_energy_data) {
+                avg_power += (edata.energy.power - avg_power) / ++n;
+            }
+            logger->info("EnergAt power (mW):\n%s;%lf\n", cl->_exec.c_str(), avg_power);
 
             /* Now erase the client */
             _clients.erase(c);
@@ -300,18 +513,130 @@ class Manager {
             c->update_metrics();
         }
 
+        /* Make energy measurements per client */
+        logger->debug("Updating energy data based on timer update\n");
+        auto now = std::chrono::high_resolution_clock::now();
+
+        EnergyData energy;
+        energy.time = now;
+        energy.total_energy_uj= _energy_measure->read();
+
+        /* Ok we got the total energy consumption. Now it is time to attribute it to the individual tasks.
+         * In order to achieve this, we follow the approach given by the EnergAt paper. We basically calculate
+         * the individual influence of the tasks at the overall system energy by comparing their cputime with
+         * the overall system wide cputime */
+
+        /* 1: Read the overall cputime statistics from /proc/stat for all CPUs as well as total*/
+        std::ifstream stat("/proc/stat");
+        if (!stat.is_open()) {
+          logger->warning("Can't open /proc/stat for global cputime statistics");
+        }
+
+        /* The first line contains the total CPU time */
+        std::string stat_line;
+        std::getline(stat, stat_line);
+
+        /* Since the line looks as follows:
+         * cpu  <user> <niced> <system> …
+         * Hence we are interested in element 2 and 4 (when split at every ' ').
+         */
+        {
+          auto elements = string_util::split(stat_line, ' ');
+          energy.raw_ctimes.all = std::stoull(elements[2]) + std::stoull(elements[4]);
+        }
+  
+        /* Now read the remaining lines to get the CPU time per cores */
+        while (true) {
+          std::getline(stat, stat_line);
+          if (string_util::starts_with(stat_line, "cpu")) {
+            /* Since the line looks as follows:
+             * cpuN <user> <niced> <system> …
+             * Hence we are interested in element 1 and 3 (when split at every ' ').
+             */
+            auto elements = string_util::split(stat_line, ' ');
+            energy.raw_ctimes.cores.push_back(std::stoull(elements[1]) + std::stoull(elements[3]));
+          } else {
+            break;
+          }
+        }
+
+        if (_energy_data.size() == 0) {
+          /* If we don't have any prior data, the remaining measurements are not meaningful. Bail early in this case. */
+          _energy_data.push_back(energy);
+          return;
+        }
+
+        auto &last = _energy_data.back();
+        /* 2a: Calculate how much the cores were active over the last period */
+        energy.ctimes.all = util::ctime_to_ms(energy.raw_ctimes.all - last.raw_ctimes.all);
+        for (int i = 0; i < energy.raw_ctimes.cores.size(); ++i) {
+          energy.ctimes.cores.push_back(util::ctime_to_ms(energy.raw_ctimes.cores[i] - last.raw_ctimes.cores[i]));
+        }
+
+        /* 2b: Attribute the measured energy to the individual CPUs respecting their power coefficient */
+        auto all_energy_uj = energy.total_energy_uj - last.total_energy_uj;
+        auto duration_ms =  std::chrono::duration_cast<std::chrono::milliseconds>(energy.time - last.time).count();
+        if (duration_ms == 0) {
+          logger->warning("No time has passed since last update - Ignoring! (%llu ms)\n", duration_ms);
+          return;
+        }
+
+        if (last.total_energy_uj > energy.total_energy_uj) {
+          logger->warning("Energy counters overflowed: %llu (LAST) vs %llu (CURRENT)\n",
+                  last.total_energy_uj, energy.total_energy_uj);
+          all_energy_uj = 0;
+        }
+
+        auto static_energy_uj = _platform->GetStaticPower() * duration_ms;
+        energy.energy.all = all_energy_uj - static_energy_uj;
+
+        if (all_energy_uj < static_energy_uj) {
+          logger->warning("Reported energy is lower than estimated static energy consumption: %llu (ALL) vs %llu (STATIC)\n",
+                  all_energy_uj, static_energy_uj);
+          energy.energy.all = 0;
+        }
+
+        double time_coefficient_sum = 0.0;
+        for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
+            bool smt_core = false;
+
+            if (energy.ctimes.cores[i] != 0) {
+              for (auto &t : _platform->FindCPUThread(i)->GetSiblings()) {
+                if (energy.ctimes.cores[t->GetID()] != 0)
+                  smt_core = true;
+              }
+            }
+            if (smt_core)
+              time_coefficient_sum += energy.ctimes.cores[i] * static_cast<double>(_platform->FindCPUThread(i)->GetPowerCoefficient())/2;
+            else
+              time_coefficient_sum += energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient();
+        }
+        for (int i = 0; i < energy.ctimes.cores.size(); ++i) {
+            energy.energy.cores.push_back((energy.energy.all * energy.ctimes.cores[i] * _platform->FindCPUThread(i)->GetPowerCoefficient()) / time_coefficient_sum);
+        }
+
+        logger->debug("Current energy consumption: Total: %llu uJ --> %llu uJ (%llu mW) since last update\n",
+                energy.total_energy_uj, energy.energy.all, energy.energy.all / duration_ms);
+
+        /* 2: Now do local attribution at the individual clients */
+        for (auto& [cid, c]: _clients) {
+            c->update_energy_data(energy, duration_ms);
+        }
+
+        _energy_data.push_back(energy);
     }
 };
 
 
 void usage() {
-  std::cout << "usage: tetris_mock [-h] [-p platform] CPUS\n"
+  std::cout << "usage: tetris_mock [-h] [-p platform] -c CPUS | -a APPFILE\n"
             << "\n"
             << "Options:\n"
             << "   -h, --help                show this help message.\n"
             << "   -p, --platform <name>     specify the platform.\n"
-            << "Positionals:\n"
-            << "   CPUS                      the available cpus for the managed client (',' or ' ' separated)\n"
+            << "MOCK Data:\n"
+            << "   -c CPUS                   one general CPU list for all applications (',' separated)\n"
+            << "   -a APPFILE                file with CPU assignments per managed application (appname:cpulist)"
             << "\n";
 }
 
@@ -390,8 +715,8 @@ bool setup_perf_timer() {
   }
 
   /* Arm the timer */
-  its.it_value.tv_sec = 1;  /* 1 sec */
-  its.it_value.tv_nsec = 0;
+  its.it_value.tv_sec = 0;
+  its.it_value.tv_nsec = 100000000; /* 100 ms */
   its.it_interval.tv_sec = its.it_value.tv_sec;
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
@@ -558,7 +883,7 @@ void event_loop(Manager &manager, int epoll_fd, int server_fd, int control_fd, i
 int main(int argc, char *argv[]) {
   /* Parsing command line arguments. */
   std::string platform_path;
-  std::vector<std::string> cpu_list;
+  AppAssignments assignments;
 
   for (int i = 1; i < argc; ++i) {
     std::string arg{argv[i]};
@@ -595,12 +920,50 @@ int main(int argc, char *argv[]) {
           return 1;
         }
       }
-    } else {
-        /* Next arguments are the cpu list */
-        auto cpus = string_util::split(arg, ",");
-        for (const auto &c : cpus) {
-            cpu_list.push_back(c);
+    } else if (arg == "-c") {
+        if (i + 1 >= argc) {
+          std::cerr << "Expected cpulist after " << arg << ".\n";
+          usage();
+          return 1;
         }
+  
+        i++;
+        auto cpulist = string_util::split(argv[i], ',');
+        assignments.add_all(cpulist);
+    } else if (arg == "-a") {
+        if (i + 1 >= argc) {
+            std::cerr << "Expected appfile after " << arg << ".\n";
+            usage();
+            return 1;
+        }
+
+        i++;
+        std::ifstream appfile(argv[i]);
+        if (!appfile.is_open()) {
+            std::cerr << "Specified appfile did not exist: " << argv[i] << "\n";
+            usage();
+            return 1;
+        }
+
+        std::string line;
+        while (std::getline(appfile, line)) {
+            auto parts = string_util::split(line, ":");
+            if (parts.size() != 2) {
+                std::cerr << "Appfile is malformed. Can't parse following line: " << line << "\n";
+                return 1;
+            }
+
+            auto name = parts[0];
+            auto cpulist = string_util::split(parts[1], ",");
+            if (name == "*")
+                assignments.add_all(cpulist);
+            else
+                assignments.add_one(name, cpulist);
+        }
+    } else {
+        std::cout << "Unknown command line option\n";
+        usage();
+        return 1;
     }
   }
 
@@ -610,8 +973,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  if (cpu_list.empty()) {
-    std::cerr << "No CPUs specified, assuming all can be used!" << std::endl;
+  if (assignments.empty()) {
+    std::cerr << "No app assignments specified!" << std::endl;
+    usage();
+    return 1;
   }
 
   std::cout << "Welcome the TETRiS MOCK Server" << std::endl;
@@ -624,7 +989,7 @@ int main(int argc, char *argv[]) {
   auto platform = reader.ReadFromFile(platform_path);
 
   /* Setting up the manager */
-  Manager manager{std::move(platform), cpu_list};
+  Manager manager{std::move(platform), std::move(assignments)};
 
   // Setting up the server and control sockets
   int server_fd = -1;
