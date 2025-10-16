@@ -364,7 +364,7 @@ void Manager::update_energy_data() {
   }
 
   LOGGER->debug("Current energy consumption: Total: %llu uJ --> %llu uJ (%llu mW) since last update\n",
-          energy.total_energy_uj, energy.energy.all, energy.energy.all / duration_ms);
+          energy.total_energy_uj, energy.energy.all, duration_ms > 0 ? energy.energy.all / duration_ms : energy.energy.all);
   /*
   LOGGER->debug("Per Core values:\n");
   for (int i = 0; i < energy.ctimes.cores.size(); ++i)

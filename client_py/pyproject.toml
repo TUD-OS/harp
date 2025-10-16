@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42", "setuptools-protobuf", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-protobuf]
+protobufs = ["proto/tetris.proto"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+# exclude = ["test", "*.test"]
+namespaces = true
+
+[project]
+name = "pytetrisclient"
+version = "0.1.0"
+description = "A Python version of Tetris client module"
+authors = []
+dependencies = [
+    "protobuf",
+    "pyyaml",
+]
+requires-python = ">=3.7"
+
