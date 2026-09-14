@@ -1,4 +1,6 @@
-# TETRiS
+# HARP: Heterogeneity-aware Adaptive Resource Partitioning
+
+**Note**: HARP was previously named TETRiS. Some code, binaries, and configuration variables still use the old TETRiS naming.
 
 ## Build
 
